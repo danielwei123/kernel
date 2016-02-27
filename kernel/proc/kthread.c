@@ -104,6 +104,9 @@ kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         NOT_YET_IMPLEMENTED("PROCS: kthread_create");
+
+        
+
         return NULL;
 }
 

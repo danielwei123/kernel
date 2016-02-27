@@ -119,6 +119,28 @@ proc_t *
 proc_create(char *name)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_create");
+
+        proc_t *pt = (proc_t *)kmalloc(sizeof(proc_t));
+        KASSERT(pt && "Unable to allocate memory to process.");
+
+        pt->p_pid = _proc_getid();
+
+        KASSERT(PID_IDLE != pt->p_pid || list_empty(&_proc_list));
+        dbg(DBG_PRINT, "GRADING1MW 2.a");
+        KASSERT(PID_INIT != pt->p_pid || PID_IDLE == curproc->p_pid);
+        dbg(DBG_PRINT, "GRADING1MW 2.a");
+
+        strcpy(pt->p_comm, name);
+        list_init(&(pt->p_threads));
+        list_init(&(pt->p_children));
+        pt->p_status = -1;
+        pt->p_state = PROC_RUNNING;
+
+        pt->p_pagedir = pt_create_pagedir();
+
+        list_init(&(p_list_link));
+        list_init(&(p_child_link));
+
         return NULL;
 }
 
