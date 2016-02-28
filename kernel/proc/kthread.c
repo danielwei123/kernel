@@ -105,32 +105,31 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         NOT_YET_IMPLEMENTED("PROCS: kthread_create");
 
-        //kthread * kthr = (kthread	*)kmalloc(sizeof(kthread_t));
-        //KASSERT();
-        //dbg();
-		//kthr->kt_kstack = alloc_stack();
-		//KASSERT()
-		//dbg();
-		
-		//kthr->kt_reval = -1;
-		//kthr->kt_proc = p;
-		//kthr->kt_state = KT_RUN;
-		
-		//context_t	newContext;
-		
-		//call to context_setup
-		//context_setup(&newContext, func, arg1, argc2, kthr->kt_kstack, sizeof(), p->p_pagedir);
-		
-		context same as bootstrap's context?
-		how to use kthread_func_t?
-		Ans: so basically setting the context also sets the procedure at a low level, sets esp eip.
-		
-		//add thread to proc's thread list
-		//list_tail(&(p->p_threads), kthr);
-		check syntax
-		
+        KASSERT(NULL != p);
+        dbg(DBG_PRINT, "GRADING1MW 3.a");
+        kthread_t * kthr = (kthread	*)kmalloc(sizeof(kthread_t));
+        KASSERT(kthr && "Unable to allocate memory for thread.");
 
-        return NULL;
+		kthr->kt_kstack = alloc_stack();
+		KASSERT(kthr->kt_kstack && "Unable to allocate thread stack.");
+
+		kthr->kt_reval = -1; //Doubtful
+		kthr->kt_proc = p;
+		kthr->kt_state = KT_RUN;
+
+		context_t	thread_context;
+
+		//call to context_setup
+		context_setup(&thread_context, func, arg1, argc2, kthr->kt_kstack, sizeof(kthr->kt_kstack), p->p_pagedir);
+
+		//context same as bootstrap's context?
+		//how to use kthread_func_t?
+		//Ans: so basically setting the context also sets the procedure at a low level, sets esp eip.
+
+		//add thread to proc's thread list
+		list_insert_tail(p->p_threads, kthr);
+
+        return kthr;
 }
 
 /*
