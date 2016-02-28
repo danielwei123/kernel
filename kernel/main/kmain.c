@@ -180,20 +180,20 @@ bootstrap(int arg1, void *arg2)
         /* necessary to finalize page table information */
         pt_template_init();
 
-        NOT_YET_IMPLEMENTED("PROCS: bootstrap");
+        /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 
         proc_t *idle_proc = proc_create("idleproc");
-        KASSERT(idle_proc && "Unable to create idle process.");
-        dbg(DBG_PRINT, "GRADING1MW 1.a");
+        KASSERT(idle_proc && "Unable to create idle process.\n");
+        dbg(DBG_PRINT, "GRADING1MW 1.a\n");
         curproc = idle_proc;
 
         KASSERT(PID_IDLE == idle_proc->p_pid);
-        dbg(DBG_PRINT, "GRADING1MW 1.a");
+        dbg(DBG_PRINT, "GRADING1MW 1.a\n");
 
 
         kthread_t *idle_thread = kthread_create(idle_proc, idleproc_run, arg1, arg2);
-        KASSERT(idle_thread && "Unable to create idle thread.");
-        dbg(DBG_PRINT, "GRADING1MW 1.a");
+        KASSERT(idle_thread && "Unable to create idle thread.\n");
+        dbg(DBG_PRINT, "GRADING1MW 1.a\n");
         curthr = idle_thread;
 
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
@@ -220,6 +220,8 @@ idleproc_run(int arg1, void *arg2)
 
         /* create init proc */
         kthread_t *initthr = initproc_create();
+        /* Doubtful might have to set arg1 as 0 and arg2 as NULL */
+        /*context_setup(&(initthr->kt_ctx), initproc_run, arg1, arg2, initthr->kt_kstack, sizeof(initthr->kt_kstack), initthr->kt_proc->p_pagedir);*/
         init_call_all();
         GDB_CALL_HOOK(initialized);
 
@@ -289,22 +291,25 @@ idleproc_run(int arg1, void *arg2)
 static kthread_t *
 initproc_create(void)
 {
-        NOT_YET_IMPLEMENTED("PROCS: initproc_create");
+        /*NOT_YET_IMPLEMENTED("PROCS: initproc_create");*/
 
         proc_t *init_proc = proc_create("init");
-        KASSERT(init_proc && "Unable to create init process.");
-        dbg(DBG_PRINT, "GRADING1MW 1.b");
+        KASSERT(init_proc && "Unable to create init process.\n");
+        dbg(DBG_PRINT, "GRADING1MW 1.b\n");
 
-        curproc = init_proc; // Doubtful
+        /* Doubtful */
+        curproc = init_proc;
 
         KASSERT(PID_INIT == init_proc->p_pid);
-        dbg(DBG_PRINT, "GRADING1MW 1.b");
+        dbg(DBG_PRINT, "GRADING1MW 1.b\n");
 
-        kthread_t *init_thread = kthread_create(init_proc, initproc_run, arg1, arg2);
-        KASSERT(init_thread && "Unable to create idle thread.");
-        dbg(DBG_PRINT, "GRADING1MW 1.b");
+        /* arg1 set to 0 and arg2 set to NULL */
+        kthread_t *init_thread = kthread_create(init_proc, initproc_run, 0, NULL);
+        KASSERT(init_thread && "Unable to create init thread.\n");
+        dbg(DBG_PRINT, "GRADING1MW 1.b\n");
 
-        curthr = init_thread; // Doubtful
+        /* Doubtful */
+        curthr = init_thread;
 
         return init_thread;
 }
