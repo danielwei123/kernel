@@ -34,6 +34,11 @@ void
 kmutex_init(kmutex_t *mtx)
 {
         NOT_YET_IMPLEMENTED("PROCS: kmutex_init");
+        
+        /*init the ktqueue list
+        set the kthread struct to NULLs.
+
+		*/
 }
 
 /*
@@ -46,6 +51,16 @@ void
 kmutex_lock(kmutex_t *mtx)
 {
         NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");
+        /*
+        	if(mtx->stuff != NULL){
+        	
+        		enqueue(mutex_queue, curThr);
+        	}
+        	else
+        	{
+        		mtx->stuff = curThr->stuff;
+        	}
+        */
 }
 
 /*
@@ -77,4 +92,18 @@ void
 kmutex_unlock(kmutex_t *mtx)
 {
         NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");
+        /*
+        	if(list_empty(ktqueue_t)){
+ 				
+ 				mtx->stuff = NULLs;       	
+        	}
+        	else{
+        		
+        		dequeuedObj = dequeue(ktqueue_t);
+        		
+        		enqueue(runQueue, dequeuedObj);	
+        		
+        		mtx->stuff = dequeuedObj;
+        	}
+        */
 }
