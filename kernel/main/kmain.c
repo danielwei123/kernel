@@ -290,7 +290,23 @@ static kthread_t *
 initproc_create(void)
 {
         NOT_YET_IMPLEMENTED("PROCS: initproc_create");
-        return NULL;
+
+        proc_t *init_proc = proc_create("init");
+        KASSERT(init_proc && "Unable to create init process.");
+        dbg(DBG_PRINT, "GRADING1MW 1.b");
+
+        curproc = init_proc; // Doubtful
+
+        KASSERT(PID_INIT == init_proc->p_pid);
+        dbg(DBG_PRINT, "GRADING1MW 1.b");
+
+        kthread_t *init_thread = kthread_create(init_proc, initproc_run, arg1, arg2);
+        KASSERT(init_thread && "Unable to create idle thread.");
+        dbg(DBG_PRINT, "GRADING1MW 1.b");
+
+        curthr = init_thread; // Doubtful
+
+        return init_thread;
 }
 
 /**
