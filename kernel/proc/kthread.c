@@ -109,8 +109,8 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         dbg(DBG_PRINT, "GRADING1MW 3.a\n");
         slab_allocator_t *kthr_allocator = NULL;
         kthr_allocator = slab_allocator_create("thread", sizeof(kthread_t));
-        KASSERT(pt_allocator && "Unable to allocate memory to thread slab.");
-        
+        KASSERT(kthr_allocator && "Unable to allocate memory to thread slab.");
+
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthr_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
 
