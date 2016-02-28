@@ -141,7 +141,7 @@ proc_create(char *name)
         list_init(&(p_list_link));
         list_init(&(p_child_link));
 
-        return NULL;
+        return pt;
 }
 
 /**
