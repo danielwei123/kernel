@@ -120,7 +120,12 @@ proc_create(char *name)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_create");
 
-        proc_t *pt = (proc_t *)kmalloc(sizeof(proc_t));
+        slab_allocator_t *pt_allocator = NULL;
+        pt_allocator = slab_allocator_create("proc", sizeof(proc_t));
+        KASSERT(pt_allocator && "Unable to allocate memory to process slab.");
+
+        proc_t *pt = (proc_t *)pt_allocator->slab.s_addr;
+        //proc_t *pt = (proc_t *)kmalloc(sizeof(proc_t));
         KASSERT(pt && "Unable to allocate memory to process.");
 
         pt->p_pid = _proc_getid();
