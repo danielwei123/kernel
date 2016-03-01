@@ -119,6 +119,14 @@ void
 sched_sleep_on(ktqueue_t *q)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");
+
+        curthr->kt_state = KT_SLEEP;
+        ktqueue_enqueue(q, curthr);
+
+        curthr = ktqueue_dequeue(&kt_runq);
+
+        /*Need to figure out wakeup on and broadcast_on check
+        */
 }
 
 
@@ -133,13 +141,43 @@ int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");
-        return 0;
+
+        curthr->kt_state = KT_SLEEP_CANCELLABLE;
+
+        int return_value = 0;
+
+        if(curthr->kt_cancelled == 1){
+            return_value = EINTR;
+        }
+
+        /*Assuming if ENTER is not returned the thread need to be enqueued in q */
+        else{
+            ktqueue_enqueue(q, curthr);
+        }
+
+        curthr = ktqueue_dequeue(&kt_runq);
+
+        /*Need to figure out wakeup on and broadcast_on check
+        */
+        return return_value;
 }
 
 kthread_t *
 sched_wakeup_on(ktqueue_t *q)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");
+
+        if(sched_queue_empty(q)){
+            return NULL;
+        }
+
+        else{
+            kthread_t *temp_thr = ktqueue_dequeue(q);
+            temp_thr->kt_state = KT_RUN;
+            ktqueue_enqueue(&kt_runq, temp_thr);
+            return temp_thr;
+        }
+
         return NULL;
 }
 
@@ -147,6 +185,13 @@ void
 sched_broadcast_on(ktqueue_t *q)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on");
+
+        while(!sched_queue_empty(q)){
+            kthread_t *temp_thr = ktqueue_dequeue(q);
+            temp_thr->kt_state = KT_RUN;
+            ktqueue_enqueue(&kt_runq, temp_thr);
+        }
+
 }
 
 /*
@@ -162,6 +207,13 @@ void
 sched_cancel(struct kthread *kthr)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_cancel");
+
+        kthr->kt_cancelled = 1;
+
+        if(kthr->kt_state == KT_SLEEP_CANCELLABLE){
+            ktqueue_remove(kthr->kt_wchan, kthr);
+            ktqueue_enqueue(&kt_runq, kthr);
+        }
 }
 
 /*
@@ -204,6 +256,29 @@ void
 sched_switch(void)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_switch");
+
+        uint8_t oldIPL;
+        oldIPL = intr_getipl();
+
+        intr_setipl(IPL_HIGH);
+
+        while(sched_queue_empty(&kt_runq)){
+            intr_setipl(IPL_LOW);
+            intr_wait();
+            intr_setipl(IPL_HIGH);
+        }
+
+        kthread_t *old_thread = curthr;
+        kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
+
+        context_switch(&(old_thread->kt_ctx), &(new_thread->kt_ctx));
+
+        curthr = new_thread;
+        curproc = curthr->kt_proc;
+
+        intr_setipl(oldIPL);
+
+        /*Understand the meaning of last Note : The IPL is process specific*/
 }
 
 /*
@@ -223,4 +298,14 @@ void
 sched_make_runnable(kthread_t *thr)
 {
         NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");
+
+        uint8_t oldIPL;
+        oldIPL = intr_getipl();
+
+        intr_setipl(IPL_HIGH);
+
+        thr->kt_state = KT_RUN;
+        ktqueue_enqueue(&kt_runq, thr);
+
+        intr_setipl(oldIPL);
 }
