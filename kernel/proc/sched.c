@@ -49,7 +49,7 @@ static void
 ktqueue_enqueue(ktqueue_t *q, kthread_t *thr)
 {
 
-		dbg(DBG_PRINT, "kt_wchan: %ld, %d, %s-QUEUE LEN: \n", thr->kt_wchan, thr->kt_proc->p_pid, thr->kt_proc->p_comm);
+		/*dbg(DBG_PRINT, "kt_wchan: %ld, %d, %s-QUEUE LEN: \n", thr->kt_wchan, thr->kt_proc->p_pid, thr->kt_proc->p_comm);*/
         KASSERT(!thr->kt_wchan);
         list_insert_head(&q->tq_list, &thr->kt_qlink);
         thr->kt_wchan = q;
@@ -124,10 +124,10 @@ sched_sleep_on(ktqueue_t *q)
 		dbg(DBG_PRINT, "from sleep on\n");
         curthr->kt_state = KT_SLEEP;
         ktqueue_enqueue(q, curthr);
-        
+
 
         sched_switch();
-        
+
         dbg(DBG_PRINT, "after sleep on\n");
         /*Need to figure out wakeup on and broadcast_on check
         */
@@ -145,28 +145,29 @@ int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
-
+        dbg(DBG_PRINT, "In cancellable sleep.\n");
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
 
         int return_value = 0;
-		ktqueue_enqueue(q, curthr);
-       	sched_switch();
-       	
-       	
+
+
+
         if(curthr->kt_cancelled == 1){
-            return_value = EINTR;
-            
+            return_value = -EINTR;
+
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting return_value to EINTR.\n");
         }
 
         /*Assuming if ENTER is not returned the thread need to be enqueued in q */
         else{
         	dbg(DBG_PRINT, "from sleep cancellable \n");
-            
+            ktqueue_enqueue(q, curthr);
+            dbg(DBG_PRINT, "before switch \n");
+            sched_switch();
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : enqueuing curthr to q.\n");
         }
 
- 
+
         dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting curthr to thread from runq.\n");
         /*Need to figure out wakeup on and broadcast_on check
         */
@@ -279,7 +280,7 @@ sched_switch(void)
 
         while(sched_queue_empty(&kt_runq)){
 
-        	dbg(DBG_PRINT, "\tinside while\n");			
+        	dbg(DBG_PRINT, "\tinside while\n");
             intr_setipl(IPL_LOW);
             intr_wait();
             intr_setipl(IPL_HIGH);
@@ -287,17 +288,18 @@ sched_switch(void)
 
 
 			dbg(DBG_PRINT, "\tafter while\n");
-	
+
         kthread_t *old_thread = curthr;
         kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
-               kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
+               /*new_thread = ktqueue_dequeue(&kt_runq);*/
 			dbg(DBG_PRINT, "\tbeofre context _switch- new thr: %s\n", new_thread->kt_proc->p_comm);
-			
-        context_switch(&(old_thread->kt_ctx), &(new_thread->kt_ctx));
-        dbg(DBG_PRINT, "In sched_switch : called context_switch.\n");
         curthr = new_thread;
         curproc = curthr->kt_proc;
         curthr->kt_state = KT_RUN;
+        context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
+        dbg(DBG_PRINT, "In sched_switch : called context_switch.\n");
+
+
         dbg(DBG_PRINT, "In sched_switch : Setting curthr and curproc.\n");
         intr_setipl(oldIPL);
 
@@ -325,7 +327,7 @@ sched_make_runnable(kthread_t *thr)
         uint8_t oldIPL;
         oldIPL = intr_getipl();
         dbg(DBG_PRINT, "from sched make runnable \n");
-        
+
         intr_setipl(IPL_HIGH);
 
         thr->kt_state = KT_RUN;
