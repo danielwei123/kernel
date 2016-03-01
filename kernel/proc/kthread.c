@@ -146,6 +146,22 @@ void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
         NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");
+        
+        if(kthr == curthr)
+        {
+        	kthread_exit(retval);	
+        }
+        else
+        {
+        	kthr->kt_cancelled = 1;
+        	kthr->kt_retval = retval;
+        }
+        
+        if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
+        {
+        	sched_wakeup_on(kthr->wchan);
+        }
+        
 }
 
 /*
