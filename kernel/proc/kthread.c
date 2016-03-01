@@ -107,33 +107,19 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 
         KASSERT(NULL != p);
         dbg(DBG_PRINT, "GRADING1MW 3.a\n");
-        slab_allocator_t *kthr_allocator = NULL;
-        kthr_allocator = slab_allocator_create("thread", sizeof(kthread_t));
-        KASSERT(kthr_allocator && "Unable to allocate memory to thread slab.");
 
-        kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthr_allocator);
+        kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
 
 		kthr->kt_kstack = alloc_stack();
 		KASSERT(kthr->kt_kstack && "Unable to allocate thread stack.\n");
 
-        /* Doubtful */
-		kthr->kt_retval = -1;
 		kthr->kt_proc = p;
-		kthr->kt_state = KT_RUN;
+		kthr->kt_state = KT_NO_STATE; /*Doubtful*/
 
-		context_t	thread_context;
+		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
 
-		/* call to context_setup */
-		context_setup(&thread_context, func, (int)arg1, arg2, kthr->kt_kstack, sizeof(kthr->kt_kstack), p->p_pagedir);
-
-		/*context same as bootstrap's context?
-		//how to use kthread_func_t?
-		//Ans: so basically setting the context also sets the procedure at a low level, sets esp eip.
-
-		//add thread to proc's thread list
-        //Doubtful
-        */
+        list_link_init(&(kthr->kt_plink));
 		list_insert_tail(&(p->p_threads), &(kthr->kt_plink));
 
         return kthr;
