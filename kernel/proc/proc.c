@@ -119,7 +119,7 @@ proc_t *
 proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
-        
+
         dbg(DBG_PRINT, "\t\tinside proc_create\n");
 
         proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
@@ -136,15 +136,15 @@ proc_create(char *name)
         list_init(&(pt->p_threads));
         list_init(&(pt->p_children));
         sched_queue_init(&(pt->p_wait));
-        
+
         pt->p_state = PROC_RUNNING;
 		pt->p_pproc = curproc;
-		
+
         pt->p_pagedir = pt_create_pagedir();
         KASSERT(pt->p_pagedir != NULL &&"page dir failing");
 
         dbg(DBG_PRINT, "\t\tpage dir worked\n");
-        
+
         list_link_init(&(pt->p_list_link));
          dbg(DBG_PRINT, "\t\tinit list link\n");
         list_link_init(&(pt->p_child_link));
@@ -153,24 +153,24 @@ proc_create(char *name)
 		/* we have to initialize status*/
 		pt->p_status = -1;
         dbg(DBG_PRINT, "\t\tbefore if\n");
-        		
+
 		if( pt->p_pid != 0)
 		{
 			list_insert_tail(&(curproc->p_children), &(pt->p_child_link));
 			dbg(DBG_PRINT, "\t\tinserting in curporc's children\n");
 		}
-		
+
 		dbg(DBG_PRINT, "\t\tesle part\n");
 
-		
-		
+
+
 		/*insert this proc into proc queue*/
 		list_insert_tail(&_proc_list, &(pt->p_list_link));
 
 		if(pt->p_pid == PID_INIT){
 			proc_initproc = pt;
 		}
-		
+
         dbg(DBG_PRINT, "\t\treturn proc_create\n");
         return pt;
 }
@@ -246,13 +246,13 @@ void
 proc_thread_exited(void *retval)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
-        
+
         sched_wakeup_on(&(curproc->p_pproc->p_wait));
-        
+
         proc_cleanup((int*)retval);
-        
+
         sched_switch();
-        
+
 }
 
 /* If pid is -1 dispose of one of the exited children of the current
@@ -339,7 +339,7 @@ do_waitpid(pid_t pid, int options, int *status)
 
 			pt_destroy_pagedir(pt->p_pagedir);
 
-			
+
 
 			/*slab_obj_free(proc_allocator, pt);*/
 
@@ -419,6 +419,16 @@ void
 do_exit(int status)
 {
         NOT_YET_IMPLEMENTED("PROCS: do_exit");
+
+        list_link_t *link;
+        kthread_t *thread;
+        for(link = curproc->p_threads.l_next ; link != &(curproc->p_threads); link = link->l_next){
+            thread = list_item(link, kthread_t, kt_plink);
+            if(thread != curthr){
+                kthread_cancel(thread, 0); /*todo : Not sure about retval*/
+            }
+        }
+        kthread_exit((void *)status);
 }
 
 size_t
