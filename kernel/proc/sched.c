@@ -173,8 +173,7 @@ sched_wakeup_on(ktqueue_t *q)
 
         else{
             kthread_t *temp_thr = ktqueue_dequeue(q);
-            temp_thr->kt_state = KT_RUN;
-            ktqueue_enqueue(&kt_runq, temp_thr);
+            sched_make_runnable(temp_thr);
             return temp_thr;
         }
 
@@ -188,8 +187,7 @@ sched_broadcast_on(ktqueue_t *q)
 
         while(!sched_queue_empty(q)){
             kthread_t *temp_thr = ktqueue_dequeue(q);
-            temp_thr->kt_state = KT_RUN;
-            ktqueue_enqueue(&kt_runq, temp_thr);
+            sched_make_runnable(temp_thr);
         }
 
 }
@@ -212,7 +210,7 @@ sched_cancel(struct kthread *kthr)
 
         if(kthr->kt_state == KT_SLEEP_CANCELLABLE){
             ktqueue_remove(kthr->kt_wchan, kthr);
-            ktqueue_enqueue(&kt_runq, kthr);
+            sched_make_runnable(kthr);
         }
 }
 
