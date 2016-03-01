@@ -116,6 +116,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 
 		kthr->kt_proc = p;
 		kthr->kt_state = KT_NO_STATE; /*Doubtful*/
+        kthr->kt_wchan = NULL;
 
 		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
 

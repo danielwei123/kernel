@@ -242,7 +242,7 @@ proc_thread_exited(void *retval)
 pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
-        NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
+        /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
 
 
 		list_link_t	*link;
