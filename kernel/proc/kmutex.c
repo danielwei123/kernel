@@ -33,12 +33,12 @@
 void
 kmutex_init(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_init");
-        
-        /*init the ktqueue list
-        set the kthread struct to NULLs.
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
 
-		*/
+		list_init(&(mtx->km_waitq.tq_list));
+		mtx->km_waitq.tq_size = 0;
+		
+		mtx->km_holder = NULL;		
 }
 
 /*
@@ -50,17 +50,20 @@ kmutex_init(kmutex_t *mtx)
 void
 kmutex_lock(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");
-        /*
-        	if(mtx->stuff != NULL){
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");*/
+        
+        	if(mtx->km_holder != NULL){
         	
-        		enqueue(mutex_queue, curThr);
+        		curthr->kt_state = KT_SLEEP;
+        		list_insert_tail(&(mtx->km_waitq.tq_list), &(curthr->kt_qlink));
+        		mtx->km_waitq.tq_size++;
+        		/*thread_switch();*/
         	}
         	else
         	{
-        		mtx->stuff = curThr->stuff;
+        		mtx->km_holder = curthr;
         	}
-        */
+        
 }
 
 /*
@@ -70,7 +73,20 @@ kmutex_lock(kmutex_t *mtx)
 int
 kmutex_lock_cancellable(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable");
+        NOT_YET_IMPLEMENTED("PROCS: todo: kmutex_lock_cancellable");
+                
+        if(mtx->km_holder != NULL){
+        	
+        		curthr->kt_state = KT_SLEEP_CANCELLABLE;
+				list_insert_tail(&(mtx->km_waitq.tq_list), &(curthr->kt_qlink));
+        		mtx->km_waitq.tq_size++;
+        		/*todo: thread_switch();*/
+        }
+        else
+        {
+        		mtx->km_holder = curthr;
+        
+        }
         return 0;
 }
 
@@ -91,19 +107,26 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 void
 kmutex_unlock(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");
-        /*
-        	if(list_empty(ktqueue_t)){
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/
+        
+        	kthread_t	*dequeuedObj = NULL;
+        	list_link_t	link ;
+        
+        	if(list_empty(&(mtx->km_waitq.tq_list))){
  				
- 				mtx->stuff = NULLs;       	
+ 				mtx->km_holder = NULL;  
+ 				mtx->km_waitq.tq_size = 0;     	
         	}
-        	else{
+        	else{	
         		
-        		dequeuedObj = dequeue(ktqueue_t);
+        		(mtx->km_waitq).tq_size = (mtx->km_waitq.tq_size) - 1;
+ 	       		/*todo: add to runnable queue
+        		enqueue(runQueue, dequeuedObj);*/
         		
-        		enqueue(runQueue, dequeuedObj);	
-        		
-        		mtx->stuff = dequeuedObj;
+        		dequeuedObj = list_head(&(mtx->km_waitq.tq_list), kthread_t, kt_qlink);
+        		list_remove_head(&(mtx->km_waitq.tq_list));
+        		/*todo: dequeuedObj is local, segementation fault may occur*/
+        		mtx->km_holder = dequeuedObj;
         	}
-        */
+        
 }
