@@ -110,18 +110,23 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
+        dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread.\n");
 
 		kthr->kt_kstack = alloc_stack();
 		KASSERT(kthr->kt_kstack && "Unable to allocate thread stack.\n");
+        dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread thread.\n");
 
 		kthr->kt_proc = p;
 		kthr->kt_state = KT_NO_STATE; /*Doubtful*/
         kthr->kt_wchan = NULL;
 
 		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
+        dbg(DBG_PRINT, "In kthread_create : Context setup done.\n");
 
         list_link_init(&(kthr->kt_plink));
+        dbg(DBG_PRINT, "In kthread_create : Initialized kthread's kt_plink.\n");
 		list_insert_tail(&(p->p_threads), &(kthr->kt_plink));
+        dbg(DBG_PRINT, "In kthread_create : Inserted to process's p_threads.\n");
 
         return kthr;
 }

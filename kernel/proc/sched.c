@@ -122,8 +122,10 @@ sched_sleep_on(ktqueue_t *q)
 
         curthr->kt_state = KT_SLEEP;
         ktqueue_enqueue(q, curthr);
+        dbg(DBG_PRINT, "In sched_sleep_on : enqueuing curthr in q.\n");
 
         curthr = ktqueue_dequeue(&kt_runq);
+        dbg(DBG_PRINT, "In sched_sleep_on : Setting curthr to thread from runq.\n");
 
         /*Need to figure out wakeup on and broadcast_on check
         */
@@ -148,15 +150,17 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 
         if(curthr->kt_cancelled == 1){
             return_value = EINTR;
+            dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting return_value to EINTR.\n");
         }
 
         /*Assuming if ENTER is not returned the thread need to be enqueued in q */
         else{
             ktqueue_enqueue(q, curthr);
+            dbg(DBG_PRINT, "In sched_cancellable_sleep_on : enqueuing curthr to q.\n");
         }
 
         curthr = ktqueue_dequeue(&kt_runq);
-
+        dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting curthr to thread from runq.\n");
         /*Need to figure out wakeup on and broadcast_on check
         */
         return return_value;
@@ -168,12 +172,14 @@ sched_wakeup_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
 
         if(sched_queue_empty(q)){
+            dbg(DBG_PRINT, "In sched_wakeup_on : q empty.\n");
             return NULL;
         }
 
         else{
             kthread_t *temp_thr = ktqueue_dequeue(q);
             sched_make_runnable(temp_thr);
+            dbg(DBG_PRINT, "In sched_wakeup_on : called make runnable.\n");
             return temp_thr;
         }
 
@@ -188,6 +194,7 @@ sched_broadcast_on(ktqueue_t *q)
         while(!sched_queue_empty(q)){
             kthread_t *temp_thr = ktqueue_dequeue(q);
             sched_make_runnable(temp_thr);
+            dbg(DBG_PRINT, "In sched_broadcast_on : called make runnable.\n");
         }
 
 }
@@ -210,7 +217,9 @@ sched_cancel(struct kthread *kthr)
 
         if(kthr->kt_state == KT_SLEEP_CANCELLABLE){
             ktqueue_remove(kthr->kt_wchan, kthr);
+            dbg(DBG_PRINT, "In sched_cancel : removing from kt_wchan.\n");
             sched_make_runnable(kthr);
+            dbg(DBG_PRINT, "In sched_cancel : called make runnable.\n");
         }
 }
 
@@ -270,10 +279,10 @@ sched_switch(void)
         kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
 
         context_switch(&(old_thread->kt_ctx), &(new_thread->kt_ctx));
-
+        dbg(DBG_PRINT, "In sched_switch : called context_switch.\n");
         curthr = new_thread;
         curproc = curthr->kt_proc;
-
+        dbg(DBG_PRINT, "In sched_switch : Setting curthr and curproc.\n");
         intr_setipl(oldIPL);
 
         /*Understand the meaning of last Note : The IPL is process specific*/
@@ -304,6 +313,6 @@ sched_make_runnable(kthread_t *thr)
 
         thr->kt_state = KT_RUN;
         ktqueue_enqueue(&kt_runq, thr);
-
+        dbg(DBG_PRINT, "In sched_make_runnable : enqueueing thread in runq.\n");
         intr_setipl(oldIPL);
 }
