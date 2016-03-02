@@ -182,7 +182,7 @@ bootstrap(int arg1, void *arg2)
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 
-        proc_t *idle_proc = proc_create("idleproc");
+        proc_t *idle_proc = proc_create("idle_proc");
         KASSERT(idle_proc && "Unable to create idle process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.a\n");
         curproc = idle_proc;
@@ -195,6 +195,8 @@ bootstrap(int arg1, void *arg2)
         KASSERT(idle_thread && "Unable to create idle thread.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.a\n");
         curthr = idle_thread;
+
+        context_make_active(&(idle_thread->kt_ctx));
 
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
         return NULL;
