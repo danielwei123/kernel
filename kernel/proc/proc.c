@@ -147,6 +147,10 @@ proc_create(char *name)
 		/*insert this proc into proc queue*/
 		list_insert_tail(&_proc_list, &(pt->p_list_link));
 		
+		if(pt->p_pid == PID_INIT){
+			proc_initproc = pt;
+		}
+		
         return pt;
 }
 
