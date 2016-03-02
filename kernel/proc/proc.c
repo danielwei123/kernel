@@ -143,7 +143,10 @@ proc_create(char *name)
 		/* we have to initialize status
 		pt->p_status
 		*/
-        
+		
+		/*insert this proc into proc queue*/
+		list_insert_tail(&_proc_list, &(pt->p_list_link));
+		
         return pt;
 }
 
