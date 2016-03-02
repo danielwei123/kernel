@@ -295,12 +295,9 @@ initproc_create(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: initproc_create");*/
 
-        proc_t *init_proc = proc_create("init");
+        proc_t *init_proc = proc_create("init_proc");
         KASSERT(init_proc && "Unable to create init process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.b\n");
-
-        /* Doubtful */
-        curproc = init_proc;
 
         KASSERT(PID_INIT == init_proc->p_pid);
         dbg(DBG_PRINT, "GRADING1MW 1.b\n");
@@ -309,9 +306,6 @@ initproc_create(void)
         kthread_t *init_thread = kthread_create(init_proc, initproc_run, 0, NULL);
         KASSERT(init_thread && "Unable to create init thread.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.b\n");
-
-        /* Doubtful */
-        curthr = init_thread;
 
         return init_thread;
 }
