@@ -202,6 +202,9 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
+		curproc->p_status = status;
+		curproc->p_state = PROC_DEAD;
+		list_remove(&(curproc->p_list_link));
         NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");
 }
 
@@ -243,6 +246,9 @@ void
 proc_thread_exited(void *retval)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
+        
+        proc_cleanup((int*)retval);
+        
 }
 
 /* If pid is -1 dispose of one of the exited children of the current
