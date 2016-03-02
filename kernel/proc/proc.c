@@ -119,6 +119,8 @@ proc_t *
 proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
+        
+        dbg(DBG_PRINT, "\t\tinside proc_create\n");
 
         proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
         KASSERT(pt && "Unable to allocate memory to process.\n");
@@ -136,6 +138,7 @@ proc_create(char *name)
         pt->p_state = PROC_RUNNING;
 
         pt->p_pagedir = pt_create_pagedir();
+        KASSERT(pt->p_pagedir != NULL &&"page dir failing");
 
         list_link_init(&(pt->p_list_link));
         list_link_init(&(pt->p_child_link));
@@ -253,6 +256,10 @@ do_waitpid(pid_t pid, int options, int *status)
 		int			dead_child = 0;
 		int			return_value = 0;
 
+
+
+		dbg(DBG_PRINT, "inside do_waitpid\n");
+
 		if(pid == -1)
 		{
 
@@ -359,7 +366,7 @@ do_waitpid(pid_t pid, int options, int *status)
 
         list_remove(&(pt->p_child_link));
 		list_remove(&(pt->p_list_link));
-
+		*status = pt->p_status;
 		pt_destroy_pagedir(pt->p_pagedir);
 
 		return_value = pt->p_pid;

@@ -182,6 +182,8 @@ bootstrap(int arg1, void *arg2)
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 
+		
+
         proc_t *idle_proc = proc_create("idle_proc");
         KASSERT(idle_proc && "Unable to create idle process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.a\n");
@@ -196,6 +198,8 @@ bootstrap(int arg1, void *arg2)
         dbg(DBG_PRINT, "GRADING1MW 1.a\n");
         curthr = idle_thread;
 
+
+        dbg(DBG_PRINT, "context_main_active\n");
         context_make_active(&(idle_thread->kt_ctx));
 
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
@@ -220,10 +224,14 @@ idleproc_run(int arg1, void *arg2)
         int status;
         pid_t child;
 
+        dbg(DBG_PRINT, "inside idleproc run\n");
+
         /* create init proc */
         kthread_t *initthr = initproc_create();
         /* Doubtful might have to set arg1 as 0 and arg2 as NULL */
         /*context_setup(&(initthr->kt_ctx), initproc_run, arg1, arg2, initthr->kt_kstack, sizeof(initthr->kt_kstack), initthr->kt_proc->p_pagedir);*/
+        
+        
         init_call_all();
         GDB_CALL_HOOK(initialized);
 
@@ -298,6 +306,8 @@ initproc_create(void)
         proc_t *init_proc = proc_create("init_proc");
         KASSERT(init_proc && "Unable to create init process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.b\n");
+        
+       	dbg(DBG_PRINT, "inside initproc_create\n");
 
         KASSERT(PID_INIT == init_proc->p_pid);
         dbg(DBG_PRINT, "GRADING1MW 1.b\n");
@@ -325,6 +335,8 @@ static void *
 initproc_run(int arg1, void *arg2)
 {
         NOT_YET_IMPLEMENTED("PROCS: initproc_run");
+        
+        dbg(DBG_PRINT, "inside initproc__run\n");
 
         return NULL;
 }
