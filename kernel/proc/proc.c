@@ -119,12 +119,8 @@ proc_t *
 proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
-
-        slab_allocator_t *pt_allocator = NULL;
-        pt_allocator = slab_allocator_create("proc", sizeof(proc_t));
-        KASSERT(pt_allocator && "Unable to allocate memory to process slab.");
-
-        proc_t *pt = (proc_t *)slab_obj_alloc(pt_allocator);
+        
+        proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
         KASSERT(pt && "Unable to allocate memory to process.\n");
 
         pt->p_pid = _proc_getid();
@@ -137,14 +133,17 @@ proc_create(char *name)
         strcpy(pt->p_comm, name);
         list_init(&(pt->p_threads));
         list_init(&(pt->p_children));
-        pt->p_status = -1;
         pt->p_state = PROC_RUNNING;
 
         pt->p_pagedir = pt_create_pagedir();
 
-        list_init(&(pt->p_list_link));
-        list_init(&(pt->p_child_link));
+        list_link_init(&(pt->p_list_link));
+        list_link_init(&(pt->p_child_link));
 
+		/* we have to initialize status
+		pt->p_status
+		*/
+        
         return pt;
 }
 
@@ -237,6 +236,14 @@ pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
         NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
+        
+        if(pid == -1){
+        
+        	
+        
+        }
+        
+        
         return 0;
 }
 
