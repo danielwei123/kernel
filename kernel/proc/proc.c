@@ -243,15 +243,132 @@ pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
         NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
+	
+	
+		list_link_t	*link;
+		proc_t		*pt = NULL;
+		thread_t	*thr = NULL;
+		
+		int			child_of_cur = 0;
+		int			dead_child = 0;
+		int			return_value = 0;
+	
+		if(pid == -1)
+		{
+		
+			/*remove this loop afterwards*/
+			do
+			{
+				for (link = curproc->p_children->l_next; link != curproc->p_children; link = link->l_next)
+        		{	
+
+					pt = list_item(link, proc_t, p_child_link);
+			
+        			if(pt->state == PROC_DEAD)
+        			{
+        				dead_child = 1;
+        				break;
+        			}
         
-        if(pid == -1){
-        
-        	
+        		}	
+        		
+        		if(dead_child == 0)
+        		{
+        			sched_sleep_on(&(curproc->p_wait));
+        		
+        		}
+			
+			}while(dead_child == 0);
+		
+			*status = pt->p_status;
+			/* if the proc has children assign them to init proc*/
+			
+			link = pt->p_thread->l_next;
+			
+			while( link != pt->p_threads)
+			{
+				
+				thr = list_item(link, thread_t, kt_plink);
+				
+				link = link->l_next;
+				
+				kthread_destroy(thr);
+			}
+			
+			
+			list_remove(pt->p_child_link);
+			list_remove(pt->p_list_link);
+			
+			pt_destroy_pagedir(pt->p_pagedir);
+			
+			return_value = pt->p_pid;
+			
+			slab_obj_free(proc_allocator, pt);
+			
+			return return_value;
+		}
+	
+		if(pid < -1 || pid == 0){
+			return	-ECHILD;
+		}
+		
+		if(options != 0){
+			return	-ECHILD;
+		}
+		
+		if(list_empty(&(curproc->p_children))){
+			return	-ECHILD;
+		}
+
+		
+	    for (link = curproc->p_children->l_next; link != curproc->p_children; link = link->l_next)
+        {
+			pt = list_item(link, proc_t, p_child_link);
+			
+        	if(pt->p_pid == pid)
+        	{
+        		child_of_cur = 1;
+        		break;
+        	}
         
         }
         
+        if(child_of_cur == 0)
+        {
+        	return	-ECHILD;
+        }
         
-        return 0;
+
+		for(link = curproc->p_children->l_next; link != curproc->p_children; link = link->l_next)
+		{
+				pt = list_item(link, proc_t, p_child_link);
+				
+				if(pt->p_pid == pid)
+				{
+					break;
+				}
+			
+
+		}
+        
+        while(pt->p_state != PROC_DEAD)
+        {
+        	sched_sleep_on(&(curproc->p_wait));
+        }
+        
+        
+        list_remove(pt->p_child_link);
+		list_remove(pt->p_list_link);
+			
+		pt_destroy_pagedir(pt->p_pagedir);
+			
+		return_value = pt->p_pid;
+			
+		slab_obj_free(proc_allocator, pt);
+			
+		return return_value;
+
+
 }
 
 /*
