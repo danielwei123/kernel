@@ -135,25 +135,43 @@ proc_create(char *name)
         strcpy(pt->p_comm, name);
         list_init(&(pt->p_threads));
         list_init(&(pt->p_children));
+        sched_queue_init(&(pt->p_wait));
+        
         pt->p_state = PROC_RUNNING;
-
+		pt->p_pproc = curproc;
+		
         pt->p_pagedir = pt_create_pagedir();
         KASSERT(pt->p_pagedir != NULL &&"page dir failing");
 
+        dbg(DBG_PRINT, "\t\tpage dir worked\n");
+        
         list_link_init(&(pt->p_list_link));
+         dbg(DBG_PRINT, "\t\tinit list link\n");
         list_link_init(&(pt->p_child_link));
 
-		/* we have to initialize status
-		pt->p_status
-		*/
+        dbg(DBG_PRINT, "\t\tinit child link\n");
+		/* we have to initialize status*/
+		pt->p_status = -1;
+        dbg(DBG_PRINT, "\t\tbefore if\n");
+        		
+		if( pt->p_pid != 0)
+		{
+			list_insert_head(&(curproc->p_children), &(pt->p_child_link));
+			dbg(DBG_PRINT, "\t\tinserting in curporc's children\n");
+		}
+		
+		dbg(DBG_PRINT, "\t\tesle part\n");
 
+		
+		
 		/*insert this proc into proc queue*/
-		list_insert_tail(&_proc_list, &(pt->p_list_link));
+		list_insert_head(&_proc_list, &(pt->p_list_link));
 
 		if(pt->p_pid == PID_INIT){
 			proc_initproc = pt;
 		}
-
+		
+        dbg(DBG_PRINT, "\t\treturn proc_create\n");
         return pt;
 }
 
@@ -262,7 +280,7 @@ do_waitpid(pid_t pid, int options, int *status)
 
 		if(pid == -1)
 		{
-
+			dbg(DBG_PRINT, "inside pid =-1\n");
 			/*remove this loop afterwards*/
 			do
 			{
@@ -281,6 +299,7 @@ do_waitpid(pid_t pid, int options, int *status)
 
         		if(dead_child == 0)
         		{
+        			dbg(DBG_PRINT, "\t\tinside dead_child = 0\n");
         			sched_sleep_on(&(curproc->p_wait));
 
         		}
@@ -291,7 +310,8 @@ do_waitpid(pid_t pid, int options, int *status)
 			/* if the proc has children assign them to init proc*/
 
 			link = pt->p_threads.l_next;
-
+        	dbg(DBG_PRINT, "\t\tcleanup = 0\n");
+			
 			while( link != &(pt->p_threads))
 			{
 

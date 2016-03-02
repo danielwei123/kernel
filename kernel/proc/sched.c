@@ -48,6 +48,8 @@ init_func(sched_init);
 static void
 ktqueue_enqueue(ktqueue_t *q, kthread_t *thr)
 {
+
+		dbg(DBG_PRINT, "kt_wchan: %ld, %d, %s\n", thr->kt_wchan, thr->kt_proc->p_pid, thr->kt_proc->p_comm);
         KASSERT(!thr->kt_wchan);
         list_insert_head(&q->tq_list, &thr->kt_qlink);
         thr->kt_wchan = q;
@@ -124,9 +126,9 @@ sched_sleep_on(ktqueue_t *q)
         ktqueue_enqueue(q, curthr);
         dbg(DBG_PRINT, "In sched_sleep_on : enqueuing curthr in q.\n");
 
-        curthr = ktqueue_dequeue(&kt_runq);
-        dbg(DBG_PRINT, "In sched_sleep_on : Setting curthr to thread from runq.\n");
-
+        sched_switch();
+        
+        dbg(DBG_PRINT, "after sleep on\n");
         /*Need to figure out wakeup on and broadcast_on check
         */
 }
@@ -265,6 +267,7 @@ sched_switch(void)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
 
         uint8_t oldIPL;
+        dbg(DBG_PRINT, "\tinside switch\n");
         oldIPL = intr_getipl();
 
         intr_setipl(IPL_HIGH);
@@ -282,6 +285,7 @@ sched_switch(void)
         dbg(DBG_PRINT, "In sched_switch : called context_switch.\n");
         curthr = new_thread;
         curproc = curthr->kt_proc;
+        curthr->kt_state = KT_RUN;
         dbg(DBG_PRINT, "In sched_switch : Setting curthr and curproc.\n");
         intr_setipl(oldIPL);
 
