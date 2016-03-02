@@ -125,7 +125,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 
         list_link_init(&(kthr->kt_plink));
         dbg(DBG_PRINT, "In kthread_create : Initialized kthread's kt_plink.\n");
-		list_insert_head(&(p->p_threads), &(kthr->kt_plink));
+		list_insert_tail(&(p->p_threads), &(kthr->kt_plink));
         dbg(DBG_PRINT, "In kthread_create : Inserted to process's p_threads.\n");
 
         return kthr;

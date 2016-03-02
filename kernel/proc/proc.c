@@ -156,7 +156,7 @@ proc_create(char *name)
         		
 		if( pt->p_pid != 0)
 		{
-			list_insert_head(&(curproc->p_children), &(pt->p_child_link));
+			list_insert_tail(&(curproc->p_children), &(pt->p_child_link));
 			dbg(DBG_PRINT, "\t\tinserting in curporc's children\n");
 		}
 		
@@ -165,7 +165,7 @@ proc_create(char *name)
 		
 		
 		/*insert this proc into proc queue*/
-		list_insert_head(&_proc_list, &(pt->p_list_link));
+		list_insert_tail(&_proc_list, &(pt->p_list_link));
 
 		if(pt->p_pid == PID_INIT){
 			proc_initproc = pt;
