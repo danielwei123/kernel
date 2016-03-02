@@ -249,6 +249,8 @@ proc_thread_exited(void *retval)
         
         proc_cleanup((int*)retval);
         
+        sched_switch();
+        
 }
 
 /* If pid is -1 dispose of one of the exited children of the current

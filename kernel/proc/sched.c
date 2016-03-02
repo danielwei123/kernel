@@ -149,8 +149,10 @@ sched_cancellable_sleep_on(ktqueue_t *q)
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
 
         int return_value = 0;
-
-
+         dbg(DBG_PRINT, "from sleep cancellable \n");
+         ktqueue_enqueue(q, curthr);
+         dbg(DBG_PRINT, "before switch \n");
+         sched_switch();
 
         if(curthr->kt_cancelled == 1){
             return_value = -EINTR;
@@ -160,10 +162,8 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 
         /*Assuming if ENTER is not returned the thread need to be enqueued in q */
         else{
-        	dbg(DBG_PRINT, "from sleep cancellable \n");
-            ktqueue_enqueue(q, curthr);
-            dbg(DBG_PRINT, "before switch \n");
-            sched_switch();
+
+
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : enqueuing curthr to q.\n");
         }
 
@@ -292,7 +292,7 @@ sched_switch(void)
         kthread_t *old_thread = curthr;
         kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
                /*new_thread = ktqueue_dequeue(&kt_runq);*/
-			dbg(DBG_PRINT, "\tbeofre context _switch- new thr: %s\n", new_thread->kt_proc->p_comm);
+			dbg(DBG_PRINT, "\tbeofre context _switch- new thr: %s, old thr: %s\n", new_thread->kt_proc->p_comm, old_thread->kt_proc->p_comm);
         curthr = new_thread;
         curproc = curthr->kt_proc;
         curthr->kt_state = KT_RUN;
