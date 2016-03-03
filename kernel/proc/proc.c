@@ -247,6 +247,8 @@ proc_thread_exited(void *retval)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
         
+        sched_wakeup_on(&(curproc->p_pproc->p_wait));
+        
         proc_cleanup((int*)retval);
         
         sched_switch();
@@ -319,7 +321,8 @@ do_waitpid(pid_t pid, int options, int *status)
 
 			link = pt->p_threads.l_next;
         	dbg(DBG_PRINT, "\t\tcleanup = 0\n");
-			
+        	return_value = pt->p_pid;
+			/*
 			while( link != &(pt->p_threads))
 			{
 
@@ -336,9 +339,9 @@ do_waitpid(pid_t pid, int options, int *status)
 
 			pt_destroy_pagedir(pt->p_pagedir);
 
-			return_value = pt->p_pid;
+			
 
-			slab_obj_free(proc_allocator, pt);
+			/*slab_obj_free(proc_allocator, pt);*/
 
 			return return_value;
 		}
