@@ -157,9 +157,9 @@ kthread_cancel(kthread_t *kthr, void *retval)
         	kthr->kt_retval = retval;
         }
         
-        if(kthr->kt_cancellable == KT_SLEEP_CANCELLABLE)
+        if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
         {
-        /*	sched_wakeup_on();*/
+        	sched_wakeup_on(kthr->wchan);
         }
         
 }
