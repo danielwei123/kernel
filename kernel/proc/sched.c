@@ -49,7 +49,6 @@ static void
 ktqueue_enqueue(ktqueue_t *q, kthread_t *thr)
 {
 
-		/*dbg(DBG_PRINT, "kt_wchan: %ld, %d, %s-QUEUE LEN: \n", thr->kt_wchan, thr->kt_proc->p_pid, thr->kt_proc->p_comm);*/
         KASSERT(!thr->kt_wchan);
         list_insert_head(&q->tq_list, &thr->kt_qlink);
         thr->kt_wchan = q;
@@ -124,8 +123,7 @@ sched_sleep_on(ktqueue_t *q)
 		dbg(DBG_PRINT, "from sleep on\n");
         curthr->kt_state = KT_SLEEP;
         ktqueue_enqueue(q, curthr);
-
-
+        
         sched_switch();
 
         dbg(DBG_PRINT, "after sleep on\n");
@@ -149,21 +147,20 @@ sched_cancellable_sleep_on(ktqueue_t *q)
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
 
         int return_value = 0;
-         dbg(DBG_PRINT, "from sleep cancellable \n");
-         ktqueue_enqueue(q, curthr);
-         dbg(DBG_PRINT, "before switch \n");
-         sched_switch();
+        dbg(DBG_PRINT, "from sleep cancellable \n");
+        ktqueue_enqueue(q, curthr);
+        dbg(DBG_PRINT, "before switch \n");
+        
+        /*check kt-cancelled beofre going to sleep*/
+        sched_switch();
 
         if(curthr->kt_cancelled == 1){
             return_value = -EINTR;
 
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting return_value to EINTR.\n");
         }
-
-        /*Assuming if ENTER is not returned the thread need to be enqueued in q */
         else{
-
-
+        /*Assuming if ENTER is not returned the thread need to be enqueued in q */
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : enqueuing curthr to q.\n");
         }
 

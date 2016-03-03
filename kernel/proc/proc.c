@@ -205,6 +205,7 @@ proc_cleanup(int status)
 		curproc->p_status = status;
 		curproc->p_state = PROC_DEAD;
 		list_remove(&(curproc->p_list_link));
+		sched_wakeup_on(&(curproc->p_pproc->p_wait));
         NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");
 }
 
@@ -247,8 +248,6 @@ proc_thread_exited(void *retval)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
         
-        sched_wakeup_on(&(curproc->p_pproc->p_wait));
-        
         proc_cleanup((int*)retval);
         
         sched_switch();
@@ -283,8 +282,6 @@ do_waitpid(pid_t pid, int options, int *status)
 		int			child_of_cur = 0;
 		int			dead_child = 0;
 		int			return_value = 0;
-
-
 
 		dbg(DBG_PRINT, "inside do_waitpid\n");
 
@@ -322,7 +319,7 @@ do_waitpid(pid_t pid, int options, int *status)
 			link = pt->p_threads.l_next;
         	dbg(DBG_PRINT, "\t\tcleanup = 0\n");
         	return_value = pt->p_pid;
-			/*
+			
 			while( link != &(pt->p_threads))
 			{
 
@@ -333,15 +330,11 @@ do_waitpid(pid_t pid, int options, int *status)
 				kthread_destroy(thr);
 			}
 
-
 			list_remove(&(pt->p_child_link));
-			list_remove(&(pt->p_list_link));
 
 			pt_destroy_pagedir(pt->p_pagedir);
 
-			
-
-			/*slab_obj_free(proc_allocator, pt);*/
+			slab_obj_free(proc_allocator, pt);
 
 			return return_value;
 		}
@@ -368,15 +361,13 @@ do_waitpid(pid_t pid, int options, int *status)
         		child_of_cur = 1;
         		break;
         	}
-
         }
 
         if(child_of_cur == 0)
         {
         	return	-ECHILD;
         }
-
-
+        
 		for(link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
 		{
 				pt = list_item(link, proc_t, p_child_link);
