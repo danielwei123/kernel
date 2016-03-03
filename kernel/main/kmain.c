@@ -182,8 +182,6 @@ bootstrap(int arg1, void *arg2)
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 
-		
-
         proc_t *idle_proc = proc_create("idle_proc");
         KASSERT(idle_proc && "Unable to create idle process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.a\n");
@@ -228,10 +226,7 @@ idleproc_run(int arg1, void *arg2)
 
         /* create init proc */
         kthread_t *initthr = initproc_create();
-        /* Doubtful might have to set arg1 as 0 and arg2 as NULL */
-        /*context_setup(&(initthr->kt_ctx), initproc_run, arg1, arg2, initthr->kt_kstack, sizeof(initthr->kt_kstack), initthr->kt_proc->p_pagedir);*/
-        
-        
+
         init_call_all();
         GDB_CALL_HOOK(initialized);
 

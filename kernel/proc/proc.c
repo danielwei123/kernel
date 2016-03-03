@@ -202,11 +202,37 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
+	
+		list_link_t	*link;
+		proc_t		*pt;
+		int			x;
+		
+		link = curproc->p_children.l_next;
+		
+		while(link != &(curproc->p_children))
+		{
+			pt = list_item(link, proc_t, p_child_link);
+			link = link->l_next;
+			
+			if(curproc == proc_initproc)
+			{
+				do_waitpid(pt->p_pid, 0, &x);	
+			
+			}
+			else
+			{
+				list_remove(&(pt->p_child_link));
+				list_insert_tail(&(proc_initproc->p_children), &(pt->p_child_link));
+				pt->p_pproc = proc_initproc;
+			}
+		
+		}
+
 		curproc->p_status = status;
 		curproc->p_state = PROC_DEAD;
 		list_remove(&(curproc->p_list_link));
 		sched_wakeup_on(&(curproc->p_pproc->p_wait));
-        NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");
+       /* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
 }
 
 /*
@@ -221,6 +247,27 @@ void
 proc_kill(proc_t *p, int status)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_kill");
+        
+        list_link_t	*link;
+        kthread_t	*thr;
+        
+        
+        if(p == curproc)
+        {
+        	do_exit(status);
+        	
+        	dbg(DBG_PRINT, "\treturned after do_exit\n");
+        
+        }
+        
+        link = p->p_threads.l_next;
+        
+        while(link != &(p->p_threads))
+        {
+        	thr = list_item(link, kthread_t, kt_plink);
+        	kthread_cancel(thr, 0);
+        }
+        
 }
 
 /*
@@ -233,6 +280,26 @@ void
 proc_kill_all()
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");
+
+		list_link_t	*link;
+		proc_t		*iter_proc;
+		
+		link = _proc_list.l_next;
+		
+		while(link != &(_proc_list))
+		{
+			iter_proc = list_item(link, proc_t, p_list_link);
+			
+			link = link->l_next;
+			
+			if((iter_proc != curproc) && (iter_proc->p_pid != PID_IDLE) && (iter_proc->p_pproc->p_pid != PID_IDLE))
+			{
+				proc_kill(iter_proc, 0);			
+			}
+		
+		}
+        
+        
 }
 
 /*
@@ -247,13 +314,9 @@ void
 proc_thread_exited(void *retval)
 {
         NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
-<<<<<<< HEAD
 
         sched_wakeup_on(&(curproc->p_pproc->p_wait));
 
-=======
-
->>>>>>> a1ba39c611a41be1cc6612e11f393a958c912236
         proc_cleanup((int*)retval);
 
         sched_switch();
@@ -340,13 +403,11 @@ do_waitpid(pid_t pid, int options, int *status)
 
 			pt_destroy_pagedir(pt->p_pagedir);
 
-<<<<<<< HEAD
 
 
 			/*slab_obj_free(proc_allocator, pt);*/
-=======
 			slab_obj_free(proc_allocator, pt);
->>>>>>> a1ba39c611a41be1cc6612e11f393a958c912236
+
 
 			return return_value;
 		}
