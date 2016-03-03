@@ -37,7 +37,6 @@ kmutex_init(kmutex_t *mtx)
 
 		list_init(&(mtx->km_waitq.tq_list));
 		mtx->km_waitq.tq_size = 0;
-		
 		mtx->km_holder = NULL;		
 }
 
@@ -53,11 +52,10 @@ kmutex_lock(kmutex_t *mtx)
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");*/
         
         	if(mtx->km_holder != NULL){
-        	
         		curthr->kt_state = KT_SLEEP;
         		list_insert_tail(&(mtx->km_waitq.tq_list), &(curthr->kt_qlink));
         		mtx->km_waitq.tq_size++;
-        		/*thread_switch();*/
+        		sched_switch();
         	}
         	else
         	{
@@ -80,6 +78,7 @@ kmutex_lock_cancellable(kmutex_t *mtx)
         		curthr->kt_state = KT_SLEEP_CANCELLABLE;
 				list_insert_tail(&(mtx->km_waitq.tq_list), &(curthr->kt_qlink));
         		mtx->km_waitq.tq_size++;
+        		sched_switch();
         		/*todo: thread_switch();*/
         }
         else
@@ -123,9 +122,15 @@ kmutex_unlock(kmutex_t *mtx)
  	       		/*todo: add to runnable queue
         		enqueue(runQueue, dequeuedObj);*/
         		
+        		
         		dequeuedObj = list_head(&(mtx->km_waitq.tq_list), kthread_t, kt_qlink);
+        		
+        		sched_make_runnable(dequeuedObj);
+        		
         		list_remove_head(&(mtx->km_waitq.tq_list));
+        		
         		/*todo: dequeuedObj is local, segementation fault may occur*/
+        		
         		mtx->km_holder = dequeuedObj;
         	}
         
