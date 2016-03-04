@@ -33,8 +33,7 @@
 void
 kmutex_init(kmutex_t *mtx)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
-		
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/		
 		sched_queue_init(&(mtx->km_waitq));
 		mtx->km_holder = NULL;		
 }
@@ -49,14 +48,13 @@ void
 kmutex_lock(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");*/
-        	KASSERT(curthr && (mtx->km_holder != curthr) && "Thread trying to lock a mutex it already has locked");
-        	dbg(DBG_PRINT, "GRADING1MW 5.a\n");   
-        	
-        	if(mtx->km_holder != NULL){
-				sched_sleep_on(&(mtx->km_waitq));
-        	}
-        	
-        	mtx->km_holder = curthr;
+        KASSERT(curthr && (mtx->km_holder != curthr) && "Thread trying to lock a mutex it already has locked");
+        dbg(DBG_PRINT, "GRADING1MW 5.a\n");   	
+        if(mtx->km_holder != NULL)
+        {
+			sched_sleep_on(&(mtx->km_waitq));
+        }	
+        mtx->km_holder = curthr;
 }
 
 /*
@@ -68,22 +66,17 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: todo: kmutex_lock_cancellable");*/
         KASSERT(curthr && (mtx->km_holder != curthr) && "Thread trying to lock a mutex it already has locked");
-        dbg(DBG_PRINT, "GRADING1MW 5.b\n");    
-                     
-        int	x = 0;       
-               
-        if(mtx->km_holder != NULL){
-        	
-        		x = sched_cancellable_sleep(&(mtx->km_waitq));
-        	
-				if(x != 0)
-				{
-					return	x;
-				}
+        dbg(DBG_PRINT, "GRADING1MW 5.b\n");                
+        int	x = 0;
+        if(mtx->km_holder != NULL)
+        {	
+        	x = sched_cancellable_sleep(&(mtx->km_waitq));
+       		if(x != 0)
+			{
+				return	x;
+			}
         }
-    
         mtx->km_holder = curthr;
-      
         return 0;
 }
 
@@ -104,14 +97,11 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 void
 kmutex_unlock(kmutex_t *mtx)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/
-        
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/       
         KASSERT(curthr && (curthr == mtx->km_holder));
        	dbg(DBG_PRINT, "GRADING1MW 5.c\n");  
-                	
 		kthread_t	*thr = sched_wakeup_on(&(mtx->km_waitq));
 		mtx->km_holder = thr;
-		
 		KASSERT(curthr != mtx->km_holder);
 		dbg(DBG_PRINT, "GRADING1MW 5.c\n");  		
 }

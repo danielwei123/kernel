@@ -87,8 +87,9 @@ kthread_destroy(kthread_t *t)
         KASSERT(t && t->kt_kstack);
         free_stack(t->kt_kstack);
         if (list_link_is_linked(&t->kt_plink))
-                list_remove(&t->kt_plink);
-
+        {
+        	list_remove(&t->kt_plink);
+		}
         slab_obj_free(kthread_allocator, t);
 }
 
@@ -104,30 +105,23 @@ kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
-
         KASSERT(NULL != p);
         dbg(DBG_PRINT, "GRADING1MW 3.a\n");
-
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread.\n");
-
 		kthr->kt_kstack = alloc_stack();
 		KASSERT(kthr->kt_kstack && "Unable to allocate thread stack.\n");
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread thread.\n");
-
 		kthr->kt_proc = p;
-		kthr->kt_state = KT_NO_STATE; /*Doubtful*/
+		kthr->kt_state = KT_NO_STATE;
         kthr->kt_wchan = NULL;
-
-		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
+		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, sizeof( kthr->kt_kstack), p->p_pagedir);
         dbg(DBG_PRINT, "In kthread_create : Context setup done.\n");
-
         list_link_init(&(kthr->kt_plink));
         dbg(DBG_PRINT, "In kthread_create : Initialized kthread's kt_plink.\n");
 		list_insert_tail(&(p->p_threads), &(kthr->kt_plink));
         dbg(DBG_PRINT, "In kthread_create : Inserted to process's p_threads.\n");
-
         return kthr;
 }
 
@@ -145,8 +139,9 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");
-        
+        /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
+ 		KASSERT(NULL != kthr && "Trying to cancel NULL thread!\n");
+ 		dbg(DBG_PRINT, "GRADING1MW 3.b\n");
         if(kthr == curthr)
         {
         	kthread_exit(retval);	
@@ -156,12 +151,10 @@ kthread_cancel(kthread_t *kthr, void *retval)
         	kthr->kt_cancelled = 1;
         	kthr->kt_retval = retval;
         }
-        
         if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
         {
         	sched_wakeup_on(kthr->kt_wchan);
         }
-        
 }
 
 /*
@@ -177,11 +170,16 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_exit");
+        /*NOT_YET_IMPLEMENTED("PROCS: kthread_exit");*/
+        KASSERT(curthr->kt_wchan == NULL && "Current thread is in some blocking queue!\n");
+        dbg(DBG_PRINT, "GRADING1MW 3.c\n");
+        KASSERT(curthr->kt_qlink.l_next == NULL && curthr->kt_qlink.l_prev==NULL "Current thread queue is not empty!\n");
+        dbg(DBG_PRINT, "GRADING1MW 3.c\n");
+        KASSERT(curthr->kt_proc == curproc && "Current thread is magically executing without curproc!\n");
+        dbg(DBG_PRINT, "GRADING1MW 3.c\n");
         curthr->kt_retval = retval;
         curthr->kt_state = KT_EXITED;
         proc_thread_exited(retval);
- 
 }
 
 /*
