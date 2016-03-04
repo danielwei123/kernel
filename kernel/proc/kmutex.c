@@ -70,7 +70,7 @@ kmutex_lock_cancellable(kmutex_t *mtx)
         int	x = 0;
         if(mtx->km_holder != NULL)
         {	
-        	x = sched_cancellable_sleep(&(mtx->km_waitq));
+        	x = sched_cancellable_sleep_on(&(mtx->km_waitq));
        		if(x != 0)
 			{
 				return	x;

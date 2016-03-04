@@ -49,7 +49,7 @@ static void
 ktqueue_enqueue(ktqueue_t *q, kthread_t *thr)
 {
 
-        KASSERT(!thr->kt_wchan);
+		dbg(DBG_PRINT, "in enqueue\n");	
         list_insert_head(&q->tq_list, &thr->kt_qlink);
         thr->kt_wchan = q;
         q->tq_size++;
@@ -122,13 +122,9 @@ sched_sleep_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
 		dbg(DBG_PRINT, "from sleep on\n");
         curthr->kt_state = KT_SLEEP;
-        ktqueue_enqueue(q, curthr);
-        
+        ktqueue_enqueue(q, curthr);        
         sched_switch();
-
         dbg(DBG_PRINT, "after sleep on\n");
-        /*Need to figure out wakeup on and broadcast_on check
-        */
 }
 
 
@@ -145,29 +141,21 @@ sched_cancellable_sleep_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
         dbg(DBG_PRINT, "In cancellable sleep.\n");
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
-
         int return_value = 0;
         dbg(DBG_PRINT, "from sleep cancellable \n");
         ktqueue_enqueue(q, curthr);
         dbg(DBG_PRINT, "before switch \n");
-        
-        /*check kt-cancelled beofre going to sleep*/
         sched_switch();
-
-        if(curthr->kt_cancelled == 1){
+        if(curthr->kt_cancelled == 1)
+        {
             return_value = -EINTR;
-
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting return_value to EINTR.\n");
         }
-        else{
-        /*Assuming if ENTER is not returned the thread need to be enqueued in q */
+        else
+        {
             dbg(DBG_PRINT, "In sched_cancellable_sleep_on : enqueuing curthr to q.\n");
         }
-
-
         dbg(DBG_PRINT, "In sched_cancellable_sleep_on : Setting curthr to thread from runq.\n");
-        /*Need to figure out wakeup on and broadcast_on check
-        */
         return return_value;
 }
 
@@ -175,19 +163,20 @@ kthread_t *
 sched_wakeup_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
-
-        if(sched_queue_empty(q)){
+        if(sched_queue_empty(q))
+        {
             dbg(DBG_PRINT, "In sched_wakeup_on : q empty.\n");
             return NULL;
         }
-
-        else{
+        else
+        {
             kthread_t *temp_thr = ktqueue_dequeue(q);
+            KASSERT((temp_thr->kt_state==KT_SLEEP || temp_thr->kt_state==KT_SLEEP_CANCELLABLE) && "Current thread is in some blocking queue!\n");
+        	dbg(DBG_PRINT, "GRADING1MW 4.a\n");
             sched_make_runnable(temp_thr);
             dbg(DBG_PRINT, "In sched_wakeup_on : called make runnable.\n");
             return temp_thr;
         }
-
         return NULL;
 }
 
@@ -195,13 +184,12 @@ void
 sched_broadcast_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on");*/
-
-        while(!sched_queue_empty(q)){
+        while(!sched_queue_empty(q))
+        {
             kthread_t *temp_thr = ktqueue_dequeue(q);
             sched_make_runnable(temp_thr);
             dbg(DBG_PRINT, "In sched_broadcast_on : called make runnable.\n");
         }
-
 }
 
 /*
@@ -217,10 +205,9 @@ void
 sched_cancel(struct kthread *kthr)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancel");*/
-
         kthr->kt_cancelled = 1;
-
-        if(kthr->kt_state == KT_SLEEP_CANCELLABLE){
+        if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
+        {
             ktqueue_remove(kthr->kt_wchan, kthr);
             dbg(DBG_PRINT, "In sched_cancel : removing from kt_wchan.\n");
             sched_make_runnable(kthr);
@@ -268,38 +255,30 @@ void
 sched_switch(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
-
         uint8_t oldIPL;
         dbg(DBG_PRINT, "\tinside switch\n");
         oldIPL = intr_getipl();
-
         intr_setipl(IPL_HIGH);
-
-        while(sched_queue_empty(&kt_runq)){
-
+        while(sched_queue_empty(&kt_runq))
+        {
         	dbg(DBG_PRINT, "\tinside while\n");
+        	intr_disable();
             intr_setipl(IPL_LOW);
             intr_wait();
             intr_setipl(IPL_HIGH);
+
         }
-
-
-			dbg(DBG_PRINT, "\tafter while\n");
-
+		dbg(DBG_PRINT, "\tafter while\n");
         kthread_t *old_thread = curthr;
         kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
-               /*new_thread = ktqueue_dequeue(&kt_runq);*/
-			dbg(DBG_PRINT, "\tbeofre context _switch- new thr: %s, old thr: %s\n", new_thread->kt_proc->p_comm, old_thread->kt_proc->p_comm);
+		dbg(DBG_PRINT, "\tbeofre context _switch- new thr: %s, old thr: %s\n", new_thread->kt_proc->p_comm, old_thread->kt_proc->p_comm);
         curthr = new_thread;
         curproc = curthr->kt_proc;
         curthr->kt_state = KT_RUN;
         context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
         dbg(DBG_PRINT, "In sched_switch : called context_switch.\n");
-
-
         dbg(DBG_PRINT, "In sched_switch : Setting curthr and curproc.\n");
         intr_setipl(oldIPL);
-
         /*Understand the meaning of last Note : The IPL is process specific*/
 }
 
@@ -320,14 +299,13 @@ void
 sched_make_runnable(kthread_t *thr)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
-
         uint8_t oldIPL;
         oldIPL = intr_getipl();
         dbg(DBG_PRINT, "from sched make runnable \n");
-
         intr_setipl(IPL_HIGH);
-
         thr->kt_state = KT_RUN;
+        KASSERT((&(kt_runq) != thr->kt_wchan) && "Thread already in run queue!\n");
+        dbg(DBG_PRINT, "GRADING1MW 4.b\n");
         ktqueue_enqueue(&kt_runq, thr);
         dbg(DBG_PRINT, "In sched_make_runnable : enqueueing thread in runq.\n");
         intr_setipl(oldIPL);
