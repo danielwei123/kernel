@@ -73,6 +73,8 @@ static void      *idleproc_run(int arg1, void *arg2);
 static kthread_t *initproc_create(void);
 static void      *initproc_run(int arg1, void *arg2);
 
+extern void*	faber_thread_test(int, void *);
+
 static context_t bootstrap_context;
 extern int gdb_wait;
 
@@ -182,8 +184,6 @@ bootstrap(int arg1, void *arg2)
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 
-		
-
         proc_t *idle_proc = proc_create("idle_proc");
         KASSERT(idle_proc && "Unable to create idle process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.a\n");
@@ -228,10 +228,7 @@ idleproc_run(int arg1, void *arg2)
 
         /* create init proc */
         kthread_t *initthr = initproc_create();
-        /* Doubtful might have to set arg1 as 0 and arg2 as NULL */
-        /*context_setup(&(initthr->kt_ctx), initproc_run, arg1, arg2, initthr->kt_kstack, sizeof(initthr->kt_kstack), initthr->kt_proc->p_pagedir);*/
-        
-        
+
         init_call_all();
         GDB_CALL_HOOK(initialized);
 
@@ -331,10 +328,40 @@ initproc_create(void)
  * @param arg1 the first argument (unused)
  * @param arg2 the second argument (unused)
  */
+ 
+#ifdef __DRIVERS__
+
+        int do_foo(kshell_t *kshell, int argc, char **argv)
+        {
+            KASSERT(kshell != NULL);
+            dbg(DBG_PRINT, "(GRADING#X Y.Z): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
+                    argc, (unsigned int)argv);
+            /*
+             * Shouldn't call a test function directly.
+             * It's best to invoke it in a separate kernel process.  
+             */
+            return 0;
+        }
+
+#endif /* __DRIVERS__ */
 static void *
 initproc_run(int arg1, void *arg2)
 {
         NOT_YET_IMPLEMENTED("PROCS: initproc_run");
+#ifdef __DRIVERS__
+
+        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+
+        kshell_t *kshell = kshell_create(0);
+        if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
+        while (kshell_execute_next(kshell));
+        kshell_destroy(kshell);
+
+#endif /* __DRIVERS__ */
+        dbg(DBG_PRINT, "inside initproc__run\n");
 
         return NULL;
 }

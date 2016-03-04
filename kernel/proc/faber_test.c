@@ -325,28 +325,28 @@ void *faber_thread_test(int arg1, void *arg2) {
     int rv = 0;
     int i = 0;
 
-    dbg(DBG_TEST, ">>> Start running faber_thread_test()...\n");
+    dbg(DBG_TEST, "xX>>> Start running faber_thread_test()...\n");
 
 #if CS402TESTS > 0
-    dbg(DBG_TEST, "waitpid any test\n");
+    dbg(DBG_TEST, "xXwaitpid any test\n");
     start_proc(&pt, "waitpid any test", waitpid_test, 23);
     wait_for_any();
 
-    dbg(DBG_TEST, "waitpid test\n");
+    dbg(DBG_TEST, "xXwaitpid test\n");
     start_proc(&pt, "waitpid test", waitpid_test, 32);
     pid = do_waitpid(2323, 0, &rv);
-    if ( pid != -ECHILD ) dbg(DBG_TEST, "Allowed wait on non-existent pid\n");
+    if ( pid != -ECHILD ) dbg(DBG_TEST, "xXAllowed wait on non-existent pid\n");
     wait_for_proc(pt.p);
 
-    dbg(DBG_TEST, "kthread exit test\n");
+    dbg(DBG_TEST, "xXkthread exit test\n");
     start_proc(&pt, "kthread exit test", kthread_exit_test, 0);
     wait_for_proc(pt.p);
 
-    dbg(DBG_TEST, "many test\n");
+    dbg(DBG_TEST, "xXmany test\n");
     for (i = 0; i < 10; i++) 
 	start_proc(NULL, "many test", waitpid_test, i);
     wait_for_all();
-    dbg(DBG_TEST, "(C.1) done\n");
+    dbg(DBG_TEST, "xX(C.1) done\n");
 #endif
 
 #if CS402TESTS > 1

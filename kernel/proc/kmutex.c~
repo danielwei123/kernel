@@ -33,11 +33,8 @@
 void
 kmutex_init(kmutex_t *mtx)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
-
-		list_init(&(mtx->km_waitq.tq_list));
-		mtx->km_waitq.tq_size = 0;
-		
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/		
+		sched_queue_init(&(mtx->km_waitq));
 		mtx->km_holder = NULL;		
 }
 
@@ -51,19 +48,13 @@ void
 kmutex_lock(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");*/
-        
-        	if(mtx->km_holder != NULL){
-        	
-        		curthr->kt_state = KT_SLEEP;
-        		list_insert_tail(&(mtx->km_waitq.tq_list), &(curthr->kt_qlink));
-        		mtx->km_waitq.tq_size++;
-        		/*thread_switch();*/
-        	}
-        	else
-        	{
-        		mtx->km_holder = curthr;
-        	}
-        
+        KASSERT(curthr && (mtx->km_holder != curthr) && "Thread trying to lock a mutex it already has locked");
+        dbg(DBG_PRINT, "GRADING1MW 5.a\n");   	
+        if(mtx->km_holder != NULL)
+        {
+			sched_sleep_on(&(mtx->km_waitq));
+        }	
+        mtx->km_holder = curthr;
 }
 
 /*
@@ -73,20 +64,19 @@ kmutex_lock(kmutex_t *mtx)
 int
 kmutex_lock_cancellable(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: todo: kmutex_lock_cancellable");
-                
-        if(mtx->km_holder != NULL){
-        	
-        		curthr->kt_state = KT_SLEEP_CANCELLABLE;
-				list_insert_tail(&(mtx->km_waitq.tq_list), &(curthr->kt_qlink));
-        		mtx->km_waitq.tq_size++;
-        		/*todo: thread_switch();*/
+        /*NOT_YET_IMPLEMENTED("PROCS: todo: kmutex_lock_cancellable");*/
+        KASSERT(curthr && (mtx->km_holder != curthr) && "Thread trying to lock a mutex it already has locked");
+        dbg(DBG_PRINT, "GRADING1MW 5.b\n");                
+        int	x = 0;
+        if(mtx->km_holder != NULL)
+        {	
+        	x = sched_cancellable_sleep(&(mtx->km_waitq));
+       		if(x != 0)
+			{
+				return	x;
+			}
         }
-        else
-        {
-        		mtx->km_holder = curthr;
-        
-        }
+        mtx->km_holder = curthr;
         return 0;
 }
 
@@ -107,26 +97,11 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 void
 kmutex_unlock(kmutex_t *mtx)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/
-        
-        	kthread_t	*dequeuedObj = NULL;
-        	list_link_t	link ;
-        
-        	if(list_empty(&(mtx->km_waitq.tq_list))){
- 				
- 				mtx->km_holder = NULL;  
- 				mtx->km_waitq.tq_size = 0;     	
-        	}
-        	else{	
-        		
-        		(mtx->km_waitq).tq_size = (mtx->km_waitq.tq_size) - 1;
- 	       		/*todo: add to runnable queue
-        		enqueue(runQueue, dequeuedObj);*/
-        		
-        		dequeuedObj = list_head(&(mtx->km_waitq.tq_list), kthread_t, kt_qlink);
-        		list_remove_head(&(mtx->km_waitq.tq_list));
-        		/*todo: dequeuedObj is local, segementation fault may occur*/
-        		mtx->km_holder = dequeuedObj;
-        	}
-        
+        /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/       
+        KASSERT(curthr && (curthr == mtx->km_holder));
+       	dbg(DBG_PRINT, "GRADING1MW 5.c\n");  
+		kthread_t	*thr = sched_wakeup_on(&(mtx->km_waitq));
+		mtx->km_holder = thr;
+		KASSERT(curthr != mtx->km_holder);
+		dbg(DBG_PRINT, "GRADING1MW 5.c\n");  		
 }

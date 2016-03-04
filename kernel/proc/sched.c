@@ -262,7 +262,7 @@ sched_switch(void)
         while(sched_queue_empty(&kt_runq))
         {
         	dbg(DBG_PRINT, "\tinside while\n");
-        	intr_disable();
+        	/*intr_disable();*/
             intr_setipl(IPL_LOW);
             intr_wait();
             intr_setipl(IPL_HIGH);

@@ -190,7 +190,7 @@ proc_cleanup(int status)
 		int			x;
 		KASSERT(NULL != proc_initproc);
         dbg(DBG_PRINT, "GRADING1MW 2.b\n");
-		KASSERT(1 == curproc->p_pid);
+		KASSERT(1 <= curproc->p_pid);
 		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
 		KASSERT(NULL != curproc->p_pproc);
 		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
@@ -201,7 +201,9 @@ proc_cleanup(int status)
 			link = link->l_next;
 			if(curproc == proc_initproc)
 			{
+				dbg(DBG_PRINT, "\t faber\n");
 				do_waitpid(pt->p_pid, 0, &x);	
+				dbg(DBG_PRINT, "\t faber do waitpid\n");
 			}
 			else
 			{
@@ -213,9 +215,12 @@ proc_cleanup(int status)
 		curproc->p_status = status;
 		curproc->p_state = PROC_DEAD;
 		list_remove(&(curproc->p_list_link));
-		sched_wakeup_on(&(curproc->p_pproc->p_wait));
-		KASSERT(NULL != pt->pagedir);
+		KASSERT(NULL != curproc->p_pproc);
 		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
+		sched_wakeup_on(&(curproc->p_pproc->p_wait));
+		dbg(DBG_PRINT, "\t\tback to clean up \n");
+
+		
        /* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
 }
 
@@ -267,10 +272,11 @@ proc_kill_all()
 				proc_kill(iter_proc, 0);			
 			}
 		}
-		if(curproc->p_pid != PID_IDLE && curproc->p_pproc->pid != PID_IDLE)
+		if(curproc->p_pid != PID_IDLE && curproc->p_pproc->p_pid != PID_IDLE)
 		{
 			proc_kill(curproc,0);
 		}
+		
 }
 
 /*
@@ -285,8 +291,8 @@ void
 proc_thread_exited(void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
-        sched_wakeup_on(&(curproc->p_pproc->p_wait));
-        proc_cleanup((int*)retval);
+        /*sched_wakeup_on(&(curproc->p_pproc->p_wait));*/
+        proc_cleanup((int)retval);
         sched_switch();
 }
 
@@ -381,8 +387,6 @@ do_waitpid(pid_t pid, int options, int *status)
         		break;
         	}
         }
-        KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
-		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
         if(child_of_cur == 0)
         {
         	return	-ECHILD;
@@ -395,18 +399,28 @@ do_waitpid(pid_t pid, int options, int *status)
 					break;
 				}
 		}
+		KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
+		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
         while(pt->p_state != PROC_DEAD)
         {
+        	dbg(DBG_PRINT, "sleep on (2)\n");
         	sched_sleep_on(&(curproc->p_wait));
+        	dbg(DBG_PRINT, "sleep on (2)\n");
         }
+        dbg(DBG_PRINT, "sleep on (1.0\n");
         list_remove(&(pt->p_child_link));
-		list_remove(&(pt->p_list_link));
+        dbg(DBG_PRINT, "sleep on (1.1)\n");
 		*status = pt->p_status;
+		dbg(DBG_PRINT, "sleep on (1.3)\n");
 		KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
 		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
+		dbg(DBG_PRINT, "sleep on (1.4)\n");
 		pt_destroy_pagedir(pt->p_pagedir);
+		dbg(DBG_PRINT, "sleep on (1.5)\n");
 		return_value = pt->p_pid;
+		dbg(DBG_PRINT, "sleep on (1.6)\n");
 		slab_obj_free(proc_allocator, pt);
+		dbg(DBG_PRINT, "sleep on (1.7)\n");
 		return return_value;
 }
 
