@@ -118,43 +118,42 @@ failed:
 proc_t *
 proc_create(char *name)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
-        dbg(DBG_PRINT, "\t\tinside proc_create\n");
-        proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
-        if(pt == NULL)
-        {
-        	return pt;
-        }
-        pt->p_pid = _proc_getid();
-        KASSERT((PID_IDLE != pt->p_pid) || (list_empty(&_proc_list)));
-        dbg(DBG_PRINT, "GRADING1A 2.a\n");
-        KASSERT((PID_INIT != pt->p_pid)|| (PID_IDLE == curproc->p_pid));
-        dbg(DBG_PRINT, "GRADING1A 2.a\n");
-        if(strlen(name)>256)
-        {
-        	name[255]='\0';
-        }
-        strcpy(pt->p_comm, name);
-        list_init(&(pt->p_threads));
-        list_init(&(pt->p_children));
-        sched_queue_init(&(pt->p_wait));
-        pt->p_state = PROC_RUNNING;
-		pt->p_pproc = curproc;
-        pt->p_pagedir = pt_create_pagedir();
-        KASSERT(pt->p_pagedir != NULL &&"Page directory not created");
-        list_link_init(&(pt->p_list_link));
-        list_link_init(&(pt->p_child_link));
-		if( pt->p_pid != PID_IDLE)
-		{
-			list_insert_tail(&(curproc->p_children), &(pt->p_child_link));
-		}
-		/*insert this proc into proc queue*/
-		list_insert_tail(&_proc_list, &(pt->p_list_link));
-		if(pt->p_pid == PID_INIT)
-		{
-			proc_initproc = pt;
-		}
-        return pt;
+    /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
+    dbg(DBG_PRINT, "\t\tinside proc_create\n");
+    proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
+    if(pt == NULL)
+    {
+    	return pt;
+    }
+    pt->p_pid = _proc_getid();
+    KASSERT((PID_IDLE != pt->p_pid) || (list_empty(&_proc_list)));
+    dbg(DBG_PRINT, "GRADING1A 2.a\n");
+    KASSERT((PID_INIT != pt->p_pid)|| (PID_IDLE == curproc->p_pid));
+    dbg(DBG_PRINT, "GRADING1A 2.a\n");
+    if(strlen(name)>256)
+    {
+    	name[255]='\0';
+    }
+    strcpy(pt->p_comm, name);
+    list_init(&(pt->p_threads));
+    list_init(&(pt->p_children));
+    sched_queue_init(&(pt->p_wait));
+    pt->p_state = PROC_RUNNING;
+	pt->p_pproc = curproc;
+    pt->p_pagedir = pt_create_pagedir();
+    KASSERT(pt->p_pagedir != NULL && "Page directory not created");
+    list_link_init(&(pt->p_list_link));
+    list_link_init(&(pt->p_child_link));
+	if( pt->p_pid != PID_IDLE)
+	{
+		list_insert_tail(&(curproc->p_children), &(pt->p_child_link));
+	}
+	list_insert_tail(&_proc_list, &(pt->p_list_link));
+	if(pt->p_pid == PID_INIT)
+	{
+		proc_initproc = pt;
+	}
+    return pt;
 }
 
 /**
@@ -184,40 +183,39 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
-
-		list_link_t	*link;
-		proc_t		*pt;
-		int			x;
-		KASSERT(NULL != proc_initproc);
-        dbg(DBG_PRINT, "GRADING1A 2.b\n");
-		KASSERT(1 <= curproc->p_pid);
-		dbg(DBG_PRINT, "GRADING1A 2.b\n");
-		KASSERT(NULL != curproc->p_pproc);
-		dbg(DBG_PRINT, "GRADING1A 2.b\n");
-		link = curproc->p_children.l_next;
-		while(link != &(curproc->p_children))
+    /* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
+	list_link_t	*link;
+	proc_t		*pt;
+	int			x;
+	KASSERT(NULL != proc_initproc);
+    dbg(DBG_PRINT, "GRADING1A 2.b\n");
+	KASSERT(1 <= curproc->p_pid);
+	dbg(DBG_PRINT, "GRADING1A 2.b\n");
+	KASSERT(NULL != curproc->p_pproc);
+	dbg(DBG_PRINT, "GRADING1A 2.b\n");
+	link = curproc->p_children.l_next;
+	while(link != &(curproc->p_children))
+	{
+		pt = list_item(link, proc_t, p_child_link);
+		link = link->l_next;
+		if(curproc == proc_initproc)
 		{
-			pt = list_item(link, proc_t, p_child_link);
-			link = link->l_next;
-			if(curproc == proc_initproc)
-			{
-				do_waitpid(pt->p_pid, 0, &x);
-			}
-			else
-			{
-				list_remove(&(pt->p_child_link));
-				list_insert_tail(&(proc_initproc->p_children), &(pt->p_child_link));
-				pt->p_pproc = proc_initproc;
-			}
+			do_waitpid(pt->p_pid, 0, &x);
 		}
-		curproc->p_status = status;
-		curproc->p_state = PROC_DEAD;
-		list_remove(&(curproc->p_list_link));
-		KASSERT(NULL != curproc->p_pproc);
-		dbg(DBG_PRINT, "GRADING1A 2.b\n");
-		sched_wakeup_on(&(curproc->p_pproc->p_wait));
-		dbg(DBG_PRINT, "\t\tback to clean up \n");
-       /* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
+		else
+		{
+			list_remove(&(pt->p_child_link));
+			list_insert_tail(&(proc_initproc->p_children), &(pt->p_child_link));
+			pt->p_pproc = proc_initproc;
+		}
+	}
+	curproc->p_status = status;
+	curproc->p_state = PROC_DEAD;
+	list_remove(&(curproc->p_list_link));
+	KASSERT(NULL != curproc->p_pproc);
+	dbg(DBG_PRINT, "GRADING1A 2.b\n");
+	sched_wakeup_on(&(curproc->p_pproc->p_wait));
+	dbg(DBG_PRINT, "\t\tback to clean up \n");
 }
 
 /*
@@ -231,21 +229,20 @@ proc_cleanup(int status)
 void
 proc_kill(proc_t *p, int status)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: proc_kill");*/
-        list_link_t	*link;
-        kthread_t	*thr;
-        if(p == curproc)
-        {
-        	do_exit(status);
-        }
-        link = p->p_threads.l_next;
-        while(link != &(p->p_threads))
-        {
-        	thr = list_item(link, kthread_t, kt_plink);
-            link = link->l_next;
-        	kthread_cancel(thr, 0);
-
-        }
+    /*NOT_YET_IMPLEMENTED("PROCS: proc_kill");*/
+    list_link_t	*link;
+    kthread_t	*thr;
+    if(p == curproc)
+    {
+    	do_exit(status);
+    }
+    link = p->p_threads.l_next;
+    while(link != &(p->p_threads))
+    {
+    	thr = list_item(link, kthread_t, kt_plink);
+        link = link->l_next;
+    	kthread_cancel(thr, 0);
+    }
 }
 
 /*
@@ -257,24 +254,23 @@ proc_kill(proc_t *p, int status)
 void
 proc_kill_all()
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");*/
-		list_link_t	*link;
-		proc_t		*iter_proc;
-		link = _proc_list.l_next;
-		while(link != &(_proc_list))
+    /*NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");*/
+	list_link_t	*link;
+	proc_t		*iter_proc;
+	link = _proc_list.l_next;
+	while(link != &(_proc_list))
+	{
+		iter_proc = list_item(link, proc_t, p_list_link);
+		link = link->l_next;
+		if((iter_proc != curproc) && (iter_proc->p_pid != PID_IDLE) && (iter_proc->p_pproc->p_pid != PID_IDLE))
 		{
-			iter_proc = list_item(link, proc_t, p_list_link);
-			link = link->l_next;
-			if((iter_proc != curproc) && (iter_proc->p_pid != PID_IDLE) && (iter_proc->p_pproc->p_pid != PID_IDLE))
-			{
-				proc_kill(iter_proc, 0);
-			}
+			proc_kill(iter_proc, 0);
 		}
-		if(curproc->p_pid != PID_IDLE && curproc->p_pproc->p_pid != PID_IDLE)
-		{
-			proc_kill(curproc,0);
-		}
-
+	}
+	if(curproc->p_pid != PID_IDLE && curproc->p_pproc->p_pid != PID_IDLE)
+	{
+		proc_kill(curproc,0);
+	}
 }
 
 /*
@@ -288,10 +284,9 @@ proc_kill_all()
 void
 proc_thread_exited(void *retval)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
-        /*sched_wakeup_on(&(curproc->p_pproc->p_wait));*/
-        proc_cleanup((int)retval);
-        sched_switch();
+    /*NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
+    proc_cleanup((int)retval);
+    sched_switch();
 }
 
 /* If pid is -1 dispose of one of the exited children of the current
@@ -312,130 +307,114 @@ proc_thread_exited(void *retval)
 pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
-		list_link_t	*link;
-		proc_t		*pt = NULL;
-		kthread_t	*thr = NULL;
-		int			child_of_cur = 0;
-		int			dead_child = 0;
-		int			return_value = 0;
-		dbg(DBG_PRINT, "inside do_waitpid\n");
+    /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
+	list_link_t	*link;
+	proc_t		*pt = NULL;
+	kthread_t	*thr = NULL;
+	int			child_of_cur = 0;
+	int			dead_child = 0;
+	int			return_value = 0;
+	if(pid < -1 || pid == 0)
+	{
+		dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
+		return	-ECHILD;
+	}
 
-        dbg(DBG_TEST, "curproc : %s\n", curproc->p_comm);
+	if(options != 0)
+	{
+		dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
+		return	-ECHILD;
+	}
 
-		if(pid < -1 || pid == 0)
+	if(list_empty(&(curproc->p_children)))
+	{
+		dbg(DBG_PRINT, "Curproc does not have any children\n");
+		return	-ECHILD;
+	}
+
+	if(pid == -1)
+	{
+		do
 		{
-			dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
-			return	-ECHILD;
-		}
-
-		if(options != 0)
-		{
-			dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
-			return	-ECHILD;
-		}
-
-		if(list_empty(&(curproc->p_children)))
-		{
-			dbg(DBG_PRINT, "Curproc does not have any children\n");
-			return	-ECHILD;
-		}
-
-		if(pid == -1)
-		{
-
-			dbg(DBG_PRINT, "inside pid =-1\n");
-			/*remove this loop afterwards*/
-			do
-			{
-				for (link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
-        		{
-					pt = list_item(link, proc_t, p_child_link);
-        			if(pt->p_state == PROC_DEAD)
-        			{
-        				dead_child = 1;
-        				break;
-        			}
-        		}
-        		if(dead_child == 0)
-        		{
-        			dbg(DBG_PRINT, "\t\tinside dead_child = 0\n");
-        			sched_sleep_on(&(curproc->p_wait));
-
-        		}
-			}while(dead_child == 0);
-
-			KASSERT(pt!=NULL && "Dead Child is NULL!\n");
-			dbg(DBG_PRINT, "GRADING1A 2.c\n");
-
-            KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
-            dbg(DBG_PRINT, "GRADING1A 2.c\n");
-
-			*status = pt->p_status;
-			link = pt->p_threads.l_next;
-        	dbg(DBG_PRINT, "\t\tcleanup = 0\n");
-        	return_value = pt->p_pid;
-			while( link != &(pt->p_threads))
-			{
-				thr = list_item(link, kthread_t, kt_plink);
-				link = link->l_next;
-                KASSERT(KT_EXITED == thr->kt_state);
-                dbg(DBG_PRINT, "GRADING1A 2.c\n");
-				kthread_destroy(thr);
-			}
-			list_remove(&(pt->p_child_link));
-			KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
-			dbg(DBG_PRINT, "GRADING1A 2.c\n");
-			pt_destroy_pagedir(pt->p_pagedir);
-			slab_obj_free(proc_allocator, pt);
-			return return_value;
-		}
-
-	    for (link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
-        {
-			pt = list_item(link, proc_t, p_child_link);
-        	if(pt->p_pid == pid)
-        	{
-        		child_of_cur = 1;
-        		break;
-        	}
-        }
-        if(child_of_cur == 0)
-        {
-        	return	-ECHILD;
-        }
-
-		for(link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
-		{
+			for (link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
+    		{
 				pt = list_item(link, proc_t, p_child_link);
-				if(pt->p_pid == pid)
-				{
-					break;
-				}
-		}
-		KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
+    			if(pt->p_state == PROC_DEAD)
+    			{
+    				dead_child = 1;
+    				break;
+    			}
+    		}
+    		if(dead_child == 0)
+    		{
+    			dbg(DBG_PRINT, "\t\tinside dead_child = 0\n");
+    			sched_sleep_on(&(curproc->p_wait));
+    		}
+		}while(dead_child == 0);
+
+		KASSERT(pt!=NULL && "Dead Child is NULL!\n");
 		dbg(DBG_PRINT, "GRADING1A 2.c\n");
-
-        while(pt->p_state != PROC_DEAD)
-        {
-
-        	sched_sleep_on(&(curproc->p_wait));
-
-        }
-        list_remove(&(pt->p_child_link));
-
+        KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
+        dbg(DBG_PRINT, "GRADING1A 2.c\n");
 		*status = pt->p_status;
-
+		link = pt->p_threads.l_next;
+    	dbg(DBG_PRINT, "\t\tcleanup = 0\n");
+    	return_value = pt->p_pid;
+		while( link != &(pt->p_threads))
+		{
+			thr = list_item(link, kthread_t, kt_plink);
+			link = link->l_next;
+            KASSERT(KT_EXITED == thr->kt_state);
+            dbg(DBG_PRINT, "GRADING1A 2.c\n");
+			kthread_destroy(thr);
+		}
+		list_remove(&(pt->p_child_link));
 		KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
 		dbg(DBG_PRINT, "GRADING1A 2.c\n");
-
 		pt_destroy_pagedir(pt->p_pagedir);
-
-		return_value = pt->p_pid;
-
 		slab_obj_free(proc_allocator, pt);
-
 		return return_value;
+	}
+
+    for (link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
+    {
+		pt = list_item(link, proc_t, p_child_link);
+    	if(pt->p_pid == pid)
+    	{
+    		child_of_cur = 1;
+    		break;
+    	}
+    }
+    if(child_of_cur == 0)
+    {
+    	return	-ECHILD;
+    }
+
+	for(link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
+	{
+		pt = list_item(link, proc_t, p_child_link);
+		if(pt->p_pid == pid)
+		{
+			break;
+		}
+	}
+	KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
+	dbg(DBG_PRINT, "GRADING1A 2.c\n");
+
+    while(pt->p_state != PROC_DEAD)
+    {
+        sched_sleep_on(&(curproc->p_wait));
+    }
+    list_remove(&(pt->p_child_link));
+	*status = pt->p_status;
+	KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
+    dbg(DBG_PRINT, "GRADING1A 2.c\n");
+
+	pt_destroy_pagedir(pt->p_pagedir);
+
+	return_value = pt->p_pid;
+	slab_obj_free(proc_allocator, pt);
+	return return_value;
 }
 
 /*
@@ -448,19 +427,19 @@ void
 do_exit(int status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/
-        list_link_t 	*link;
-        kthread_t 		*thread;
-        dbg(DBG_PRINT,"In do exit\n");
-        for(link = curproc->p_threads.l_next ; link != &(curproc->p_threads); link = link->l_next)
+    list_link_t 	*link;
+    kthread_t 		*thread;
+    dbg(DBG_PRINT,"In do exit\n");
+    for(link = curproc->p_threads.l_next ; link != &(curproc->p_threads); link = link->l_next)
+    {
+        thread = list_item(link, kthread_t, kt_plink);
+        if(thread != curthr)
         {
-            thread = list_item(link, kthread_t, kt_plink);
-            if(thread != curthr)
-            {
-                kthread_cancel(thread, 0);
-            }
+            kthread_cancel(thread, 0);
         }
+    }
 
-        kthread_exit((void *)status);
+    kthread_exit((void *)status);
 }
 
 size_t
