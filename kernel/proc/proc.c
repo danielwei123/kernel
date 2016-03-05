@@ -122,7 +122,7 @@ proc_create(char *name)
         dbg(DBG_PRINT, "\t\tinside proc_create\n");
         proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
         if(pt == NULL)
-        {	
+        {
         	panic("\nslab allocator failed\n");
         }
         pt->p_pid = _proc_getid();
@@ -132,7 +132,7 @@ proc_create(char *name)
         dbg(DBG_PRINT, "GRADING1MW 2.a\n");
         if(strlen(name)>256)
         {
-        	name[255]='\0';	
+        	name[255]='\0';
         }
         strcpy(pt->p_comm, name);
         list_init(&(pt->p_threads));
@@ -184,7 +184,7 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
-	
+
 		list_link_t	*link;
 		proc_t		*pt;
 		int			x;
@@ -201,9 +201,7 @@ proc_cleanup(int status)
 			link = link->l_next;
 			if(curproc == proc_initproc)
 			{
-				dbg(DBG_PRINT, "\t faber\n");
-				do_waitpid(pt->p_pid, 0, &x);	
-				dbg(DBG_PRINT, "\t faber do waitpid\n");
+				do_waitpid(pt->p_pid, 0, &x);
 			}
 			else
 			{
@@ -219,8 +217,6 @@ proc_cleanup(int status)
 		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
 		sched_wakeup_on(&(curproc->p_pproc->p_wait));
 		dbg(DBG_PRINT, "\t\tback to clean up \n");
-
-		
        /* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
 }
 
@@ -269,14 +265,14 @@ proc_kill_all()
 			link = link->l_next;
 			if((iter_proc != curproc) && (iter_proc->p_pid != PID_IDLE) && (iter_proc->p_pproc->p_pid != PID_IDLE))
 			{
-				proc_kill(iter_proc, 0);			
+				proc_kill(iter_proc, 0);
 			}
 		}
 		if(curproc->p_pid != PID_IDLE && curproc->p_pproc->p_pid != PID_IDLE)
 		{
 			proc_kill(curproc,0);
 		}
-		
+
 }
 
 /*
@@ -322,8 +318,27 @@ do_waitpid(pid_t pid, int options, int *status)
 		int			dead_child = 0;
 		int			return_value = 0;
 		dbg(DBG_PRINT, "inside do_waitpid\n");
+
+        dbg(DBG_TEST, "curproc : %s\n", curproc->p_comm);
+
+        if(pid < -1)
+		{
+			dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
+			return	-ECHILD;
+		}
+		if(options != 0)
+		{
+			dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
+			return	-ECHILD;
+		}
+		if(list_empty(&(curproc->p_children)))
+		{
+			dbg(DBG_PRINT, "Curproc does not have any children\n");
+			return	-ECHILD;
+		}
 		if(pid == -1)
 		{
+
 			dbg(DBG_PRINT, "inside pid =-1\n");
 			/*remove this loop afterwards*/
 			do
@@ -363,21 +378,7 @@ do_waitpid(pid_t pid, int options, int *status)
 			slab_obj_free(proc_allocator, pt);
 			return return_value;
 		}
-		if(pid < -1 || pid == 0)
-		{
-			dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
-			return	-ECHILD;
-		}
-		if(options != 0)
-		{
-			dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
-			return	-ECHILD;
-		}
-		if(list_empty(&(curproc->p_children)))
-		{
-			dbg(DBG_PRINT, "Curproc does not have any children\n");
-			return	-ECHILD;
-		}
+
 	    for (link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
         {
 			pt = list_item(link, proc_t, p_child_link);
@@ -403,24 +404,23 @@ do_waitpid(pid_t pid, int options, int *status)
 		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
         while(pt->p_state != PROC_DEAD)
         {
-        	dbg(DBG_PRINT, "sleep on (2)\n");
+
         	sched_sleep_on(&(curproc->p_wait));
-        	dbg(DBG_PRINT, "sleep on (2)\n");
+
         }
-        dbg(DBG_PRINT, "sleep on (1.0\n");
         list_remove(&(pt->p_child_link));
-        dbg(DBG_PRINT, "sleep on (1.1)\n");
+
 		*status = pt->p_status;
-		dbg(DBG_PRINT, "sleep on (1.3)\n");
+
 		KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
 		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
-		dbg(DBG_PRINT, "sleep on (1.4)\n");
+
 		pt_destroy_pagedir(pt->p_pagedir);
-		dbg(DBG_PRINT, "sleep on (1.5)\n");
+
 		return_value = pt->p_pid;
-		dbg(DBG_PRINT, "sleep on (1.6)\n");
+
 		slab_obj_free(proc_allocator, pt);
-		dbg(DBG_PRINT, "sleep on (1.7)\n");
+
 		return return_value;
 }
 
@@ -436,6 +436,7 @@ do_exit(int status)
         /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/
         list_link_t 	*link;
         kthread_t 		*thread;
+        dbg(DBG_PRINT,"In do exit\n");
         for(link = curproc->p_threads.l_next ; link != &(curproc->p_threads); link = link->l_next)
         {
             thread = list_item(link, kthread_t, kt_plink);
@@ -444,6 +445,7 @@ do_exit(int status)
                 kthread_cancel(thread, 0);
             }
         }
+
         kthread_exit((void *)status);
 }
 

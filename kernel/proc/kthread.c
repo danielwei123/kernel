@@ -107,21 +107,23 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
         KASSERT(NULL != p);
         dbg(DBG_PRINT, "GRADING1MW 3.a\n");
+        
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread.\n");
+
 		kthr->kt_kstack = alloc_stack();
 		KASSERT(kthr->kt_kstack != NULL && "Unable to allocate thread stack.\n");
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread thread.\n");
-		kthr->kt_proc = p;
+
+        kthr->kt_proc = p;
 		kthr->kt_state = KT_NO_STATE;
         kthr->kt_wchan = NULL;
 		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
-        dbg(DBG_PRINT, "In kthread_create : Context setup done.\n");
+
         list_link_init(&(kthr->kt_plink));
-        dbg(DBG_PRINT, "In kthread_create : Initialized kthread's kt_plink.\n");
 		list_insert_tail(&(p->p_threads), &(kthr->kt_plink));
-        dbg(DBG_PRINT, "In kthread_create : Inserted to process's p_threads.\n");
+
         return kthr;
 }
 
@@ -144,7 +146,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
  		dbg(DBG_PRINT, "GRADING1MW 3.b\n");
         if(kthr == curthr)
         {
-        	kthread_exit(retval);	
+        	kthread_exit(retval);
         }
         else
         {

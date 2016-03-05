@@ -84,8 +84,8 @@ static void wait_for_proc(proc_t *p) {
     pid_t pid;
     char pname[PROC_NAME_LEN];
 
-    strncpy(pname, p->p_comm, PROC_NAME_LEN); 
-    pname[PROC_NAME_LEN-1] = '\0'; 
+    strncpy(pname, p->p_comm, PROC_NAME_LEN);
+    pname[PROC_NAME_LEN-1] = '\0';
     pid = do_waitpid(p->p_pid, 0, &rv);
     dbg(DBG_TEST, "%s (%d) exited: %d\n", pname, pid, rv);
 }
@@ -166,7 +166,7 @@ void *wakeme_test(int arg1, void *arg2) {
 
 /*
  * A thread function that uncancellably waits on wake_me_q and exist when
- * released.  
+ * released.
  */
 void *wakeme_uncancellable_test(int arg1, void *arg2) {
     wake_me_len++;
@@ -224,7 +224,7 @@ void *racer_test(int arg1, void *arg2) {
 void *mutex_uncancellable_test(int arg1, void *arg2) {
     int local;
 
-    kmutex_lock(&mutex); 
+    kmutex_lock(&mutex);
     sched_make_runnable(curthr);
     sched_switch();
     local = race;
@@ -280,7 +280,7 @@ void *mutex_test(int arg1, void *arg2) {
 void *mutex_test_cancelme(int arg1, void *arg2) {
     int local;
 
-    if ( kmutex_lock_cancellable(&mutex) ) 
+    if ( kmutex_lock_cancellable(&mutex) )
 	do_exit(0);
     dbg(DBG_TEST, "Mutex not cancelled? %d", curproc->p_pid);
     sched_make_runnable(curthr);
@@ -308,7 +308,7 @@ void *mutex_test_cancelme(int arg1, void *arg2) {
  */
 void *reparent_test(int arg1, void *arg2) {
     start_proc(NULL, "reparented" , wakeme_test, arg1);
-    if ( arg1 > 1 ) 
+    if ( arg1 > 1 )
 	start_proc(NULL, "reparent ", reparent_test, arg1-1);
     do_exit(0);
     return NULL;
@@ -325,28 +325,28 @@ void *faber_thread_test(int arg1, void *arg2) {
     int rv = 0;
     int i = 0;
 
-    dbg(DBG_TEST, "xX>>> Start running faber_thread_test()...\n");
+    dbg(DBG_TEST, ">>> Start running faber_thread_test()...\n");
 
 #if CS402TESTS > 0
-    dbg(DBG_TEST, "xXwaitpid any test\n");
+    dbg(DBG_TEST, "waitpid any test\n");
     start_proc(&pt, "waitpid any test", waitpid_test, 23);
     wait_for_any();
 
-    dbg(DBG_TEST, "xXwaitpid test\n");
+    dbg(DBG_TEST, "waitpid test\n");
     start_proc(&pt, "waitpid test", waitpid_test, 32);
     pid = do_waitpid(2323, 0, &rv);
-    if ( pid != -ECHILD ) dbg(DBG_TEST, "xXAllowed wait on non-existent pid\n");
+    if ( pid != -ECHILD ) dbg(DBG_TEST, "Allowed wait on non-existent pid\n");
     wait_for_proc(pt.p);
 
-    dbg(DBG_TEST, "xXkthread exit test\n");
+    dbg(DBG_TEST, "kthread exit test\n");
     start_proc(&pt, "kthread exit test", kthread_exit_test, 0);
     wait_for_proc(pt.p);
 
-    dbg(DBG_TEST, "xXmany test\n");
-    for (i = 0; i < 10; i++) 
+    dbg(DBG_TEST, "many test\n");
+    for (i = 0; i < 10; i++)
 	start_proc(NULL, "many test", waitpid_test, i);
     wait_for_all();
-    dbg(DBG_TEST, "xX(C.1) done\n");
+    dbg(DBG_TEST, "(C.1) done\n");
 #endif
 
 #if CS402TESTS > 1
@@ -369,7 +369,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
 
     dbg(DBG_TEST, "broadcast me test\n");
-    for (i = 0; i < 10; i++ ) 
+    for (i = 0; i < 10; i++ )
 	start_proc(NULL, "broadcast me test", wakeme_test, 0);
     stop_until_queued(10, &wake_me_len);
     /* Make sure the processes have blocked */
@@ -381,7 +381,7 @@ void *faber_thread_test(int arg1, void *arg2) {
 
 #if CS402TESTS > 3
     dbg(DBG_TEST, "wake me uncancellable test\n");
-    start_proc(&pt, "wake me uncancellable test", 
+    start_proc(&pt, "wake me uncancellable test",
 	    wakeme_uncancellable_test, 0);
     /* Make sure p has blocked */
     stop_until_queued(1, &wake_me_len);
@@ -390,8 +390,8 @@ void *faber_thread_test(int arg1, void *arg2) {
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
 
     dbg(DBG_TEST, "broadcast me uncancellable test\n");
-    for (i = 0; i < 10; i++ ) 
-	start_proc(NULL, "broadcast me uncancellable test", 
+    for (i = 0; i < 10; i++ )
+	start_proc(NULL, "broadcast me uncancellable test",
 		wakeme_uncancellable_test, 0);
     /* Make sure the processes have blocked */
     stop_until_queued(10, &wake_me_len);
@@ -400,21 +400,26 @@ void *faber_thread_test(int arg1, void *arg2) {
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
     dbg(DBG_TEST, "(C.4) done\n");
 #endif
-
+/*
 #if CS402TESTS > 4
     dbg(DBG_TEST, "cancel me test\n");
     start_proc(&pt, "cancel me test", cancelme_test, 0);
-    /* Make sure p has blocked */
+    /* Make sure p has blocked
     stop_until_queued(1, &wake_me_len);
     sched_cancel(pt.t);
     wait_for_proc(pt.p);
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
 
     dbg(DBG_TEST, "prior cancel me test\n");
+    dbg(DBG_TEST, "xXbefore start_proc\n");
+
     start_proc(&pt, "prior cancel me test", cancelme_test, 0);
-    /*  Cancel before sleep */
+    dbg(DBG_TEST, "xXyo\n");
+    /*  Cancel before sleep
     sched_cancel(pt.t);
+    dbg(DBG_TEST, "xXafter sched_cancel\n");
     wait_for_proc(pt.p);
+    dbg(DBG_TEST, "xXafter wait for proc \n");
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
 
     dbg(DBG_TEST, "cancel me head test\n");
@@ -425,7 +430,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     sched_wakeup_on(&wake_me_q);
     wait_for_all();
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
-    
+
     dbg(DBG_TEST, "cancel me tail test\n");
     start_proc(NULL, "cancel me tail test", wakeme_test, 0);
     start_proc(&pt, "cancel me tail test", cancelme_test, 0);
@@ -436,7 +441,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
     dbg(DBG_TEST, "(C.5) done\n");
 #endif
-
+*/
 #if CS402TESTS > 5
     dbg(DBG_TEST, "Reparenting test\n");
     start_proc(NULL, "Reparenting test", reparent_test, 1);
@@ -459,20 +464,20 @@ void *faber_thread_test(int arg1, void *arg2) {
 
     dbg(DBG_TEST, "show race test\n");
     race = 0;
-    for (i = 0; i < 10; i++ ) 
+    for (i = 0; i < 10; i++ )
 	start_proc(NULL, "show race test", racer_test, 0);
     wait_for_all();
 
     dbg(DBG_TEST, "fix race test\n");
     race = 0;
-    for (i = 0; i < 10; i++ ) 
+    for (i = 0; i < 10; i++ )
 	start_proc(NULL, "fix race test", mutex_uncancellable_test, 0);
     wait_for_all();
 
     dbg(DBG_TEST, "fix race test w/cancel\n");
     race = 0;
     for (i = 0; i < 10; i++ ) {
-	if ( i % 2 == 0) { 
+	if ( i % 2 == 0) {
 	    start_proc(NULL, "fix race test w/cancel", mutex_test, 0);
 	} else {
 	    start_proc(&pt, "fix race test w/cancel", mutex_test_cancelme, 0);

@@ -224,8 +224,6 @@ idleproc_run(int arg1, void *arg2)
         int status;
         pid_t child;
 
-        dbg(DBG_PRINT, "inside idleproc run\n");
-
         /* create init proc */
         kthread_t *initthr = initproc_create();
 
@@ -303,7 +301,7 @@ initproc_create(void)
         proc_t *init_proc = proc_create("init_proc");
         KASSERT(init_proc && "Unable to create init process.\n");
         dbg(DBG_PRINT, "GRADING1MW 1.b\n");
-        
+
        	dbg(DBG_PRINT, "inside initproc_create\n");
 
         KASSERT(PID_INIT == init_proc->p_pid);
@@ -328,7 +326,7 @@ initproc_create(void)
  * @param arg1 the first argument (unused)
  * @param arg2 the second argument (unused)
  */
- 
+
 #ifdef __DRIVERS__
 
         int do_foo(kshell_t *kshell, int argc, char **argv)
@@ -338,7 +336,7 @@ initproc_create(void)
                     argc, (unsigned int)argv);
             /*
              * Shouldn't call a test function directly.
-             * It's best to invoke it in a separate kernel process.  
+             * It's best to invoke it in a separate kernel process.
              */
             return 0;
         }
