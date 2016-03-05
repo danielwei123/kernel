@@ -139,6 +139,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
         if(curthr->kt_cancelled == 1)
         {
+            dbg(DBG_TEST, "YYsched_cancellable_sleep_on\n");
             return -EINTR;
         }
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
@@ -243,6 +244,7 @@ void
 sched_switch(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
+        dbg(DBG_TEST, "YY inside switch\n");
         uint8_t oldIPL;
         oldIPL = intr_getipl();
 

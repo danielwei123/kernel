@@ -118,6 +118,7 @@ static void wait_for_all() {
 static void stop_until_queued(int tot, int *count) {
     while ( *count < tot) {
 	sched_make_runnable(curthr);
+    dbg(DBG_TEST, "YYCount : %d, Current Process : %s\n", *count, curthr->kt_proc->p_comm);
 	sched_switch();
     }
 }
@@ -326,7 +327,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     int i = 0;
 
     dbg(DBG_TEST, ">>> Start running faber_thread_test()...\n");
-
+/*
 #if CS402TESTS > 0
     dbg(DBG_TEST, "waitpid any test\n");
     start_proc(&pt, "waitpid any test", waitpid_test, 23);
@@ -362,7 +363,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     dbg(DBG_TEST, "wake me test\n");
     wake_me_len = 0;
     start_proc(&pt, "wake me test", wakeme_test, 0);
-    /* Make sure p has blocked */
+    /* Make sure p has blocked
     stop_until_queued(1, &wake_me_len);
     sched_wakeup_on(&wake_me_q);
     wait_for_proc(pt.p);
@@ -372,7 +373,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     for (i = 0; i < 10; i++ )
 	start_proc(NULL, "broadcast me test", wakeme_test, 0);
     stop_until_queued(10, &wake_me_len);
-    /* Make sure the processes have blocked */
+    /* Make sure the processes have blocked
     sched_broadcast_on(&wake_me_q);
     wait_for_all();
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
@@ -383,7 +384,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     dbg(DBG_TEST, "wake me uncancellable test\n");
     start_proc(&pt, "wake me uncancellable test",
 	    wakeme_uncancellable_test, 0);
-    /* Make sure p has blocked */
+    /* Make sure p has blocked
     stop_until_queued(1, &wake_me_len);
     sched_wakeup_on(&wake_me_q);
     wait_for_proc(pt.p);
@@ -393,18 +394,18 @@ void *faber_thread_test(int arg1, void *arg2) {
     for (i = 0; i < 10; i++ )
 	start_proc(NULL, "broadcast me uncancellable test",
 		wakeme_uncancellable_test, 0);
-    /* Make sure the processes have blocked */
+    /* Make sure the processes have blocked
     stop_until_queued(10, &wake_me_len);
     sched_broadcast_on(&wake_me_q);
     wait_for_all();
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
     dbg(DBG_TEST, "(C.4) done\n");
 #endif
-/*
+*/
 #if CS402TESTS > 4
     dbg(DBG_TEST, "cancel me test\n");
     start_proc(&pt, "cancel me test", cancelme_test, 0);
-    /* Make sure p has blocked
+    /* Make sure p has blocked */
     stop_until_queued(1, &wake_me_len);
     sched_cancel(pt.t);
     wait_for_proc(pt.p);
@@ -414,24 +415,25 @@ void *faber_thread_test(int arg1, void *arg2) {
     dbg(DBG_TEST, "xXbefore start_proc\n");
 
     start_proc(&pt, "prior cancel me test", cancelme_test, 0);
-    dbg(DBG_TEST, "xXyo\n");
-    /*  Cancel before sleep
+    /*  Cancel before sleep */
     sched_cancel(pt.t);
-    dbg(DBG_TEST, "xXafter sched_cancel\n");
     wait_for_proc(pt.p);
-    dbg(DBG_TEST, "xXafter wait for proc \n");
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
 
     dbg(DBG_TEST, "cancel me head test\n");
     start_proc(&pt, "cancel me head test", cancelme_test, 0);
     start_proc(NULL, "cancel me head test", wakeme_test, 0);
+    dbg(DBG_TEST, "wake me len : %d", wake_me_len);
     stop_until_queued(2, &wake_me_len);
+    dbg(DBG_TEST, "YYAfter stop until queue\n");
     sched_cancel(pt.t);
+    dbg(DBG_TEST, "YYAfter Schedule cancel\n");
     sched_wakeup_on(&wake_me_q);
+    dbg(DBG_TEST, "YYAfter schedule wake up on\n");
     wait_for_all();
+    dbg(DBG_TEST, "YYAfter wait for all\n");
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
-
-    dbg(DBG_TEST, "cancel me tail test\n");
+/*    dbg(DBG_TEST, "cancel me tail test\n");
     start_proc(NULL, "cancel me tail test", wakeme_test, 0);
     start_proc(&pt, "cancel me tail test", cancelme_test, 0);
     stop_until_queued(2, &wake_me_len);
@@ -439,9 +441,9 @@ void *faber_thread_test(int arg1, void *arg2) {
     sched_wakeup_on(&wake_me_q);
     wait_for_all();
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
-    dbg(DBG_TEST, "(C.5) done\n");
+    dbg(DBG_TEST, "(C.5) done\n"); */
 #endif
-*/
+/*
 #if CS402TESTS > 5
     dbg(DBG_TEST, "Reparenting test\n");
     start_proc(NULL, "Reparenting test", reparent_test, 1);
@@ -506,19 +508,19 @@ void *faber_thread_test(int arg1, void *arg2) {
     for ( i=0 ; i < 10; i++ )
 	start_proc(NULL, "proc kill all test", cancelme_test, 0);
     stop_until_queued(10, &wake_me_len);
-    /*
+    *
      * If you don't run this test in a separate process,
      *   the kernel should shutdown and you would fail this test.
      * Therefore, you must run faber_thread_test() in a separate process,
      *   since proc_kill_all() should not kill the init process,
      *   although this function will not return, you should
      *   be able to get your kshell prompt back.
-     */
+
     proc_kill_all();
 
     dbg(DBG_TEST, "proc_kill_all() must not return\n\n");
     KASSERT(0 && "Error in proc kill all test");
 #endif
-
+*/
     return NULL;
 }

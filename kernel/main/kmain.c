@@ -75,6 +75,10 @@ static void      *initproc_run(int arg1, void *arg2);
 
 extern void*	faber_thread_test(int, void *);
 
+extern void *sunghan_test(int, void*);
+extern void *sunghan_deadlock_test(int, void*);
+extern void *faber_thread_test(int, void*);
+
 static context_t bootstrap_context;
 extern int gdb_wait;
 
@@ -327,38 +331,49 @@ initproc_create(void)
  * @param arg2 the second argument (unused)
  */
 
-#ifdef __DRIVERS__
+ #ifdef __DRIVERS__
 
-        int do_foo(kshell_t *kshell, int argc, char **argv)
-        {
-            KASSERT(kshell != NULL);
-            dbg(DBG_PRINT, "(GRADING#X Y.Z): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
-                    argc, (unsigned int)argv);
-            /*
-             * Shouldn't call a test function directly.
-             * It's best to invoke it in a separate kernel process.
-             */
-            return 0;
-        }
+         int do_foo(kshell_t *kshell, int argc, char **argv)
+         {
+             KASSERT(kshell != NULL);
+             dbg(DBG_PRINT, "(GRADING#X Y.Z): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
+                     argc, (unsigned int)argv);
 
-#endif /* __DRIVERS__ */
-static void *
-initproc_run(int arg1, void *arg2)
-{
-        NOT_YET_IMPLEMENTED("PROCS: initproc_run");
-#ifdef __DRIVERS__
+        		proc_t *faber_test = proc_create("faber_test");
 
-        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
-        kshell_add_command("faber", faber_thread_test, "run faber");
+         	kthread_t *faber_thread = kthread_create(faber_test, faber_thread_test, 0, 0);
 
+ 			sched_make_runnable(faber_thread);
 
-        kshell_t *kshell = kshell_create(0);
-        if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        while (kshell_execute_next(kshell));
-        kshell_destroy(kshell);
+ 			do_waitpid(curproc->p_pid , 0, 0);
+             /*
+              * Shouldn't call a test function directly.
+              * It's best to invoke it in a separate kernel process.
+              */
+             return 0;
+         }
 
-#endif /* __DRIVERS__ */
-        dbg(DBG_PRINT, "inside initproc__run\n");
+ #endif /* __DRIVERS__ */
+ static void *
+ initproc_run(int arg1, void *arg2)
+ {
+         NOT_YET_IMPLEMENTED("PROCS: initproc_run");
 
-        return NULL;
-}
+ #ifdef __DRIVERS__
+
+         kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+
+         kshell_add_command("faber", faber_thread_test, "tests");
+ 		kshell_add_command("sunghan", sunghan_test, "sunghan's creation");
+ 		kshell_add_command("sunghan_dead", sunghan_deadlock_test, "sunghan's deadlock creation");
+
+         kshell_t *kshell = kshell_create(0);
+         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
+         while (kshell_execute_next(kshell));
+         kshell_destroy(kshell);
+
+ #endif /* __DRIVERS__ */
+         dbg(DBG_PRINT, "inside initproc__run\n");
+
+         return NULL;
+ }
