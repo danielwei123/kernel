@@ -49,7 +49,7 @@ static void
 ktqueue_enqueue(ktqueue_t *q, kthread_t *thr)
 {
 
-		dbg(DBG_PRINT, "in enqueue\n");
+
         list_insert_head(&q->tq_list, &thr->kt_qlink);
         thr->kt_wchan = q;
         q->tq_size++;
@@ -145,6 +145,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
         int return_value = 0;
         ktqueue_enqueue(q, curthr);
+        dbg(DBG_TEST, "before switch\n");
         sched_switch();
         if(curthr->kt_cancelled == 1)
         {
@@ -244,7 +245,7 @@ void
 sched_switch(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
-        dbg(DBG_TEST, "YY inside switch\n");
+        dbg(DBG_TEST, "\n");
         uint8_t oldIPL;
         oldIPL = intr_getipl();
 
@@ -262,12 +263,13 @@ sched_switch(void)
         kthread_t *old_thread = curthr;
         kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
 
-		dbg(DBG_PRINT, "\tBefore context switch - new thr: %s, old thr: %s\n", new_thread->kt_proc->p_comm, old_thread->kt_proc->p_comm);
+		dbg(DBG_PRINT, "\tZZBefore context switch - new thr: %s, old thr: %s\n", new_thread->kt_proc->p_comm, old_thread->kt_proc->p_comm);
         curthr = new_thread;
         curproc = curthr->kt_proc;
         curthr->kt_state = KT_RUN;
         context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
         intr_setipl(oldIPL);
+        dbg(DBG_TEST, "Ending switch\n");
         /*Understand the meaning of last Note : The IPL is process specific*/
 }
 
@@ -295,6 +297,11 @@ sched_make_runnable(kthread_t *thr)
         thr->kt_state = KT_RUN;
         KASSERT((&(kt_runq) != thr->kt_wchan) && "Thread already in run queue!\n");
         dbg(DBG_PRINT, "GRADING1MW 4.b\n");
+        dbg(DBG_PRINT, "ZZin enqueue. Enqueueing %s, enqueued by %s\n", thr->kt_proc->p_comm, curproc->p_comm);
         ktqueue_enqueue(&kt_runq, thr);
         intr_setipl(oldIPL);
+}
+
+void getLengthQ(){
+    dbg(DBG_TEST, "ZZRunQ : %d\n", kt_runq.tq_size);
 }

@@ -242,7 +242,9 @@ proc_kill(proc_t *p, int status)
         while(link != &(p->p_threads))
         {
         	thr = list_item(link, kthread_t, kt_plink);
+            link = link->l_next;
         	kthread_cancel(thr, 0);
+
         }
 }
 

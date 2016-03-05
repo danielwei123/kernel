@@ -337,15 +337,15 @@ initproc_create(void)
          {
              KASSERT(kshell != NULL);
              dbg(DBG_PRINT, "(GRADING#X Y.Z): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
-                     argc, (unsigned int)argv);
-
-        		proc_t *faber_test = proc_create("faber_test");
+             argc, (unsigned int)argv);
+             int status = 0;
+        	proc_t *faber_test = proc_create("faber_test");
 
          	kthread_t *faber_thread = kthread_create(faber_test, faber_thread_test, 0, 0);
 
  			sched_make_runnable(faber_thread);
 
- 			do_waitpid(curproc->p_pid , 0, 0);
+ 			do_waitpid(-1 , 0, &status);
              /*
               * Shouldn't call a test function directly.
               * It's best to invoke it in a separate kernel process.
@@ -363,9 +363,9 @@ initproc_create(void)
 
          kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
 
-         kshell_add_command("faber", faber_thread_test, "tests");
- 		kshell_add_command("sunghan", sunghan_test, "sunghan's creation");
- 		kshell_add_command("sunghan_dead", sunghan_deadlock_test, "sunghan's deadlock creation");
+         /*kshell_add_command("faber", faber_thread_test, "tests");*/
+         kshell_add_command("sunghan", sunghan_test, "sunghan's creation");
+ 	     kshell_add_command("sunghan_dead", sunghan_deadlock_test, "sunghan's deadlock creation");
 
          kshell_t *kshell = kshell_create(0);
          if (NULL == kshell) panic("init: Couldn't create kernel shell\n");

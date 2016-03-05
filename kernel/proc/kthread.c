@@ -107,7 +107,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
         KASSERT(NULL != p);
         dbg(DBG_PRINT, "GRADING1MW 3.a\n");
-        
+
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread.\n");
@@ -119,6 +119,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         kthr->kt_proc = p;
 		kthr->kt_state = KT_NO_STATE;
         kthr->kt_wchan = NULL;
+        kthr->kt_cancelled = 0;
 		context_setup(&(kthr->kt_ctx), func, (int)arg1, arg2, kthr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
 
         list_link_init(&(kthr->kt_plink));
