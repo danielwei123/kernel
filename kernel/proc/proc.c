@@ -321,21 +321,24 @@ do_waitpid(pid_t pid, int options, int *status)
 
         dbg(DBG_TEST, "curproc : %s\n", curproc->p_comm);
 
-        if(pid < -1)
+		if(pid < -1 || pid == 0)
 		{
 			dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
 			return	-ECHILD;
 		}
+
 		if(options != 0)
 		{
 			dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
 			return	-ECHILD;
 		}
+
 		if(list_empty(&(curproc->p_children)))
 		{
 			dbg(DBG_PRINT, "Curproc does not have any children\n");
 			return	-ECHILD;
 		}
+
 		if(pid == -1)
 		{
 
@@ -392,6 +395,7 @@ do_waitpid(pid_t pid, int options, int *status)
         {
         	return	-ECHILD;
         }
+
 		for(link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
 		{
 				pt = list_item(link, proc_t, p_child_link);
