@@ -322,6 +322,25 @@ do_waitpid(pid_t pid, int options, int *status)
 		int			dead_child = 0;
 		int			return_value = 0;
 		dbg(DBG_PRINT, "inside do_waitpid\n");
+		
+		if(pid < -1 || pid == 0)
+		{
+			dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
+			return	-ECHILD;
+		}
+		
+		if(options != 0)
+		{
+			dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
+			return	-ECHILD;
+		}
+		
+		if(list_empty(&(curproc->p_children)))
+		{
+			dbg(DBG_PRINT, "Curproc does not have any children\n");
+			return	-ECHILD;
+		}
+		
 		if(pid == -1)
 		{
 			dbg(DBG_PRINT, "inside pid =-1\n");
@@ -363,21 +382,7 @@ do_waitpid(pid_t pid, int options, int *status)
 			slab_obj_free(proc_allocator, pt);
 			return return_value;
 		}
-		if(pid < -1 || pid == 0)
-		{
-			dbg(DBG_PRINT, "Invalid PID arg to do_waitpid\n");
-			return	-ECHILD;
-		}
-		if(options != 0)
-		{
-			dbg(DBG_PRINT, "Invalid options arg to do_waitpid\n");
-			return	-ECHILD;
-		}
-		if(list_empty(&(curproc->p_children)))
-		{
-			dbg(DBG_PRINT, "Curproc does not have any children\n");
-			return	-ECHILD;
-		}
+
 	    for (link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
         {
 			pt = list_item(link, proc_t, p_child_link);
@@ -391,6 +396,7 @@ do_waitpid(pid_t pid, int options, int *status)
         {
         	return	-ECHILD;
         }
+		
 		for(link = curproc->p_children.l_next; link != &(curproc->p_children); link = link->l_next)
 		{
 				pt = list_item(link, proc_t, p_child_link);
