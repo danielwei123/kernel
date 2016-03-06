@@ -48,8 +48,6 @@ init_func(sched_init);
 static void
 ktqueue_enqueue(ktqueue_t *q, kthread_t *thr)
 {
-
-
         list_insert_head(&q->tq_list, &thr->kt_qlink);
         thr->kt_wchan = q;
         q->tq_size++;
@@ -66,7 +64,6 @@ ktqueue_dequeue(ktqueue_t *q)
 {
         kthread_t *thr;
         list_link_t *link;
-
         if (list_empty(&q->tq_list))
                 return NULL;
 
@@ -120,6 +117,7 @@ void
 sched_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
+        dbg(DBG_PRINT, "GRADING1C 1\n");
         curthr->kt_state = KT_SLEEP;
         ktqueue_enqueue(q, curthr);
         sched_switch();
@@ -137,18 +135,19 @@ int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
+        dbg(DBG_PRINT, "GRADING1C 3\n");
         if(curthr->kt_cancelled == 1)
         {
-            dbg(DBG_TEST, "YYsched_cancellable_sleep_on\n");
+            dbg(DBG_PRINT, "GRADING1C 5\n");
             return -EINTR;
         }
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
         int return_value = 0;
         ktqueue_enqueue(q, curthr);
-        dbg(DBG_TEST, "before switch\n");
         sched_switch();
         if(curthr->kt_cancelled == 1)
         {
+            dbg(DBG_PRINT, "GRADING1C 5\n");
             return_value = -EINTR;
         }
         return return_value;
@@ -160,12 +159,14 @@ sched_wakeup_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
         if(sched_queue_empty(q))
         {
+            dbg(DBG_PRINT, "GRADING1C 1\n");
             return NULL;
         }
         else
         {
+            dbg(DBG_PRINT, "GRADING1C 1\n");
             kthread_t *temp_thr = ktqueue_dequeue(q);
-            KASSERT((temp_thr->kt_state == KT_SLEEP) || (temp_thr->kt_state == KT_SLEEP_CANCELLABLE) && "Current thread is in some blocking queue!\n");
+            KASSERT(((temp_thr->kt_state == KT_SLEEP) || (temp_thr->kt_state == KT_SLEEP_CANCELLABLE)) && "Current thread is in some blocking queue!\n");
         	dbg(DBG_PRINT, "GRADING1A 4.a\n");
             sched_make_runnable(temp_thr);
             return temp_thr;
@@ -179,6 +180,7 @@ sched_broadcast_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on");*/
         while(!sched_queue_empty(q))
         {
+            dbg(DBG_PRINT, "GRADING1C 3\n");
             kthread_t *temp_thr = ktqueue_dequeue(q);
             sched_make_runnable(temp_thr);
         }
@@ -200,6 +202,7 @@ sched_cancel(struct kthread *kthr)
         kthr->kt_cancelled = 1;
         if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
         {
+            dbg(DBG_PRINT, "GRADING1C 5\n");
             ktqueue_remove(kthr->kt_wchan, kthr);
             sched_make_runnable(kthr);
         }
@@ -245,32 +248,25 @@ void
 sched_switch(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
-        dbg(DBG_TEST, "\n");
+        dbg(DBG_PRINT, "\n");
         uint8_t oldIPL;
         oldIPL = intr_getipl();
-
         intr_setipl(IPL_HIGH);
-
         while(sched_queue_empty(&kt_runq))
         {
-        	/*intr_disable();*/
+        	dbg(DBG_PRINT, "GRADING1D 2\n");
             intr_setipl(IPL_LOW);
             intr_wait();
             intr_setipl(IPL_HIGH);
 
         }
-
         kthread_t *old_thread = curthr;
         kthread_t *new_thread = ktqueue_dequeue(&kt_runq);
-
-		dbg(DBG_PRINT, "\tZZBefore context switch - new thr: %s, old thr: %s\n", new_thread->kt_proc->p_comm, old_thread->kt_proc->p_comm);
-        curthr = new_thread;
+		curthr = new_thread;
         curproc = curthr->kt_proc;
         curthr->kt_state = KT_RUN;
         context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
         intr_setipl(oldIPL);
-        dbg(DBG_TEST, "Ending switch\n");
-        /*Understand the meaning of last Note : The IPL is process specific*/
 }
 
 /*
@@ -289,19 +285,12 @@ sched_switch(void)
 void
 sched_make_runnable(kthread_t *thr)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
         uint8_t oldIPL;
         oldIPL = intr_getipl();
-
         intr_setipl(IPL_HIGH);
         thr->kt_state = KT_RUN;
         KASSERT((&(kt_runq) != thr->kt_wchan) && "Thread already in run queue!\n");
         dbg(DBG_PRINT, "GRADING1A 4.b\n");
-        dbg(DBG_PRINT, "ZZin enqueue. Enqueueing %s, enqueued by %s\n", thr->kt_proc->p_comm, curproc->p_comm);
         ktqueue_enqueue(&kt_runq, thr);
         intr_setipl(oldIPL);
-}
-
-void getLengthQ(){
-    dbg(DBG_TEST, "ZZRunQ : %d\n", kt_runq.tq_size);
 }

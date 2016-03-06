@@ -34,6 +34,7 @@ void
 kmutex_init(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
+		dbg(DBG_PRINT, "GRADING1C 7\n");
 		sched_queue_init(&(mtx->km_waitq));
 		mtx->km_holder = NULL;
 }
@@ -52,8 +53,10 @@ kmutex_lock(kmutex_t *mtx)
         dbg(DBG_PRINT, "GRADING1A 5.a\n");
         if(mtx->km_holder != NULL)
         {
+			dbg(DBG_PRINT, "GRADING1C 7\n");
 			sched_sleep_on(&(mtx->km_waitq));
         }
+		dbg(DBG_PRINT, "GRADING1C 7\n");
         mtx->km_holder = curthr;
 }
 
@@ -74,9 +77,12 @@ kmutex_lock_cancellable(kmutex_t *mtx)
         	x = sched_cancellable_sleep_on(&(mtx->km_waitq));
        		if(x != 0)
 			{
+				dbg(DBG_PRINT, "GRADING1C 7\n");
 				return	x;
 			}
+			dbg(DBG_PRINT, "GRADING1C 7\n");
         }
+		dbg(DBG_PRINT, "GRADING1C 7\n");
         mtx->km_holder = curthr;
         return 0;
 }
@@ -101,7 +107,6 @@ kmutex_unlock(kmutex_t *mtx)
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/
         KASSERT(curthr && (curthr == mtx->km_holder));
        	dbg(DBG_PRINT, "GRADING1A 5.c\n");
-		  
 		kthread_t	*thr = sched_wakeup_on(&(mtx->km_waitq));
 		mtx->km_holder = thr;
 		KASSERT(curthr != mtx->km_holder);
