@@ -367,7 +367,8 @@ sunghan_deadlock_test_func(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
-int big_process_name(kshell_t *kshell, int argc, char **argv)
+int
+big_process_name(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
     dbg(DBG_PRINT, "GRADING1E 1\n");
@@ -381,7 +382,8 @@ int big_process_name(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
-int thread_self_cancel(kshell_t *kshell, int argc, char **argv)
+int
+thread_self_cancel(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
     dbg(DBG_PRINT, "GRADING1E 2\n");
@@ -393,7 +395,8 @@ int thread_self_cancel(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
-int init_clean(kshell_t *kshell, int argc, char **argv)
+int
+init_clean(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
     dbg(DBG_PRINT, "GRADING1E 3\n");
@@ -401,7 +404,8 @@ int init_clean(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
-int badargs1(kshell_t *kshell, int argc, char **argv)
+int
+badargs1(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
     dbg(DBG_PRINT, "GRADING1E 4\n");
@@ -413,7 +417,8 @@ int badargs1(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
-int badargs2(kshell_t *kshell, int argc, char **argv)
+int
+badargs2(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
     dbg(DBG_PRINT, "GRADING1E 5\n");
@@ -443,6 +448,7 @@ int badargs2(kshell_t *kshell, int argc, char **argv)
          kshell_add_command("initclean", init_clean, "Proc clean called on init(Works similar to exit)");
          kshell_add_command("badargs1", badargs1, "Pid other than -1 and positive numbers");
          kshell_add_command("badargs2", badargs2, "Options other than 0");
+
          kshell_t *kshell = kshell_create(0);
          if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
          while (kshell_execute_next(kshell));

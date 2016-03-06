@@ -111,7 +111,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread.\n");
 		kthr->kt_kstack = alloc_stack();
 		KASSERT(kthr->kt_kstack != NULL && "Unable to allocate thread stack.\n");
-        dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread thread.\n");
+        dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread stack.\n");
         kthr->kt_proc = p;
 		kthr->kt_state = KT_NO_STATE;
         kthr->kt_wchan = NULL;
