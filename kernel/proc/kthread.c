@@ -106,7 +106,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
         KASSERT(NULL != p);
-        dbg(DBG_PRINT, "GRADING1MW 3.a\n");
+        dbg(DBG_PRINT, "GRADING1A 3.a\n");
 
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
@@ -144,7 +144,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
  		KASSERT(NULL != kthr && "Trying to cancel NULL thread!\n");
- 		dbg(DBG_PRINT, "GRADING1MW 3.b\n");
+ 		dbg(DBG_PRINT, "GRADING1A 3.b\n");
         if(kthr == curthr)
         {
         	kthread_exit(retval);
@@ -175,11 +175,11 @@ kthread_exit(void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_exit");*/
         KASSERT(curthr->kt_wchan == NULL && "Current thread is in some blocking queue!\n");
-        dbg(DBG_PRINT, "GRADING1MW 3.c\n");
+        dbg(DBG_PRINT, "GRADING1A 3.c\n");
         KASSERT(curthr->kt_qlink.l_next == NULL && curthr->kt_qlink.l_prev==NULL && "Current thread queue is not empty!\n");
-        dbg(DBG_PRINT, "GRADING1MW 3.c\n");
+        dbg(DBG_PRINT, "GRADING1A 3.c\n");
         KASSERT(curthr->kt_proc == curproc && "Current thread is magically executing without curproc!\n");
-        dbg(DBG_PRINT, "GRADING1MW 3.c\n");
+        dbg(DBG_PRINT, "GRADING1A 3.c\n");
         curthr->kt_retval = retval;
         curthr->kt_state = KT_EXITED;
         proc_thread_exited(retval);

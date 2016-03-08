@@ -165,8 +165,8 @@ sched_wakeup_on(ktqueue_t *q)
         else
         {
             kthread_t *temp_thr = ktqueue_dequeue(q);
-            KASSERT((temp_thr->kt_state == KT_SLEEP || temp_thr->kt_state == KT_SLEEP_CANCELLABLE) && "Current thread is in some blocking queue!\n");
-        	dbg(DBG_PRINT, "GRADING1MW 4.a\n");
+            KASSERT((temp_thr->kt_state == KT_SLEEP) || (temp_thr->kt_state == KT_SLEEP_CANCELLABLE) && "Current thread is in some blocking queue!\n");
+        	dbg(DBG_PRINT, "GRADING1A 4.a\n");
             sched_make_runnable(temp_thr);
             return temp_thr;
         }
@@ -296,7 +296,7 @@ sched_make_runnable(kthread_t *thr)
         intr_setipl(IPL_HIGH);
         thr->kt_state = KT_RUN;
         KASSERT((&(kt_runq) != thr->kt_wchan) && "Thread already in run queue!\n");
-        dbg(DBG_PRINT, "GRADING1MW 4.b\n");
+        dbg(DBG_PRINT, "GRADING1A 4.b\n");
         dbg(DBG_PRINT, "ZZin enqueue. Enqueueing %s, enqueued by %s\n", thr->kt_proc->p_comm, curproc->p_comm);
         ktqueue_enqueue(&kt_runq, thr);
         intr_setipl(oldIPL);

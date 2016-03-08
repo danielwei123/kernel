@@ -189,18 +189,20 @@ bootstrap(int arg1, void *arg2)
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 
         proc_t *idle_proc = proc_create("idle_proc");
-        KASSERT(idle_proc && "Unable to create idle process.\n");
-        dbg(DBG_PRINT, "GRADING1MW 1.a\n");
+        
         curproc = idle_proc;
+        KASSERT((NULL!= curproc) && "Unable to create idle process.\n");
+        dbg(DBG_PRINT, "GRADING1A 1.a\n");
 
-        KASSERT(PID_IDLE == idle_proc->p_pid);
-        dbg(DBG_PRINT, "GRADING1MW 1.a\n");
+        KASSERT(PID_IDLE == curproc->p_pid);
+        dbg(DBG_PRINT, "GRADING1A 1.a\n");
 
 
         kthread_t *idle_thread = kthread_create(idle_proc, idleproc_run, arg1, arg2);
-        KASSERT(idle_thread && "Unable to create idle thread.\n");
-        dbg(DBG_PRINT, "GRADING1MW 1.a\n");
+        
         curthr = idle_thread;
+        KASSERT((NULL != curthr) && "Unable to create idle thread.\n");
+        dbg(DBG_PRINT, "GRADING1A 1.a\n");
 
 
         dbg(DBG_PRINT, "context_main_active\n");
@@ -303,18 +305,18 @@ initproc_create(void)
         /*NOT_YET_IMPLEMENTED("PROCS: initproc_create");*/
 
         proc_t *init_proc = proc_create("init_proc");
-        KASSERT(init_proc && "Unable to create init process.\n");
-        dbg(DBG_PRINT, "GRADING1MW 1.b\n");
+        KASSERT((NULL != init_proc) && "Unable to create init process.\n");
+        dbg(DBG_PRINT, "GRADING1A 1.b\n");
 
        	dbg(DBG_PRINT, "inside initproc_create\n");
 
         KASSERT(PID_INIT == init_proc->p_pid);
-        dbg(DBG_PRINT, "GRADING1MW 1.b\n");
+        dbg(DBG_PRINT, "GRADING1A 1.b\n");
 
         /* arg1 set to 0 and arg2 set to NULL */
         kthread_t *init_thread = kthread_create(init_proc, initproc_run, 0, NULL);
-        KASSERT(init_thread && "Unable to create init thread.\n");
-        dbg(DBG_PRINT, "GRADING1MW 1.b\n");
+        KASSERT((init_thread != NULL )&& "Unable to create init thread.\n");
+        dbg(DBG_PRINT, "GRADING1A 1.b\n");
 
         return init_thread;
 }

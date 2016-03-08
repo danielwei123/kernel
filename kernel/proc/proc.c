@@ -123,13 +123,13 @@ proc_create(char *name)
         proc_t *pt = (proc_t *)slab_obj_alloc(proc_allocator);
         if(pt == NULL)
         {
-        	panic("\nslab allocator failed\n");
+        	return pt;
         }
         pt->p_pid = _proc_getid();
-        KASSERT(PID_IDLE != pt->p_pid || list_empty(&_proc_list));
-        dbg(DBG_PRINT, "GRADING1MW 2.a\n");
-        KASSERT(PID_INIT != pt->p_pid || PID_IDLE == curproc->p_pid);
-        dbg(DBG_PRINT, "GRADING1MW 2.a\n");
+        KASSERT((PID_IDLE != pt->p_pid) || (list_empty(&_proc_list)));
+        dbg(DBG_PRINT, "GRADING1A 2.a\n");
+        KASSERT((PID_INIT != pt->p_pid)|| (PID_IDLE == curproc->p_pid));
+        dbg(DBG_PRINT, "GRADING1A 2.a\n");
         if(strlen(name)>256)
         {
         	name[255]='\0';
@@ -189,11 +189,11 @@ proc_cleanup(int status)
 		proc_t		*pt;
 		int			x;
 		KASSERT(NULL != proc_initproc);
-        dbg(DBG_PRINT, "GRADING1MW 2.b\n");
+        dbg(DBG_PRINT, "GRADING1A 2.b\n");
 		KASSERT(1 <= curproc->p_pid);
-		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
+		dbg(DBG_PRINT, "GRADING1A 2.b\n");
 		KASSERT(NULL != curproc->p_pproc);
-		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
+		dbg(DBG_PRINT, "GRADING1A 2.b\n");
 		link = curproc->p_children.l_next;
 		while(link != &(curproc->p_children))
 		{
@@ -214,7 +214,7 @@ proc_cleanup(int status)
 		curproc->p_state = PROC_DEAD;
 		list_remove(&(curproc->p_list_link));
 		KASSERT(NULL != curproc->p_pproc);
-		dbg(DBG_PRINT, "GRADING1MW 2.b\n");
+		dbg(DBG_PRINT, "GRADING1A 2.b\n");
 		sched_wakeup_on(&(curproc->p_pproc->p_wait));
 		dbg(DBG_PRINT, "\t\tback to clean up \n");
        /* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
@@ -364,8 +364,13 @@ do_waitpid(pid_t pid, int options, int *status)
 
         		}
 			}while(dead_child == 0);
+
 			KASSERT(pt!=NULL && "Dead Child is NULL!\n");
-			dbg(DBG_PRINT, "GRADING1MW 2.c\n");
+			dbg(DBG_PRINT, "GRADING1A 2.c\n");
+
+            KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
+            dbg(DBG_PRINT, "GRADING1A 2.c\n");
+
 			*status = pt->p_status;
 			link = pt->p_threads.l_next;
         	dbg(DBG_PRINT, "\t\tcleanup = 0\n");
@@ -374,11 +379,13 @@ do_waitpid(pid_t pid, int options, int *status)
 			{
 				thr = list_item(link, kthread_t, kt_plink);
 				link = link->l_next;
+                KASSERT(KT_EXITED == thr->kt_state);
+                dbg(DBG_PRINT, "GRADING1A 2.c\n");
 				kthread_destroy(thr);
 			}
 			list_remove(&(pt->p_child_link));
 			KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
-			dbg(DBG_PRINT, "GRADING1MW 2.c\n");
+			dbg(DBG_PRINT, "GRADING1A 2.c\n");
 			pt_destroy_pagedir(pt->p_pagedir);
 			slab_obj_free(proc_allocator, pt);
 			return return_value;
@@ -407,7 +414,8 @@ do_waitpid(pid_t pid, int options, int *status)
 				}
 		}
 		KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
-		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
+		dbg(DBG_PRINT, "GRADING1A 2.c\n");
+
         while(pt->p_state != PROC_DEAD)
         {
 
@@ -419,7 +427,7 @@ do_waitpid(pid_t pid, int options, int *status)
 		*status = pt->p_status;
 
 		KASSERT(pt->p_pagedir != NULL && "Page directory is NULL!\n");
-		dbg(DBG_PRINT, "GRADING1MW 2.c\n");
+		dbg(DBG_PRINT, "GRADING1A 2.c\n");
 
 		pt_destroy_pagedir(pt->p_pagedir);
 
