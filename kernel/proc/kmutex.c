@@ -66,7 +66,8 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: todo: kmutex_lock_cancellable");*/
         KASSERT(curthr && (mtx->km_holder != curthr) && "Thread trying to lock a mutex it already has locked");
-        dbg(DBG_PRINT, "GRADING1A 5.b\n");                
+        dbg(DBG_PRINT, "GRADING1A 5.b\n");  
+        dbg(DBG_PRINT, "GRADING1C 7\n");          
         int	x = 0;
         if(mtx->km_holder != NULL)
         {	

@@ -143,8 +143,9 @@ void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
- 		KASSERT(NULL != kthr && "Trying to cancel NULL thread!\n");
- 		dbg(DBG_PRINT, "GRADING1A 3.b\n");
+	KASSERT(NULL != kthr && "Trying to cancel NULL thread!\n");
+	dbg(DBG_PRINT, "GRADING1A 3.b\n");
+        dbg(DBG_PRINT, "GRADING1C 8\n");
         if(kthr == curthr)
         {
         	kthread_exit(retval);

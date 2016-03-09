@@ -418,7 +418,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     wait_for_proc(pt.p);
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
 
-    dbg(DBG_TEST, "prior cancel me test\n");
+    dbg(DBG_TEST, "BBprior cancel me test\n");
     dbg(DBG_TEST, "xXbefore start_proc\n");
 
     start_proc(&pt, "prior cancel me test", cancelme_test, 0);
@@ -461,7 +461,7 @@ void *faber_thread_test(int arg1, void *arg2) {
 #endif
 
 #if CS402TESTS > 5
-    dbg(DBG_TEST, "Reparenting test\n");
+    dbg(DBG_TEST, "BBReparenting test\n");
     start_proc(NULL, "Reparenting test", reparent_test, 1);
     stop_until_queued(1, &wake_me_len);
     sched_wakeup_on(&wake_me_q);
@@ -480,7 +480,7 @@ void *faber_thread_test(int arg1, void *arg2) {
 #if CS402TESTS > 6
     kmutex_init(&mutex);
 
-    dbg(DBG_TEST, "show race test\n");
+    dbg(DBG_TEST, "BBshow race test\n");
     race = 0;
     for (i = 0; i < 10; i++ )
 	start_proc(NULL, "show race test", racer_test, 0);
@@ -503,11 +503,11 @@ void *faber_thread_test(int arg1, void *arg2) {
 	}
     }
     wait_for_all();
-    dbg(DBG_TEST, "(C.7) done\n");
+    dbg(DBG_TEST, "BB(C.7) done\n");
 #endif
 
 #if CS402TESTS > 7
-    dbg(DBG_TEST, "kill child procs test\n");
+    dbg(DBG_TEST, "BBkill child procs test\n");
     for ( i=0 ; i < 10; i++ )
 	start_proc(NULL, "kill child procs test", cancelme_test, 0);
     stop_until_queued(10, &wake_me_len);
@@ -516,11 +516,11 @@ void *faber_thread_test(int arg1, void *arg2) {
     } list_iterate_end();
     wait_for_all();
     KASSERT(wake_me_len == 0 && "Error on wakeme bookkeeping");
-    dbg(DBG_TEST, "(C.8) done\n");
+    dbg(DBG_TEST, "BB(C.8) done\n");
 #endif
 
 #if CS402TESTS > 8
-    dbg(DBG_TEST, "proc kill all test\n");
+    dbg(DBG_TEST, "BBproc kill all test\n");
     for ( i=0 ; i < 10; i++ )
 	start_proc(NULL, "proc kill all test", cancelme_test, 0);
     stop_until_queued(10, &wake_me_len);
@@ -535,7 +535,7 @@ void *faber_thread_test(int arg1, void *arg2) {
     proc_kill_all();
 
     dbg(DBG_TEST, "proc_kill_all() must not return\n\n");
-    KASSERT(0 && "Error in proc kill all test");
+    KASSERT(0 && "BBError in proc kill all test");
 #endif
 
     return NULL;
