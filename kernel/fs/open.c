@@ -91,6 +91,74 @@ get_empty_fd(proc_t *p)
 int
 do_open(const char *filename, int oflags)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_open");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
+        
+        int	fd;
+	file_t	*f;
+	int	flags = 0;
+	vnode_t **res_vnode = NULL;
+	vnode_t *base = NULL;
+	int	error_code = 0
+		
+	fd = get_empty_fd(curproc);
+	
+	if(fd == (-EMFILE))
+	{
+		//return -EMFILE or EMFILE?
+		return	EMFILE;
+	}
+	
+	f = fget(-1);
+	
+	if(f == NULL)
+	{
+		return ENOMEM;
+	}
+	
+	curproc->p_files[fd] = f;
+	
+	flags = (oflags & O_RDONLY)|(oflags & O_WRONLY)|(oflags & O_RDWR);
+	
+	if((oflags & O_WRONLY) && !((oflags & O_RDWR))
+	{
+		flags = FMODE_WRITE;
+	}
+	else
+	{
+	
+		if((oflags & O_RDWR))
+		{
+			flags =  FMODE_WRITE | FMODE_READ;
+		}
+		else
+		{
+			if((oflags & O_RDONLY) && !((oflags & O_RDWR)
+			{
+				flags = FMODE_READ;
+			}
+			else
+			{
+				return EINVAL;
+			}
+		}
+	}
+	
+	if((oflags&O_APPEND) == O_APPEND)
+	{
+		flags = flags | FMODE_APPEND;
+	}
+	
+	f->f_mode = flags; 
+	
+	error_code = open_namev(filename, oflags, res_vnode, base);
+	//use error_code to return EN...
+	
+	f->f_pos = 0;
+	f->vnode = *res_vnode;
+
+	//f->f_refcount fill this
+	
+  	return fd;
+  	
+        //return -1;
 }
