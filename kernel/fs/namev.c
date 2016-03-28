@@ -44,7 +44,25 @@ int
 lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 {
         NOT_YET_IMPLEMENTED("VFS: lookup");
+        if( strcmp(name,".") == 0)
+        {
+            result = &dir;
+        }
+        else if ( strcmp(name,"..") == 0)
+        {
+
+        }
+        else
+        {
+            int res = dir->vn_ops->lookup(dir,name,len,result);
+            if( res != 0)
+                return -ENOTDIR;
+        }
+
+        
+
         return 0;
+       
 }
 
 
@@ -66,11 +84,55 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
  * Note: A successful call to this causes vnode refcount on *res_vnode to
  * be incremented.
  */
+
+
 int
 dir_namev(const char *pathname, size_t *namelen, const char **name,
           vnode_t *base, vnode_t **res_vnode)
 {
+
         NOT_YET_IMPLEMENTED("VFS: dir_namev");
+
+        /* Handle Case like ///  and also kmalloc */
+        char *token;
+
+        char *path = (*char)kmalloc((strlen(pathname)+1)*sizeof(char));
+        strcpy(path,pathname);
+
+        if( path[0] == '/')
+        {
+            base = vfs_root_vn;
+            token = strtok(path,"/");
+            token = strtok(NULL,"/");
+        }
+        else if( base == NULL)
+        {
+            base = curproc->p_cwd;
+            token = strtok(path,"/");
+        }
+        else 
+        {
+            token = strtok(path,"/");
+        }
+
+        if(token == NULL)
+            token = path;
+
+
+        while( token != NULL ) 
+        {
+
+            int res = lookup(base, token, strlen(token) , res_vnode);
+            if (res != 0)
+                return res;
+            base = &res_vnode;
+            token = strtok(NULL, "/");
+        }
+
+        name = &token;
+        namelen = strlen(token);
+
+
         return 0;
 }
 
