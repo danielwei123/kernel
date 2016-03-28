@@ -59,7 +59,19 @@
 int
 do_read(int fd, void *buf, size_t nbytes)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_read");
+        /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
+        int	bytes_read = -1;
+        
+        fget(fd);
+        
+        bytes_read = curproc->p_files[fd]->f_vnode->vn_ops->read(curproc->p_files[fd]->f_vnode, curproc->p_files[fd]->f_vnode->f_pos, buf, nbytes);
+        
+        if(bytes_read != -1)
+        {
+        	curproc->p_files[fd]->f_vnode->f_pos + bytes_read;
+        	return	bytes_read;
+        }
+        
         return -1;
 }
 
