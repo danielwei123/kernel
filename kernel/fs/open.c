@@ -108,15 +108,39 @@ do_open(const char *filename, int oflags)
 		return	EMFILE;
 	}
 	
-	f = fget(fd);
+	f = fget(-1);
+	
+	if(f == NULL)
+	{
+		return ENOMEM;
+	}
 	
 	curproc->p_files[fd] = f;
 	
 	flags = (oflags & O_RDONLY)|(oflags & O_WRONLY)|(oflags & O_RDWR);
 	
-	if(flags == O_RDWR)
+	if((oflags & O_WRONLY) && !((oflags & O_RDWR))
 	{
-		flags = FMODE_WRITE | FMODE_READ;
+		flags = FMODE_WRITE;
+	}
+	else
+	{
+	
+		if((oflags & O_RDWR))
+		{
+			flags =  FMODE_WRITE | FMODE_READ;
+		}
+		else
+		{
+			if((oflags & O_RDONLY) && !((oflags & O_RDWR)
+			{
+				flags = FMODE_READ;
+			}
+			else
+			{
+				return EINVAL;
+			}
+		}
 	}
 	
 	if((oflags&O_APPEND) == O_APPEND)
