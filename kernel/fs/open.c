@@ -125,7 +125,6 @@ do_open(const char *filename, int oflags)
 	}
 	else
 	{
-	
 		if((oflags & O_RDWR))
 		{
 			flags =  FMODE_WRITE | FMODE_READ;
@@ -138,11 +137,11 @@ do_open(const char *filename, int oflags)
 			}
 			else
 			{
+				fput(f);
 				return EINVAL;
 			}
 		}
 	}
-	
 	if((oflags&O_APPEND) == O_APPEND)
 	{
 		flags = flags | FMODE_APPEND;
@@ -153,10 +152,17 @@ do_open(const char *filename, int oflags)
 	error_code = open_namev(filename, oflags, res_vnode, base);
 	//use error_code to return EN...
 	
+	if(error_code < 0)
+	{
+		curproc->p_files[fd] = NULL;
+		fput(f);
+		return error_code;
+	}
+	
 	f->f_pos = 0;
 	f->vnode = *res_vnode;
 
-	//f->f_refcount fill this
+	f->f_refcount = 1;
 	
   	return fd;
   	
