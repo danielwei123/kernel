@@ -64,14 +64,16 @@ do_read(int fd, void *buf, size_t nbytes)
         
         fget(fd);
         
-        bytes_read = curproc->p_files[fd]->f_vnode->vn_ops->read(curproc->p_files[fd]->f_vnode, curproc->p_files[fd]->f_vnode->f_pos, buf, nbytes);
+        bytes_read = curproc->p_files[fd]->f_vnode->vn_ops->read(curproc->p_files[fd]->f_vnode, curproc->p_files[fd]->f_pos, buf, nbytes);
         
         if(bytes_read != -1)
         {
-        	curproc->p_files[fd]->f_vnode->f_pos + bytes_read;
+        	fput();
+        	curproc->p_files[fd]->f_pos + bytes_read;
         	return	bytes_read;
         }
         
+        fput();
         return -1;
 }
 
@@ -86,7 +88,10 @@ do_read(int fd, void *buf, size_t nbytes)
 int
 do_write(int fd, const void *buf, size_t nbytes)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_write");
+        /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
+        
+        
+        
         return -1;
 }
 
@@ -100,7 +105,12 @@ do_write(int fd, const void *buf, size_t nbytes)
 int
 do_close(int fd)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_close");
+        /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
+ 
+ 	file_t	*temp = curproc->p_files[fd];
+	curproc->p_files[fd] = NULL;
+       	fput(temp);
+		
         return -1;
 }
 
@@ -339,7 +349,44 @@ do_getdent(int fd, struct dirent *dirp)
 int
 do_lseek(int fd, int offset, int whence)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_lseek");
+        /*NOT_YET_IMPLEMENTED("VFS: do_lseek");*/
+        
+        int	x;
+
+	/*handle neg offset*/	
+
+        if(whence == SEEK_SET){
+        
+        	curproc->p_files[fd]->f_pos = offset;
+        	
+        	return	curproc->p_files[fd]->f_pos;
+        }
+        else
+        {
+        	if(whence == SEEK_CUR){
+        		curproc->p_files[fd]->f_pos = curproc->p_files[fd]->f_pos + offset;
+        		
+        		if(curproc->p_files[fd]->f_pos >= 0){
+        			return	curproc->p_files[fd]->f_pos;
+        		}
+        		else
+        		{
+        		
+        		}
+        	}
+        	else
+        	{
+        		if(whence == SEEK_END){
+        			
+        		}
+        		else
+        		{
+        			return	EINVAL;	
+        		}
+        	}
+        }
+        
+        
         return -1;
 }
 
