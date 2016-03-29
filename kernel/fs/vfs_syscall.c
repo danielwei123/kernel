@@ -181,7 +181,7 @@ do_dup(int fd)
 
         f = fget(fd);
         /* fd isn't an open file descriptor. */
-        if( fd == NULL)
+        if( f == NULL)
         {
                 return EBADF;
         }
@@ -214,6 +214,26 @@ int
 do_dup2(int ofd, int nfd)
 {
         NOT_YET_IMPLEMENTED("VFS: do_dup2");
+        file_t  *f_ofd;
+        file_t  *f_nfd
+        int   fd_new;
+
+
+        f_ofd = fget(ofd);
+        /* fd isn't an open file descriptor. */
+        if( f_ofd == NULL || nfd < 0 || nfd >= NFILES)
+        {
+                return EBADF;
+        }
+
+        f_nfd = curproc->p_files[nfd];
+        if( f_nfd != NULL && nfd != ofd)
+        {
+                do_close(nfd);
+        }
+        curproc->p_files[nfd] = f_ofd;
+        return nfd;
+
         return -1;
 }
 
