@@ -107,7 +107,7 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
  
- 	if(fd < 0 ||  (curproc->p_files[fd]->NULL) || fd >= NFILES)
+ 	if(fd < 0 || fd >= NFILES)
  	{
  		return	EBADF;
  	}
@@ -360,27 +360,42 @@ do_lseek(int fd, int offset, int whence)
 
 	/*handle neg offset*/	
 
+ 	if(fd < 0 || fd >= NFILES)
+ 	{
+ 		return	EBADF;
+ 	}
+
+	file_t	*f = fget(fd);
+	
+	if(f == NULL){
+		return	EBADF;
+	}
+
+
         if(whence == SEEK_SET){
         
-        	curproc->p_files[fd]->f_pos = offset;
+        	f->f_pos = offset;
         	
-        	if(curproc->p_files[fd]->f_pos < 0){
+        	if(f->p_files[fd]->f_pos < 0){
+        		fput(f);
         		return	EINVAL;
         	}
-        	
-        	return	curproc->p_files[fd]->f_pos;
+        	fput(f);
+        	return	f[fd]->f_pos;
         }
         else
         {
         	if(whence == SEEK_CUR){
-        		x = curproc->p_files[fd]->f_pos + offset;
+        		x = f->f_pos + offset;
         		
         		if(x >= 0){
-        			curproc->p_files[fd]->f_pos = x;
-        			return	curproc->p_files[fd]->f_pos;
+        			f->f_pos = x;
+        			fput(f);
+        			return	f->f_pos;
         		}
         		else
         		{
+        			fput(f);
         			return	EINVAL;
         		}
         	}
@@ -388,18 +403,21 @@ do_lseek(int fd, int offset, int whence)
         	{
         		if(whence == SEEK_END){
         			
-        			x = curproc->p_files[fd]->f_vnode + offset;
+        			x = f->f_vnode + offset;
         			if(x < 0){
+        				fput(f);
         				return	EINVAL;
         			}
         			else
         			{
-        				curproc->p_files[fd]->f_pos = x;
-        				return	curproc->p_files[fd]->f_pos;
+        				f->f_pos = x;
+        				fput(f);
+        				return	f->f_pos;
         			}
         		}
         		else
         		{
+        			fput(f);
         			return	EINVAL;	
         		}
         	}
