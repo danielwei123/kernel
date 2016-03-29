@@ -271,17 +271,62 @@ do_mknod(const char *path, int mode, unsigned devid)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
         
-        if((mode == S_IFCHR) || (mode == S_IFBLK))
+        if((mode != S_IFCHR) || (mode != S_IFBLK))
         {
-        			
+        	return	EINVAL;		
+        }
+
+	char	*file = (char*)kmalloc(sizeof(char)*sizeof(path));
+	char	*dir =  (char*)kmalloc(sizeof(char)*sizeof(path));
+	        
+        int	i = 0, j = 0;
+        int	error_code = 0;
+        vnode_t	*base = NULL;
+        vnode_t	**result_node;
+        vnode_t	**res;
+        size_t	*nameLength;
+        char	**name;
+        
+        for(i = sizeof(path)-1; i>=0; i--, j++)
+        {
+        	if(path(i) == '/'){
+        		file[j] = 0;
+        		break;
+        	}
+        	
+        	file[j] = path[i];
+        }
+        
+        file = strrev(file);
+        
+        strncpy(path, dir, i);
+        
+        error_code = dir_namev(dir, nameLength, name, base, result_node);
+
+	if(error_code != 0){
+		return	error_code;
+	}
+        
+        error_code = lookup(result_node, file, strlen(file), res);
+        
+        if(error_code == 0){
+        	return	EEXIST;
         }
         else
         {
-        	return	EINVAL;
+        	if(error_code == ENAMETOOLONG)
+        	{
+        		return	ENAMETOOLONG;
+        	}
+        	else
+        	{
+        		
+        	}
+        
         }
         
-        
-        return -1;
+        return	result_node->vn_ops->mknod(result_node, file, strlen(file), mode, devid);
+      
 }
 
 /* Use dir_namev() to find the vnode of the dir we want to make the new
