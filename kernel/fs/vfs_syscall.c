@@ -62,18 +62,19 @@ do_read(int fd, void *buf, size_t nbytes)
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
         int	bytes_read = -1;
         
-        fget(fd);
+        file_t	*f = fget(fd);
         
-        bytes_read = curproc->p_files[fd]->f_vnode->vn_ops->read(curproc->p_files[fd]->f_vnode, curproc->p_files[fd]->f_pos, buf, nbytes);
+        bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         
         if(bytes_read != -1)
         {
-        	fput();
-        	curproc->p_files[fd]->f_pos + bytes_read;
+
+        	f->f_pos + bytes_read;
+        	fput(f);
         	return	bytes_read;
         }
         
-        fput();
+        fput(f);
         return -1;
 }
 
@@ -90,8 +91,43 @@ do_write(int fd, const void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
         
+        int	bytes_written = -1;
         
+        if(fd < 0 || fd >= NFILES)
+ 	{
+ 		return	EBADF;
+ 	}
         
+        file_t	*f = fget(fd);
+        
+       	if(f == NULL){
+		return	EBADF;
+	}
+	
+	if((f->f_mode&FMODE_WRITE) != FMODE_WRITE)
+	{
+		return	EBADF;
+	}
+	
+	if((f->f_mode&FMODE_APPEND)==FMODE_APPEND)
+	{
+		do_lseek(fd, 0, SEEK_END);
+	}
+	
+	bytes_written = f->f_vnode->vn_ops->write(f->f_vnode, f->f_pos, buf, nbytes);
+        
+        if(bytes_written == -1)
+        {
+        	/*error*/
+        	
+        }
+        else
+        {
+        	fput(f);
+        	return	bytes_written;
+        }
+        
+        fput(f);
         return -1;
 }
 
@@ -370,8 +406,6 @@ do_lseek(int fd, int offset, int whence)
 	if(f == NULL){
 		return	EBADF;
 	}
-
-
         if(whence == SEEK_SET){
         
         	f->f_pos = offset;
@@ -422,8 +456,7 @@ do_lseek(int fd, int offset, int whence)
         		}
         	}
         }
-        
-        
+     
         return -1;
 }
 
