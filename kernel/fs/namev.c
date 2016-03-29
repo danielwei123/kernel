@@ -44,6 +44,8 @@ int
 lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 {
         NOT_YET_IMPLEMENTED("VFS: lookup");
+        /* Check if to incremnet reference count or no*/
+
         if( strcmp(name,".") == 0)
         {
             result = &dir;
@@ -55,11 +57,13 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
         else
         {
             int res = dir->vn_ops->lookup(dir,name,len,result);
+            /* Check if it is a dir or no */
             if( res != 0)
-                return -ENOTDIR;
+                return res;
+
         }
 
-        
+        result->vn_refcount++;
 
         return 0;
        
@@ -148,6 +152,23 @@ int
 open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 {
         NOT_YET_IMPLEMENTED("VFS: open_namev");
+        size_t namelen = -1;
+        const char **name;
+        int res = dir_namev(pathname,namelen,name,base,res_vnode);
+        if(res != 0)
+        {
+            if(flag == O_CREAT)
+            {
+                /* parent dir needed here*/
+                int r = dir->vn_ops->create(dir,name,len,result);
+                if(r != 0)
+                    return r;
+                 
+
+            }
+            else return res;
+        }
+        
         return 0;
 }
 

@@ -179,6 +179,29 @@ int
 do_dup(int fd)
 {
         NOT_YET_IMPLEMENTED("VFS: do_dup");
+        file_t  *f;
+        int fd_new;
+
+
+        f = fget(fd);
+        /* fd isn't an open file descriptor. */
+        if( f == NULL)
+        {
+                return EBADF;
+        }
+
+        fd_new = get_empty_fd(curproc);
+
+        if(fd_new == -EMFILE)
+        {
+               fput(f);
+               return EMFILE; 
+        }
+        else
+        {
+                curproc->p_files[fd_new] = f;
+                return fd_new;
+        }
         return -1;
 }
 
@@ -195,6 +218,26 @@ int
 do_dup2(int ofd, int nfd)
 {
         NOT_YET_IMPLEMENTED("VFS: do_dup2");
+        file_t  *f_ofd;
+        file_t  *f_nfd
+        int   fd_new;
+
+
+        f_ofd = fget(ofd);
+        /* fd isn't an open file descriptor. */
+        if( f_ofd == NULL || nfd < 0 || nfd >= NFILES)
+        {
+                return EBADF;
+        }
+
+        f_nfd = curproc->p_files[nfd];
+        if( f_nfd != NULL && nfd != ofd)
+        {
+                do_close(nfd);
+        }
+        curproc->p_files[nfd] = f_ofd;
+        return nfd;
+
         return -1;
 }
 
@@ -490,6 +533,22 @@ int
 do_stat(const char *path, struct stat *buf)
 {
         NOT_YET_IMPLEMENTED("VFS: do_stat");
+        /* Check for Enametoolong */
+        /* Find the base directory*/
+        size_t *namelen = -1;
+        const char **name;
+        vnode_t *base = NULL;
+        vnode_t **res_vnode = NULL;
+
+        int res = dir_namev(path, namelen, name, base,res_vnode);
+        if( res == 0)
+        {
+                return res_vnode->vn_ops->stat(res_vnode,buf);
+        }
+        else return res;
+
+
+
         return -1;
 }
 
