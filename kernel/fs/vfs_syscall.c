@@ -359,19 +359,23 @@ do_lseek(int fd, int offset, int whence)
         
         	curproc->p_files[fd]->f_pos = offset;
         	
+        	if(curproc->p_files[fd]->f_pos < 0){
+        		return	EINVAL;
+        	}
+        	
         	return	curproc->p_files[fd]->f_pos;
         }
         else
         {
         	if(whence == SEEK_CUR){
-        		curproc->p_files[fd]->f_pos = curproc->p_files[fd]->f_pos + offset;
+        		x = curproc->p_files[fd]->f_pos + offset;
         		
-        		if(curproc->p_files[fd]->f_pos >= 0){
+        		if(x >= 0){
         			return	curproc->p_files[fd]->f_pos;
         		}
         		else
         		{
-        		
+        			return	EINVAL;
         		}
         	}
         	else
