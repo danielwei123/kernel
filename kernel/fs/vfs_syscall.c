@@ -69,7 +69,7 @@ do_read(int fd, void *buf, size_t nbytes)
         if(bytes_read != -1)
         {
 
-        	f->f_pos + bytes_read;
+        	f->f_pos = f->f_pos + bytes_read;
         	fput(f);
         	return	bytes_read;
         }
