@@ -69,11 +69,22 @@ do_read(int fd, void *buf, size_t nbytes)
         
         file_t	*f = fget(fd);
         
+        if(f == NULL)
+        {
+        	return	EBADF;	
+        }
+        
+        if(!(f->f_mode&FMODE_READ)){
+        	fput(f);
+        	return	EBADF;
+        }
+        
+        
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         
         if(bytes_read != -1)
         {
-        	f->f_pos = f->f_pos + bytes_read;
+        	do_lseek(fd, bytes_read, SEEK_CUR);
         	fput(f);
         	return	bytes_read;
         }
@@ -120,13 +131,9 @@ do_write(int fd, const void *buf, size_t nbytes)
 	
 	bytes_written = f->f_vnode->vn_ops->write(f->f_vnode, f->f_pos, buf, nbytes);
         
-        if(bytes_written == -1)
+        if(bytes_written != -1)
         {
-        	/*error*/
-        	
-        }
-        else
-        {
+   		do_lseek(fd, bytes_written, SEEK_CUR);
         	fput(f);
         	return	bytes_written;
         }
@@ -178,16 +185,21 @@ do_close(int fd)
 int
 do_dup(int fd)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_dup");
+        /*NOT_YET_IMPLEMENTED("VFS: do_dup");*/
         file_t  *f;
         int fd_new;
 
-
+ 	if(fd < 0 || fd >= NFILES || (curproc->p_files[fd] == NULL))
+ 	{
+ 		return	-EBADF;
+ 	}
+ 	
         f = fget(fd);
         /* fd isn't an open file descriptor. */
+        
         if( f == NULL)
         {
-                return EBADF;
+                return -EBADF;
         }
 
         fd_new = get_empty_fd(curproc);
@@ -195,14 +207,14 @@ do_dup(int fd)
         if(fd_new == -EMFILE)
         {
                fput(f);
-               return EMFILE; 
+               return -EMFILE; 
         }
         else
         {
                 curproc->p_files[fd_new] = f;
                 return fd_new;
         }
-        return -1;
+
 }
 
 /* Same as do_dup, but insted of using get_empty_fd() to get the new fd,
@@ -221,13 +233,17 @@ do_dup2(int ofd, int nfd)
         file_t  *f_ofd;
         file_t  *f_nfd
         int   fd_new;
-
-
+ 	
+ 	if(ofd < 0 || ofd >= NFILES || (curproc->p_files[ofd] == NULL))
+ 	{
+ 		return	-EBADF;
+ 	}
+ 	
         f_ofd = fget(ofd);
         /* fd isn't an open file descriptor. */
         if( f_ofd == NULL || nfd < 0 || nfd >= NFILES)
         {
-                return EBADF;
+                return -EBADF;
         }
 
         f_nfd = curproc->p_files[nfd];
@@ -238,7 +254,6 @@ do_dup2(int ofd, int nfd)
         curproc->p_files[nfd] = f_ofd;
         return nfd;
 
-        return -1;
 }
 
 /*
@@ -273,7 +288,7 @@ do_mknod(const char *path, int mode, unsigned devid)
         
         if((mode != S_IFCHR) || (mode != S_IFBLK))
         {
-        	return	EINVAL;		
+        	return	-EINVAL;		
         }
 
 	char	*file = (char*)kmalloc(sizeof(char)*sizeof(path));
@@ -310,13 +325,13 @@ do_mknod(const char *path, int mode, unsigned devid)
         error_code = lookup(result_node, file, strlen(file), res);
         
         if(error_code == 0){
-        	return	EEXIST;
+        	return	-EEXIST;
         }
         else
         {
         	if(error_code == ENAMETOOLONG)
         	{
-        		return	ENAMETOOLONG;
+        		return	-ENAMETOOLONG;
         	}
         	else
         	{
@@ -346,8 +361,58 @@ do_mknod(const char *path, int mode, unsigned devid)
 int
 do_mkdir(const char *path)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_mkdir");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
+        
+        char	*newDir = (char*)kmalloc(sizeof(char)*sizeof(path));
+	char	*dir =  (char*)kmalloc(sizeof(char)*sizeof(path));
+	        
+        int	i = 0, j = 0;
+        int	error_code = 0;
+        vnode_t	*base = NULL;
+        vnode_t	**result_node;
+        vnode_t	**res;
+        size_t	*nameLength;
+        char	**name;
+        
+        for(i = sizeof(path)-1; i>=0; i--, j++)
+        {
+        	if(path(i) == '/'){
+        		newDir[j] = 0;
+        		break;
+        	}
+        	
+        	newDir[j] = path[i];
+        }
+        
+        file = strrev(file);
+        
+        strncpy(path, dir, i);
+        
+        error_code = dir_namev(dir, nameLength, name, base, result_node);
+
+	if(error_code != 0){
+		return	error_code;
+	}
+        
+        error_code = lookup(result_node, newDir, strlen(newDir), res);
+        
+        if(error_code == 0){
+        	return	-EEXIST;
+        }
+        else
+        {
+        	if(error_code == ENAMETOOLONG)
+        	{
+        		return	-ENAMETOOLONG;
+        	}
+        	else
+        	{
+        		
+        	}
+        
+        }
+        
+        return	result_node->vn_ops->mkdir(result_node, file, strlen(file));
 }
 
 /* Use dir_namev() to find the vnode of the directory containing the dir to be
