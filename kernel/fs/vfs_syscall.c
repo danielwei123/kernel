@@ -107,11 +107,16 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
  
+ 	if(fd < 0 ||  (curproc->p_files[fd]->NULL) || fd >= NFILES)
+ 	{
+ 		return	EBADF;
+ 	}
+ 
  	file_t	*temp = curproc->p_files[fd];
 	curproc->p_files[fd] = NULL;
        	fput(temp);
 		
-        return -1;
+        return 0;
 }
 
 /* To dup a file:
@@ -371,6 +376,7 @@ do_lseek(int fd, int offset, int whence)
         		x = curproc->p_files[fd]->f_pos + offset;
         		
         		if(x >= 0){
+        			curproc->p_files[fd]->f_pos = x;
         			return	curproc->p_files[fd]->f_pos;
         		}
         		else
@@ -382,6 +388,15 @@ do_lseek(int fd, int offset, int whence)
         	{
         		if(whence == SEEK_END){
         			
+        			x = curproc->p_files[fd]->f_vnode + offset;
+        			if(x < 0){
+        				return	EINVAL;
+        			}
+        			else
+        			{
+        				curproc->p_files[fd]->f_pos = x;
+        				return	curproc->p_files[fd]->f_pos;
+        			}
         		}
         		else
         		{
