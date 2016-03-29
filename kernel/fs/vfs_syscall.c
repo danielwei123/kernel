@@ -384,7 +384,7 @@ do_mkdir(const char *path)
         	newDir[j] = path[i];
         }
         
-        file = strrev(file);
+        file = strrev(newDir);
         
         strncpy(path, dir, i);
         
@@ -409,9 +409,7 @@ do_mkdir(const char *path)
         	{
         		
         	}
-        
         }
-        
         return	result_node->vn_ops->mkdir(result_node, file, strlen(file));
 }
 
@@ -436,8 +434,26 @@ do_mkdir(const char *path)
 int
 do_rmdir(const char *path)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_rmdir");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_rmdir");*/
+        char	*removeDir = (char*)kmalloc(sizeof(char)*sizeof(path));
+	char	*dir =  (char*)kmalloc(sizeof(char)*sizeof(path));
+	        
+        int	i = 0, j = 0;
+        int	error_code = 0;
+        vnode_t	*base = NULL;
+        vnode_t	**result_node;
+        vnode_t	**res;
+        size_t	*nameLength;
+        char	**name;
+
+        error_code = dir_namev(path, nameLength, name, base, result_node);
+
+	if(error_code != 0){
+		return	error_code;
+	}
+        
+        return	result_node->vn_ops->rmdir(result_node, name, strlen(name));
+
 }
 
 /*
