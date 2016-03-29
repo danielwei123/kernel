@@ -62,13 +62,17 @@ do_read(int fd, void *buf, size_t nbytes)
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
         int	bytes_read = -1;
         
+        if(fd < 0 || fd >= NFILES)
+ 	{
+ 		return	EBADF;
+ 	}
+        
         file_t	*f = fget(fd);
         
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         
         if(bytes_read != -1)
         {
-
         	f->f_pos = f->f_pos + bytes_read;
         	fput(f);
         	return	bytes_read;
@@ -222,7 +226,18 @@ do_dup2(int ofd, int nfd)
 int
 do_mknod(const char *path, int mode, unsigned devid)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_mknod");
+        /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
+        
+        if((mode == S_IFCHR) || (mode == S_IFBLK))
+        {
+        			
+        }
+        else
+        {
+        	return	EINVAL;
+        }
+        
+        
         return -1;
 }
 
