@@ -504,15 +504,15 @@ do_link(const char *from, const char *to)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_link");*/
         vnode_t	**res;
-        vnode_t	**res_vode;
+        vnode_t	**res_vnode;
         char	**name;
         size_t	*nameLength;
         
         open_namev(from, O_RDONLY, res, NULL);
         
-        dir_namev(to, nameLength, name, NULL, res_vode);
+        dir_namev(to, nameLength, name, NULL, res_vnode);
         
-        res_vnode->vn_ops->link(res, res_vode, name, nameLength);
+        res_vnode->vn_ops->link(*res, *res_vnode, name, nameLength);
 
         return -1;
 }
