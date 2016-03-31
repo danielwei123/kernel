@@ -166,15 +166,20 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
                 
                 if(x != 0)
                 {
-                    return x;
+                	vput(ret_node);
+                    	return x;
                 }
 
             }
             else
             { 
+            	vput(ret_node);
             	return res;
             }
         }
+        
+        vput(ret_node);
+        return	res;
 }
 
 #ifdef __GETCWD__
