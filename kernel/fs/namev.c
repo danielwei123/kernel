@@ -93,6 +93,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         char *token;
         
         vnode_t	*myBase;
+        char	currentDir[29];
         
 
         char *path = (*char)kmalloc((strlen(pathname)+1)*sizeof(char));
@@ -104,40 +105,62 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
             
             while(*pathname == '/'){
             	pathname++;
-            }
-             
-            token = strtok(path,"/");
-            token = strtok(NULL,"/");
+            } 
         }
         else if( base == NULL)
         {
             myBase = curproc->p_cwd;
-            token = strtok(path,"/");
         }
         else 
         {
         	myBase = base;
-            token = strtok(path,"/");
         }
 
-        if(token == NULL)
-            token = path;
-
-
-        while( token != NULL ) 
+	int	i = 0;
+	int	j = 0;
+        int	flag = 0;
+        
+        while(1) 
         {
+		
+		j = 0;
+		currentDir[0] = 0;
+		while(pathname[i] != '/'){
+			
+			currentDir[j] = pathname[i];
+			i++;
+			j++;
+			currentDir[j] = 0;
+			
+			if(pathname[i] == 0)
+			{
+				flag = 1;
+				break;
+			}
+			
+		}
+		
+		if(flag == 1)
+		{
+			break;	
+		}
+		
+		i++;
+		while(pathname[i] == '/'){
+			i++;
+		}
 
-            int res = lookup(base, token, strlen(token) , res_vnode);
-            if (res != 0)
-                return res;
-            base = &res_vnode;
-            token = strtok(NULL, "/");
+            int res = lookup(myBase, currentDir, strlen(currentDir) , res_vnode);
+            
+            if(res != 0)
+            {
+            	return res;
+            }
+               
+          
+            myBase = *res_vnode;
         }
-
-        name = &token;
-        namelen = strlen(token);
-
-
+        
         return 0;
 }
 
