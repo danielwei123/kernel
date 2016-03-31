@@ -43,29 +43,18 @@
 int
 lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 {
-        NOT_YET_IMPLEMENTED("VFS: lookup");
+       /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/
 
-        if( strcmp(name,".") == 0)
-        {
-            result = &dir;
-        }
-        else if ( strcmp(name,"..") == 0)
-        {
 
-        }
-        else
-        {
-            int res = dir->vn_ops->lookup(dir,name,len,result);
-            /* Check if it is a dir or no */
-            if( res != 0)
-                return res;
+	if(dir->vn_ops->lookup == NULL){
+		return	-ENOTDIR;
+	}
 
-        }
 
-        result->vn_refcount++;
+	int res = dir->vn_ops->lookup(dir, name, len, result);
 
-        return 0;
+	return	res;
        
 }
 
