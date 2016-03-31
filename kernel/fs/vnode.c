@@ -465,8 +465,17 @@ special_file_stat(vnode_t *vnode, struct stat *ss)
 static int
 special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
 {
-        NOT_YET_IMPLEMENTED("VFS: special_file_read");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VFS: special_file_read");*/
+        
+        if(file->vn_mode&S_IFBLK)
+        {
+        	return	-ENOTSUP;
+        }
+        
+        
+        int res = read(file->vn_cdev, offset, buf, count); 
+        
+        return res;
 }
 
 /*
@@ -478,7 +487,19 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
 static int
 special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
 {
-        NOT_YET_IMPLEMENTED("VFS: special_file_write");
+        /*NOT_YET_IMPLEMENTED("VFS: special_file_write");*/
+        
+        if(file->vn_mode&S_IFBLK)
+        {
+        	return	-ENOTSUP;
+        }
+        
+        
+        int res = write(file->vn_cdev, offset, buf, count); 
+        
+        return res;
+        
+        
         return 0;
 }
 
