@@ -45,20 +45,18 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 {
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/
-	
-	KASSERT(name!= NULL);
 	//check name length
-	
-
-	if(dir->vn_ops->lookup == NULL){
+	if(dir->vn_ops->lookup == NULL)
+	{
 		return	-ENOTDIR;
 	}
-
-
+	KASSERT(name!= NULL);
+	if(len > NAME_LEN)
+	{
+		return -ENAMETOOLONG;
+	}
 	int res = dir->vn_ops->lookup(dir, name, len, result);
-
 	return	res;
-       
 }
 
 
@@ -88,22 +86,13 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 {
 
         /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
-
-        /* Handle Case like ///  and also kmalloc */
-        char *token;
-        
         vnode_t	*myBase;
-        char	currentDir[29];
-        
-
-        char *path = (*char)kmalloc((strlen(pathname)+1)*sizeof(char));
-        strcpy(path,pathname);
-
+        vnode_t	*temp = NULL;
         if( pathname[0] == '/')
         {
             myBase = vfs_root_vn;  
-            
-            while(*pathname == '/'){
+            while(*pathname == '/')
+            {
             	pathname++;
             } 
         }
@@ -116,51 +105,28 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	myBase = base;
         }
 
-	int	i = 0;
-	int	j = 0;
-        int	flag = 0;
-        
-        while(1) 
+	int	nextslash = 0;
+	int	prevslash = 0;
+     	int	retval = 1;   
+     	int 	len;
+        while(retval>0 && pathname[nextslash]!='\0')
         {
-		
-		j = 0;
-		currentDir[0] = 0;
-		while(pathname[i] != '/'){
-			
-			currentDir[j] = pathname[i];
-			i++;
-			j++;
-			currentDir[j] = 0;
-			
-			if(pathname[i] == 0)
-			{
-				flag = 1;
-				break;
-			}
-			
-		}
-		
-		if(flag == 1)
-		{
-			break;	
-		}
-		
-		i++;
-		while(pathname[i] == '/'){
-			i++;
-		}
-
-            int res = lookup(myBase, currentDir, strlen(currentDir) , res_vnode);
-            
-            if(res != 0)
-            {
-            	return res;
-            }
-               
-          
-            myBase = *res_vnode;
+        	if(temp!=NULL)
+        	{
+        		vput(temp);
+        	}
+        	temp=myBase;
+        	while(pathname[nextslash]!='/' && pathname[nextslash]!='\0')nextslash++;
+        	len=nextslash - prevslash;
+        	retval = lookup(temp,pathname+prevslash,len,&myBase);
+        	while(pathname[nextslash]=='/' && pathname[nextslash]!='\0')nextslash++;
+        	prevslash=nextslash;
         }
-        
+        if(retval < 0)
+        {
+        	return retval;
+        }
+    	res_vnode = &temp; 
         return 0;
 }
 
