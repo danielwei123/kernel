@@ -447,6 +447,8 @@ do_rmdir(const char *path)
         char	**name;
 
         error_code = dir_namev(path, nameLength, name, base, result_node);
+        //check name for . ..
+        
 
 	if(error_code != 0){
 		return	error_code;
@@ -500,7 +502,18 @@ do_unlink(const char *path)
 int
 do_link(const char *from, const char *to)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_link");
+        /*NOT_YET_IMPLEMENTED("VFS: do_link");*/
+        vnode_t	**res;
+        vnode_t	**res_vode;
+        char	**name;
+        size_t	*nameLength;
+        
+        open_namev(from, O_RDONLY, res, NULL);
+        
+        dir_namev(to, nameLength, name, NULL, res_vode);
+        
+        res_vnode->vn_ops->link(res, res_vode, name, nameLength);
+
         return -1;
 }
 
