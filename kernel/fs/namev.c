@@ -87,27 +87,36 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
           vnode_t *base, vnode_t **res_vnode)
 {
 
-        NOT_YET_IMPLEMENTED("VFS: dir_namev");
+        /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
 
         /* Handle Case like ///  and also kmalloc */
         char *token;
+        
+        vnode_t	*myBase;
+        
 
         char *path = (*char)kmalloc((strlen(pathname)+1)*sizeof(char));
         strcpy(path,pathname);
 
-        if( path[0] == '/')
+        if( pathname[0] == '/')
         {
-            base = vfs_root_vn;
+            myBase = vfs_root_vn;  
+            
+            while(*pathname == '/'){
+            	pathname++;
+            }
+             
             token = strtok(path,"/");
             token = strtok(NULL,"/");
         }
         else if( base == NULL)
         {
-            base = curproc->p_cwd;
+            myBase = curproc->p_cwd;
             token = strtok(path,"/");
         }
         else 
         {
+        	myBase = base;
             token = strtok(path,"/");
         }
 
