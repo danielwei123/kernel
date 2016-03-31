@@ -45,7 +45,10 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 {
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/
-
+	
+	KASSERT(name!= NULL);
+	//check name length
+	
 
 	if(dir->vn_ops->lookup == NULL){
 		return	-ENOTDIR;
