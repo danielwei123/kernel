@@ -148,7 +148,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
        	char 	**name = NULL;
        	vnode_t	*ret_node;
        	
-        int res = dir_namev((const)pathname, &namelen, name, base, &ret_node);
+        int res = dir_namev(pathname, &namelen, name, base, &ret_node);
         
         if(res < 0)
         {

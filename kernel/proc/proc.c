@@ -321,7 +321,7 @@ do_waitpid(pid_t pid, int options, int *status)
 	int			return_value = 0;
 	if(pid < -1 || pid == 0)
 	{
-        dbg(DBG_PRINT, "GRADING1E 4\n ");
+        dbg(DBG_PRINT, "(GRADING1E 4\n ");
         return	-ECHILD;
 
 	}
