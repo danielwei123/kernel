@@ -46,6 +46,8 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
         NOT_YET_IMPLEMENTED("VFS: lookup");
         /* Check if to incremnet reference count or no*/
 
+        if( len >= ENAMETOOLONG )
+            return ENAMETOOLONG;
         if( strcmp(name,".") == 0)
         {
             result = &dir;
