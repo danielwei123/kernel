@@ -231,7 +231,7 @@ do_dup2(int ofd, int nfd)
 {
         NOT_YET_IMPLEMENTED("VFS: do_dup2");
         file_t  *f_ofd;
-        file_t  *f_nfd
+        file_t  *f_nfd;
         int   fd_new;
  	
  	if(ofd < 0 || ofd >= NFILES || (curproc->p_files[ofd] == NULL))
@@ -292,19 +292,19 @@ do_mknod(const char *path, int mode, unsigned devid)
         }
 
         size_t	*nameLength;
-        char	*name;
+        const char *name;
         vnode_t	**result_node;
         vnode_t	*ret_node = NULL;
 
-	//might have to change BASE
-	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
+	/* might have to change BASE */
+	int res = dir_namev(path, nameLength, &name, NULL, result_node);
 	
 	if( res < 0){
 	
 		return	res;
 	}
 	
-	res = lookup(result_node, name, nameLength, &ret_node);
+	res = lookup(*result_node, name, *nameLength, &ret_node);
 	
 	if(res == -ENAMETOOLONG){
 		return	res;
@@ -314,7 +314,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 		return	-EEXIST;
 	}
 	        
-        return	result_node->vn_ops->mknod(result_node, name, nameLength, mode, devid);
+        return	(*result_node)->vn_ops->mknod(*result_node, name, *nameLength, mode, devid);
       
 }
 
