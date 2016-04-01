@@ -291,9 +291,9 @@ do_mknod(const char *path, int mode, unsigned devid)
         	return	-EINVAL;		
         }
 
-        size_t	*nameLength;
+        size_t	*nameLength = NULL;
         const char *name;
-        vnode_t	**result_node;
+        vnode_t	**result_node = NULL;
         vnode_t	*ret_node = NULL;
 
 	/* might have to change BASE */
@@ -337,12 +337,12 @@ do_mkdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
         
-       size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
+       size_t	*nameLength = NULL;
+        const char	*name;
+        vnode_t	**result_node = NULL;
         vnode_t	*ret_node = NULL;
 
-	//might have to change BASE
+	/*might have to change BASE */
 	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
 	
 	if( res < 0){
@@ -350,7 +350,7 @@ do_mkdir(const char *path)
 		return	res;
 	}
 	
-	res = lookup(result_node, name, nameLength, &ret_node);
+	res = lookup(*result_node, name, *nameLength, &ret_node);
 	
 	if(res == -ENAMETOOLONG){
 		return	res;
@@ -358,7 +358,7 @@ do_mkdir(const char *path)
 	if(res == 0){
 		return	-EEXIST;
 	}
-        return	result_node->vn_ops->mkdir(result_node, name, nameLength);
+        return	(*result_node)->vn_ops->mkdir(*result_node, name, *nameLength);
 }
 
 /* Use dir_namev() to find the vnode of the directory containing the dir to be
@@ -384,13 +384,13 @@ do_rmdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_rmdir");*/
 	        
-        size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
+        size_t	*nameLength = NULL;
+        const char	*name;
+        vnode_t	**result_node = NULL;
         vnode_t	*ret_node = NULL;
 
-	//might have to change BASE
-	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
+	/*might have to change BASE*/
+	int res = dir_namev(path, nameLength, &name, NULL, result_node);
 	
 	
 	if(name[0] == '.'){
@@ -407,7 +407,7 @@ do_rmdir(const char *path)
 		return	res;
 	}
         
-        return	result_node->vn_ops->rmdir(result_node, name, nameLength);
+        return	(*result_node)->vn_ops->rmdir(*result_node, name, *nameLength);
 }
 
 /*
@@ -427,12 +427,12 @@ int
 do_unlink(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_unlink");*/
-         size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
+         size_t	*nameLength = NULL;
+        const char	*name;
+        vnode_t	**result_node = NULL;
         vnode_t	*ret_node = NULL;
 
-	//might have to change BASE
+	/*might have to change BASE*/
 	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
 	
 	if( res < 0){
@@ -440,7 +440,7 @@ do_unlink(const char *path)
 		return	res;
 	}
 	
-        res = lookup(result_node, name, nameLength, &ret_node);
+        res = lookup(*result_node, name, *nameLength, &ret_node);
         
         if(res < 0)
         {
@@ -452,7 +452,7 @@ do_unlink(const char *path)
 		return -EISDIR;
 	}        
         
-        return	result_node->vn_ops->unlink(result_node, name, nameLength);
+        return	(*result_node)->vn_ops->unlink(*result_node, name, *nameLength);
 
 }
 
@@ -481,11 +481,11 @@ int
 do_link(const char *from, const char *to)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_link");*/
-        vnode_t	**ret;
-        vnode_t	**res_vnode;
-        vnode_t **ret_vnode;
-        char	**name;
-        size_t	*nameLength;
+        vnode_t	**ret = NULL;
+        vnode_t	**res_vnode = NULL;
+        vnode_t **ret_vnode = NULL;
+        const char	*name;
+        size_t	*nameLength = NULL;
         
         int res = open_namev(from, O_RDONLY, ret, NULL);
         
@@ -494,20 +494,20 @@ do_link(const char *from, const char *to)
 		return res;
 	}    
 	    
-        res = dir_namev(to, nameLength, name, NULL, res_vnode);
+        res = dir_namev(to, nameLength, &name, NULL, res_vnode);
       
         if( res < 0)
         {
         	return res;
         }
         
-        res = lookup(ret, name, nameLength, ret_vnode);
+        res = lookup(*ret, name, *nameLength, ret_vnode);
         if(res == 0)
         {
         	return -EEXIST;
         }
         
-        return res_vnode->vn_ops->link(*res_vnode, *ret, name, nameLength);
+        return (*res_vnode)->vn_ops->link(*res_vnode, *ret, name, *nameLength);
 }
 
 /*      o link newname to oldname
@@ -547,8 +547,8 @@ int
 do_chdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_chdir");*/
-        vnode_t	**ret;
-        vnode_t	**out;
+        vnode_t	**ret = NULL;
+        vnode_t	**out = NULL;
         
         int res = open_namev(path, 0, ret, NULL);
         
@@ -592,7 +592,7 @@ do_getdent(int fd, struct dirent *dirp)
  		return	-EBADF;
  	}
         
-        f = fgets(fd);
+        f = fget(fd);
         
         if(f == NULL)
         {
@@ -654,14 +654,15 @@ do_lseek(int fd, int offset, int whence)
 	}
         if(whence == SEEK_SET){
         
-        	f->f_pos = offset;
         	
-        	if(f->p_files[fd]->f_pos < 0){
+        	
+        	if(offset < 0){
         		fput(f);
         		return	EINVAL;
         	}
+                f->f_pos = offset;
         	fput(f);
-        	return	f[fd]->f_pos;
+        	return	offset;
         }
         else
         {
@@ -683,7 +684,7 @@ do_lseek(int fd, int offset, int whence)
         	{
         		if(whence == SEEK_END){
         			
-        			x = f->f_vnode + offset;
+        			x = f->f_pos + offset;
         			if(x < 0){
         				fput(f);
         				return	EINVAL;
@@ -722,20 +723,22 @@ do_stat(const char *path, struct stat *buf)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_stat");*/
         /* Find the base directory*/
-        size_t *namelen = -1;
+        size_t *namelen;
         const char **name;
         vnode_t *base = NULL;
         vnode_t **res_vnode = NULL;
 
-        int res = open_namev(path, 0, base, res_vnode);
+        int res = open_namev(path, 0, res_vnode, base);
         if( res == 0)
         {
-                return res_vnode->vn_ops->stat(res_vnode, buf);
+                return (*res_vnode)->vn_ops->stat(*res_vnode, buf);
         }
         else 
         {
         	return res;
         }
+
+        return -1;
 
 }
 

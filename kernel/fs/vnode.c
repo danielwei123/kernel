@@ -473,7 +473,7 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
         }
         
         
-        int res = read(file->vn_cdev, offset, buf, count); 
+        int res = file->vn_ops->read(file->vn_cdev, offset, buf, count); 
         
         return res;
 }
@@ -494,16 +494,48 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
         	return	-ENOTSUP;
         }
         
-        
-        int res = write(file->vn_cdev, offset, buf, count); 
+      
+        int res = file->vn_ops->write(file->vn_cdev, offset, buf, count); 
         
         return res;
         
         
-        return 0;
+        
 }
 
-/* Memory map the special file represented by <file>. All of the
+/* Memory map the 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+special file represented by <file>. All of the
  * work for this function is device-specific, so look up the
  * file's bytedev_t and pass the arguments through to its mmap
  * function. Return what that function returns.
