@@ -473,7 +473,7 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
         }
         
         
-        int res = file->vn_ops->read(file->vn_cdev, offset, buf, count); 
+        int res = file->vn_ops->read(file, offset, buf, count); 
         
         return res;
 }
@@ -495,7 +495,7 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
         }
         
       
-        int res = file->vn_ops->write(file->vn_cdev, offset, buf, count); 
+        int res = file->vn_ops->write(file, offset, buf, count); 
         
         return res;
         

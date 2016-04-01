@@ -87,7 +87,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 {
 
         /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
-        vnode_t	*myBase;
+        vnode_t	*myBase = NULL;
         vnode_t	*temp = NULL;
         if( pathname[0] == '/')
         {
@@ -147,39 +147,39 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 {
        	/*NOT_YET_IMPLEMENTED("VFS: open_namev");*/
         size_t	namelen = -1;
-       	char 	**name = NULL;
-       	vnode_t	*ret_node;
+       	const char 	*name = NULL;
+       	vnode_t	**ret_node = NULL;
        	
-        int res = dir_namev((const)pathname, &namelen, name, base, &ret_node);
+        int res = dir_namev((const char *)pathname, &namelen, &name, base, ret_node);
         
         if(res < 0)
         {
         	return	res;
         }
         
-        res = lookup(ret_node, name, namelen, res_vnode);
+        res = lookup(*ret_node, name, namelen, res_vnode);
         
         if(res == -ENOENT)
         {
             if((flag & O_CREAT) == O_CREAT)
             {
-                int x = ret_node->vn_ops->create(ret_node, name, namelen, res_vnode);
+                int x = (*ret_node)->vn_ops->create(*ret_node, name, namelen, res_vnode);
                 
                 if(x != 0)
                 {
-                	vput(ret_node);
+                	vput(*ret_node);
                     	return x;
                 }
 
             }
             else
             { 
-            	vput(ret_node);
+            	vput(*ret_node);
             	return res;
             }
         }
         
-        vput(ret_node);
+        vput(*ret_node);
         return	res;
 }
 
