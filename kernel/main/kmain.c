@@ -247,7 +247,12 @@ idleproc_run(int arg1, void *arg2)
             y = do_mknod("/dev/zero",S_IFCHR,MEM_ZERO_DEVID);
 
             y = do_mknod("/dev/tty0",S_IFCHR,MKDEVID(2,0));
+            y = do_mknod("/dev/tty1",S_IFCHR,MKDEVID(2,1));
+            y = do_mknod("/dev/tty2",S_IFCHR,MKDEVID(2,2));
+
         }
+        x = do_mkdir("/tmp");
+         dbg(DBG_PRINT,"PP END of VFS \n");
 
 #endif
 
@@ -465,6 +470,7 @@ badargs2(kshell_t *kshell, int argc, char **argv)
          kshell_add_command("badargs2", badargs2, "Options other than 0");
 
          kshell_t *kshell = kshell_create(0);
+        dbg(DBG_PRINT,"Before kShell\n");
          if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
          while (kshell_execute_next(kshell));
          kshell_destroy(kshell);

@@ -46,16 +46,24 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/	
-	if(dir->vn_ops->lookup == NULL)
+    
+     dbg(DBG_PRINT,"PP lookup: %s called\n",name);
+	if(dir && dir->vn_ops->lookup == NULL)
 	{
+        dbg(DBG_PRINT,"PP not dir\n");
 		return	-ENOTDIR;
 	}
+     dbg(DBG_PRINT,"PP before KASSERT\n");
 	KASSERT(name!= NULL);
+     dbg(DBG_PRINT,"PP before len\n");
 	if(len > NAME_LEN)
 	{
+        dbg(DBG_PRINT,"PP end of lokkup nametoolong\n");
 		return -ENAMETOOLONG;
 	}
+     dbg(DBG_PRINT,"PP after len check \n");
 	int res = dir->vn_ops->lookup(dir, name, len, result);
+    dbg(DBG_PRINT,"PP end of lookup %d\n",res);
 	return	res;
 
 }
@@ -87,11 +95,17 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 {
 
         /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
+        dbg(DBG_PRINT,"PP dir_namev: %s called\n",pathname);
         vnode_t	*myBase = NULL;
         vnode_t	*temp = NULL;
         if( pathname[0] == '/')
         {
-            myBase = vfs_root_vn;  
+             dbg(DBG_PRINT,"PP if it is /\n");
+            myBase = vfs_root_vn; 
+             if(myBase == NULL)
+             {
+                 dbg(DBG_PRINT,"PP base is null\n");
+             }
             while(*pathname == '/')
             {
             	pathname++;
@@ -106,31 +120,61 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	myBase = base;
         }
 
+         if(myBase == NULL)
+             {
+                 dbg(DBG_PRINT,"PP base is null 2\n");
+             }
+
+ 
 	int	nextslash = 0;
 	int	prevslash = 0;
      	int	retval = 1;   
-     	int 	len;
+     	size_t 	len;
+        dbg(DBG_PRINT,"PP before while %s \n",pathname);
         while(retval>0 && pathname[nextslash]!='\0')
         {
+            dbg(DBG_PRINT,"PP inside while \n");
         	if(temp!=NULL)
         	{
+                 dbg(DBG_PRINT,"PP inside if \n");
         		vput(temp);
         	}
         	temp=myBase;
         	while(pathname[nextslash]!='/' && pathname[nextslash]!='\0')nextslash++;
         	len=nextslash - prevslash;
-        	retval = lookup(temp,pathname+prevslash,len,&myBase);
+        	
         	while(pathname[nextslash]=='/' && pathname[nextslash]!='\0')nextslash++;
+            if( pathname[nextslash] == '\0')
+            {
+                dbg(DBG_PRINT,"PP at break point %s \n",pathname+prevslash);
+                break;
+            }
+            dbg(DBG_PRINT,"PP calling lookup for %s \n",pathname+prevslash);
+            retval = lookup(temp,pathname+prevslash,len,&myBase);
         	prevslash=nextslash;
         }
         if(retval < 0)
         {
         	return retval;
         }
-        vput(myBase);
+        dbg(DBG_PRINT,"PP outside if \n");
+        if(myBase!=temp)
+        {
+            dbg(DBG_PRINT,"PP trying to close myBase \n");
+            vput(myBase);
+        }
+        
+        dbg(DBG_PRINT,"PP after if \n");
         *namelen = len;
+        dbg(DBG_PRINT,"PP after len \n");
         *name = (pathname + prevslash);
-    	res_vnode = &temp; 
+        dbg(DBG_PRINT,"PP before assigning temp to res_vnode \n");
+    	*res_vnode = temp; 
+         if(res_vnode == NULL)
+             {
+                 dbg(DBG_PRINT,"PP temp is null\n");
+             }
+        dbg(DBG_PRINT,"PP Exit dir_namev \n");
         return 0;
 }
 
@@ -146,40 +190,44 @@ int
 open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 {
        	/*NOT_YET_IMPLEMENTED("VFS: open_namev");*/
+        /*dbg(DBG_PRINT,"P open_namev path %s called",*pathname);*/
         size_t	namelen = -1;
        	const char 	*name = NULL;
-       	vnode_t	**ret_node = NULL;
+       	vnode_t	*ret_node ;
        	
-        int res = dir_namev((const char *)pathname, &namelen, &name, base, ret_node);
+        dbg(DBG_PRINT,"PP before trying to access len");
+        dbg(DBG_PRINT,"PP %d \n",namelen);
+        int res = dir_namev((const char *)pathname, &namelen, &name, base, &ret_node);
         
         if(res < 0)
         {
+            dbg(DBG_PRINT,"PP returning value from dir namev\n");
         	return	res;
         }
         
-        res = lookup(*ret_node, name, namelen, res_vnode);
+        res = lookup(ret_node, name, namelen, res_vnode);
         
         if(res == -ENOENT)
         {
             if((flag & O_CREAT) == O_CREAT)
             {
-                int x = (*ret_node)->vn_ops->create(*ret_node, name, namelen, res_vnode);
+                int x = (ret_node)->vn_ops->create(ret_node, name, namelen, res_vnode);
                 
                 if(x != 0)
                 {
-                	vput(*ret_node);
+                	vput(ret_node);
                     	return x;
                 }
 
             }
             else
             { 
-            	vput(*ret_node);
+            	vput(ret_node);
             	return res;
             }
         }
         
-        vput(*ret_node);
+        vput(ret_node);
         return	res;
 }
 

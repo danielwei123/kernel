@@ -152,6 +152,21 @@ proc_create(char *name)
 		proc_initproc = pt;
         dbg(DBG_PRINT, "GRADING1C 1\n");
 	}
+
+    int i = 0;
+    for(i=0; i<NFILES; i++)
+    {
+        pt->p_files[i] = NULL;
+    }
+    if(pt->p_pid > 3)
+    {
+        pt->p_cwd = pt->p_pproc->p_cwd;
+        vref(pt->p_cwd);
+    }
+    else
+    {
+        pt->p_cwd = NULL;
+    }
     return pt;
 }
 

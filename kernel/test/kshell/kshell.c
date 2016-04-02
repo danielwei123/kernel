@@ -85,6 +85,7 @@ void kshell_add_command(const char *name, kshell_cmd_func_t cmd_func,
 kshell_t *kshell_create(uint8_t ttyid)
 {
         kshell_t *ksh;
+        dbg(DBG_PRINT,"PP Inside KSHELL\n");
 
         ksh = (kshell_t *)kmalloc(sizeof(kshell_t));
         if (NULL == ksh) {
@@ -93,6 +94,8 @@ kshell_t *kshell_create(uint8_t ttyid)
         }
 
 #ifdef __VFS__
+
+        dbg(DBG_PRINT,"PP Inside kshell vfs\n");
         int fd;
         char tty_path[MAXPATHLEN];
 
@@ -103,6 +106,7 @@ kshell_t *kshell_create(uint8_t ttyid)
                 return NULL;
         }
         ksh->ksh_out_fd = ksh->ksh_in_fd = ksh->ksh_fd = fd;
+        dbg(DBG_PRINT,"PP out do open kshell vfsn");
 #else
         bytedev_t *bd;
         bd = bytedev_lookup(MKDEVID(TTY_MAJOR, ttyid));

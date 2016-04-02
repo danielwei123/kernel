@@ -302,39 +302,45 @@ int
 do_mknod(const char *path, int mode, unsigned devid)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
-        
-    if((mode != S_IFCHR) || (mode != S_IFBLK))
+    dbg(DBG_PRINT,"PPP here %d mode %d \n",mode,S_IFCHR);
+
+    if((mode != S_IFCHR) && (mode != S_IFBLK))
     {
+        dbg(DBG_PRINT,"PPP flag check \n");
     	return	-EINVAL;		
     }
-
-    size_t	*nameLength = NULL;
+    dbg(DBG_PRINT,"PPP after flag check gone right \n");
+    size_t	nameLength ;
     const char *name;
-    vnode_t	**result_node = NULL;
+    vnode_t	*result_node = NULL;
     vnode_t	*ret_node = NULL;
 
 	/* might have to change BASE */
-	int res = dir_namev(path, nameLength, &name, NULL, result_node);
-	
+    dbg(DBG_PRINT,"PPP before dir name v \n");
+	int res = dir_namev(path, &nameLength, &name, NULL, &result_node);
+	 dbg(DBG_PRINT,"PPP after dir name v \n");
 	if( res < 0){
 	
 		return	res;
 	}
-	
-	res = lookup(*result_node, name, *nameLength, &ret_node);
+	dbg(DBG_PRINT,"PPP before lookup \n");
+	res = lookup(result_node, name, nameLength, &ret_node);
+    dbg(DBG_PRINT,"PPP after lookup \n");
 	int ret_val = res;
     if(res == 0){
 
+        dbg(DBG_PRINT,"PPP before trying to access len \n");
         ret_val = -EEXIST;
         
         vput(ret_node);
     }
     else if( res == -ENOENT )
     {
-        ret_val = (*result_node)->vn_ops->mknod(*result_node, name, *nameLength, mode, devid);
+        dbg(DBG_PRINT,"PPP error no 2 \n");
+        ret_val = (result_node)->vn_ops->mknod(result_node, name, nameLength, mode, devid);
     }
 
-    vput(*result_node);
+    vput(result_node);
     return ret_val;
       
 }
@@ -358,20 +364,25 @@ do_mkdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
         
-       size_t	*nameLength = NULL;
+       size_t	nameLength ;
         const char	*name;
-        vnode_t	**result_node = NULL;
-        vnode_t	*ret_node = NULL;
+        vnode_t	*result_node ;
+        vnode_t	*ret_node ;
 
 	/*might have to change BASE */
-	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
-	
+	int	res = dir_namev(path, &nameLength, &name, NULL, &result_node);
+	if( result_node == NULL)
+    {
+         dbg(DBG_PRINT,"PP null node of result\n");
+    }
 	if( res < 0){
 	
 		return	res;
 	}
 	
-	res = lookup(*result_node, name, *nameLength, &ret_node);
+    dbg(DBG_PRINT,"PP noww calling lookup \n");
+
+	res = lookup(result_node, name, nameLength, &ret_node);
 
     int ret_val = res;
     if(res == 0){
@@ -381,10 +392,15 @@ do_mkdir(const char *path)
     }
     else if( res == -ENOENT )
     {
-        ret_val = (*result_node)->vn_ops->mkdir(*result_node, name, *nameLength);
+        dbg(DBG_PRINT,"PP before calling mkdir thru vn_ops \n");
+        ret_val = (result_node)->vn_ops->mkdir(result_node, name, nameLength);
+        dbg(DBG_PRINT,"PP after calling mkdir thru vn_ops \n");
     }
 
-    vput(*result_node);
+    dbg(DBG_PRINT,"PP before calling vput for result node\n");
+    vput(result_node);
+    dbg(DBG_PRINT,"PP after  calling vput of result node \n");
+
     return ret_val;
 	
 }
