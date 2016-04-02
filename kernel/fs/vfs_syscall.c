@@ -340,7 +340,7 @@ do_mknod(const char *path, int mode, unsigned devid)
         ret_val = (result_node)->vn_ops->mknod(result_node, name, nameLength, mode, devid);
     }
     dbg(DBG_PRINT,"PPP before vput %s %d \n",name,nameLength);
-    vput(result_node);
+    vput(result_node); 
     return ret_val;
       
 }
@@ -398,7 +398,7 @@ do_mkdir(const char *path)
     }
 
     dbg(DBG_PRINT,"PPP before calling vput for result node %s %d \n",name,nameLength);
-    /*vput(result_node);*/
+    vput(result_node);
     dbg(DBG_PRINT,"PPP after  calling vput of result node \n");
 
     return ret_val;
@@ -471,10 +471,10 @@ int
 do_unlink(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_unlink");*/
-         size_t	*nameLength = NULL;
-        const char	*name;
-        vnode_t	**result_node = NULL;
-        vnode_t	*ret_node = NULL;
+    size_t	*nameLength = NULL;
+    const char	*name;
+    vnode_t	**result_node = NULL;
+    vnode_t	*ret_node = NULL;
 
 	/*might have to change BASE*/
 	int	res = dir_namev(path, nameLength, &name, NULL, result_node);

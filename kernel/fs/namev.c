@@ -47,10 +47,10 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/	
     
-     dbg(DBG_PRINT,"XXPP lookup: %s(%d) vn:0x%p called\n",name,len, dir);
+     dbg(DBG_PRINT,"PP lookup: %s(%d) vn:0x%p called\n",name,len, dir);
 	if(dir->vn_ops->lookup == NULL)
 	{
-        dbg(DBG_PRINT,"PP not dir\n");
+        dbg(DBG_PRINT,"QQ PP not dir\n");
 		return	-ENOTDIR;
 	}
      dbg(DBG_PRINT,"PP before KASSERT\n");
@@ -62,6 +62,7 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 		return -ENAMETOOLONG;
 	}
      dbg(DBG_PRINT,"PP after len check \n");
+     dbg(DBG_PRINT," QQ calling lookup with %s \n",name);
 	int res = dir->vn_ops->lookup(dir, name, len, result);
     dbg(DBG_PRINT,"PP end of lookup %d\n",res);
 	return	res;
@@ -148,7 +149,11 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
             }
             dbg(DBG_PRINT,"RR PP calling lookup for %s \n",pathname+prevslash);
             retval = lookup(temp,pathname+prevslash,len,&myBase);
-             dbg(DBG_PRINT,"RR retval %d \n",retval);
+            if(retval < 0)
+            {
+                break;
+            }
+            dbg(DBG_PRINT,"RR retval %d \n",retval);
             dbg(DBG_PRINT, "RR XXtemp: 0x%p, mybase: 0x%p \n ",temp, myBase);
         	prevslash=nextslash;
             if(temp!=NULL)
@@ -166,12 +171,13 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	return retval;
         }
         dbg(DBG_PRINT,"PP outside if \n");
+        /*
         if(myBase!=temp)
         {
             dbg(DBG_PRINT,"PP trying to close myBase \n");
             vput(myBase);
         }
-        
+        */
         dbg(DBG_PRINT,"PP after if \n");
         *namelen = len;
         dbg(DBG_PRINT,"PP after len \n");
@@ -224,7 +230,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
                 if(x != 0)
                 {
                 	vput(ret_node);
-                    	return x;
+                    return x;
                 }
 
             }
@@ -235,7 +241,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
             }
         }
         
-        /*vput(ret_node);*/
+        vput(ret_node);
         return	res;
 }
 

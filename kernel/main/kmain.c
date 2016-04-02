@@ -241,12 +241,13 @@ idleproc_run(int arg1, void *arg2)
         int x = do_mkdir("/dev");
         if( x == 0)
         {
-            int y = do_mknod("/dev/null",S_IFCHR,MEM_NULL_DEVID);
+            int y = do_mknod("/dev/tty0",S_IFCHR,MKDEVID(2,0));
+            y = do_mknod("/dev/null",S_IFCHR,MEM_NULL_DEVID);
             
 
             y = do_mknod("/dev/zero",S_IFCHR,MEM_ZERO_DEVID);
 
-            y = do_mknod("/dev/tty0",S_IFCHR,MKDEVID(2,0));
+            
            /* y = do_mknod("/dev/tty1",S_IFCHR,MKDEVID(2,1));
             y = do_mknod("/dev/tty2",S_IFCHR,MKDEVID(2,2));*/
 

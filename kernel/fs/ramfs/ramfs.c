@@ -422,6 +422,7 @@ ramfs_mknod(struct vnode *dir, const char *name, size_t name_len, int mode, devi
 static int
 ramfs_lookup(vnode_t *dir, const char *name, size_t namelen, vnode_t **result)
 {
+     dbg(DBG_PRINT," QQ calling lookup with in ramfs %s 0x%p \n",name,dir);
         off_t i;
         ramfs_inode_t *inode = VNODE_TO_RAMFSINODE(dir);
         ramfs_dirent_t *entry = (ramfs_dirent_t *)inode->rf_mem;

@@ -93,14 +93,14 @@ do_open(const char *filename, int oflags)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
     
-    dbg(DBG_PRINT,"PP Start do open\n"); 
+    dbg(DBG_PRINT,"PPQ Start do open\n"); 
     int	fd;
 	file_t	*f;
 	int	flags = 0;
 	vnode_t **res_vnode = NULL;
 	vnode_t *base = NULL;
 	int	error_code = 0;
-	dbg(DBG_PRINT,"PP Before get_empty_fd\n");
+	dbg(DBG_PRINT,"PPQ Before get_empty_fd\n");
 	fd = get_empty_fd(curproc);
 	
 	if(fd == (-EMFILE))
@@ -109,7 +109,7 @@ do_open(const char *filename, int oflags)
 		return	-EMFILE;
 	}
 	
-	dbg(DBG_PRINT,"PP Before fget\n");
+	dbg(DBG_PRINT,"PPQ Before fget\n");
 	f = fget(-1);
 	
 	if(f == NULL)
@@ -146,14 +146,14 @@ do_open(const char *filename, int oflags)
 		}
 	}
 
-	dbg(DBG_PRINT,"PP After flags set\n");
+	dbg(DBG_PRINT,"PPQ After flags set\n");
 	if((oflags&O_APPEND) == O_APPEND)
 	{
 		flags = flags | FMODE_APPEND;
 	}
 	
 	f->f_mode = flags; 
-	dbg(DBG_PRINT,"PP Before namev %s\n",filename);
+	dbg(DBG_PRINT,"PPQ Before namev %s\n",filename);
 	error_code = open_namev(filename, oflags, res_vnode, base);
 	if(error_code < 0)
 	{
@@ -162,7 +162,7 @@ do_open(const char *filename, int oflags)
 		return error_code;
 	}
 	
-	dbg(DBG_PRINT,"PP ALl well\n");
+	dbg(DBG_PRINT,"PPQ ALl well\n");
 	f->f_pos = 0;
 	f->f_vnode = *res_vnode;
 

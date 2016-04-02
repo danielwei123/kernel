@@ -122,6 +122,7 @@ init_func(vnode_init);
 void
 vref(vnode_t *vn)
 {
+     dbg(DBG_PRINT," QQ calling vref \n");
         KASSERT(vn);
         KASSERT(0 < vn->vn_refcount);
         vn->vn_refcount++;
@@ -132,6 +133,8 @@ vref(vnode_t *vn)
 vnode_t *
 vget(struct fs *fs, ino_t vno)
 {
+
+     dbg(DBG_PRINT," QQ calling vget \n");
         vnode_t *vn = NULL;
 
         KASSERT(fs);
@@ -249,14 +252,14 @@ vput(struct vnode *vn)
         KASSERT(vn);
 
         KASSERT(0 <= vn->vn_nrespages);
-        dbg(DBG_PRINT, "PPP before kassert nrespages: %d, refcount: %d\n",vn->vn_nrespages,vn->vn_refcount);
+        dbg(DBG_PRINT, "QQ PPP before kassert nrespages: %d, refcount: %d vn:0x%p \n",vn->vn_nrespages,vn->vn_refcount,vn);
 
         KASSERT(vn->vn_nrespages < vn->vn_refcount);
 
         KASSERT(!(VN_BUSY & vn->vn_flags));
 
 
-        dbg(DBG_VNREF, "PPPvput: 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",
+        dbg(DBG_VNREF, " PPPvput: 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount - 1, vn->vn_nrespages);
 
         if ((vn->vn_nrespages == (vn->vn_refcount - 1))
