@@ -302,7 +302,7 @@ int
 do_mknod(const char *path, int mode, unsigned devid)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
-    dbg(DBG_PRINT,"PPP here %d mode %d \n",mode,S_IFCHR);
+    dbg(DBG_PRINT,"PPP path %s \n", path);
 
     if((mode != S_IFCHR) && (mode != S_IFBLK))
     {
@@ -336,10 +336,10 @@ do_mknod(const char *path, int mode, unsigned devid)
     }
     else if( res == -ENOENT )
     {
-        dbg(DBG_PRINT,"PPP error no 2 \n");
+        dbg(DBG_PRINT,"PPP error no 2 %s %d \n",name,nameLength);
         ret_val = (result_node)->vn_ops->mknod(result_node, name, nameLength, mode, devid);
     }
-
+    dbg(DBG_PRINT,"PPP before vput %s %d \n",name,nameLength);
     vput(result_node);
     return ret_val;
       
@@ -394,12 +394,12 @@ do_mkdir(const char *path)
     {
         dbg(DBG_PRINT,"PP before calling mkdir thru vn_ops \n");
         ret_val = (result_node)->vn_ops->mkdir(result_node, name, nameLength);
-        dbg(DBG_PRINT,"PP after calling mkdir thru vn_ops \n");
+        dbg(DBG_PRINT,"PP dir made vn:0x%p \n", result_node);
     }
 
-    dbg(DBG_PRINT,"PP before calling vput for result node\n");
-    vput(result_node);
-    dbg(DBG_PRINT,"PP after  calling vput of result node \n");
+    dbg(DBG_PRINT,"PPP before calling vput for result node %s %d \n",name,nameLength);
+    /*vput(result_node);*/
+    dbg(DBG_PRINT,"PPP after  calling vput of result node \n");
 
     return ret_val;
 	

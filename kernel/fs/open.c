@@ -153,7 +153,7 @@ do_open(const char *filename, int oflags)
 	}
 	
 	f->f_mode = flags; 
-	dbg(DBG_PRINT,"PP Before namev\n");
+	dbg(DBG_PRINT,"PP Before namev %s\n",filename);
 	error_code = open_namev(filename, oflags, res_vnode, base);
 	if(error_code < 0)
 	{

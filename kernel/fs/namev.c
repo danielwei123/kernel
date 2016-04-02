@@ -47,8 +47,8 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/	
     
-     dbg(DBG_PRINT,"PP lookup: %s called\n",name);
-	if(dir && dir->vn_ops->lookup == NULL)
+     dbg(DBG_PRINT,"XXPP lookup: %s(%d) vn:0x%p called\n",name,len, dir);
+	if(dir->vn_ops->lookup == NULL)
 	{
         dbg(DBG_PRINT,"PP not dir\n");
 		return	-ENOTDIR;
@@ -130,29 +130,37 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 	int	prevslash = 0;
      	int	retval = 1;   
      	size_t 	len;
-        dbg(DBG_PRINT,"PP before while %s \n",pathname);
-        while(retval>0 && pathname[nextslash]!='\0')
+        dbg(DBG_PRINT,"RR XXPP before while %s \n",pathname);
+        while(retval>=0 && pathname[nextslash]!='\0')
         {
-            dbg(DBG_PRINT,"PP inside while \n");
-        	if(temp!=NULL)
-        	{
-                 dbg(DBG_PRINT,"PP inside if \n");
-        		vput(temp);
-        	}
-        	temp=myBase;
+            dbg(DBG_PRINT,"RR PP inside while \n");
+
+            dbg(DBG_PRINT, "\nRR XXafter assign temp: 0x%p, mybase: 0x%p\n",temp, myBase);
         	while(pathname[nextslash]!='/' && pathname[nextslash]!='\0')nextslash++;
         	len=nextslash - prevslash;
-        	
+        	            temp=myBase;
+
         	while(pathname[nextslash]=='/' && pathname[nextslash]!='\0')nextslash++;
             if( pathname[nextslash] == '\0')
             {
-                dbg(DBG_PRINT,"PP at break point %s \n",pathname+prevslash);
+                dbg(DBG_PRINT,"RR PP at break point %s \n",pathname+prevslash);
                 break;
             }
-            dbg(DBG_PRINT,"PP calling lookup for %s \n",pathname+prevslash);
+            dbg(DBG_PRINT,"RR PP calling lookup for %s \n",pathname+prevslash);
             retval = lookup(temp,pathname+prevslash,len,&myBase);
+             dbg(DBG_PRINT,"RR retval %d \n",retval);
+            dbg(DBG_PRINT, "RR XXtemp: 0x%p, mybase: 0x%p \n ",temp, myBase);
         	prevslash=nextslash;
+            if(temp!=NULL)
+            {
+                dbg(DBG_PRINT,"RR PP inside if \n");
+                vput(temp);
+            }
+            dbg(DBG_PRINT, "\nRR XX before assign temp: 0x%p, mybase: 0x%p\n",temp, myBase);
+
+
         }
+         dbg(DBG_PRINT,"RR XXPP finish while %s \n",pathname);
         if(retval < 0)
         {
         	return retval;
@@ -227,7 +235,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
             }
         }
         
-        vput(ret_node);
+        /*vput(ret_node);*/
         return	res;
 }
 
