@@ -132,10 +132,13 @@ static void *make_dir_thread(int arg1, void *arg2) {
 	int rv = 0;		/* return values */
 	int i = 0;		/* Scratch */
 
+
+
 	/* Make the directory name and the directory.  Snprintf is safe - it
 	 * always zero-terminates and never overflows the buffer. */
 	snprintf(dir, TESTBUFLEN, "/dir%03d", arg1);
 	do_mkdir(dir);
+
 	for (i = 0; i < 20 ; i++ ) {
 	    int f= 0;	/* File descriptor */
 
@@ -255,6 +258,10 @@ int faber_fs_thread_test(kshell_t *ksh, int argc, char **argv) {
 	int rv = 0;		    /* Return value */
 	int i = 0;		    /* Scratch */
 	int passed = 1;		    /* Passed all tests */
+	
+	
+	dbg(DBG_PRINT, "AAA here in thrd test\n");
+
 
         KASSERT(NULL != ksh);
 	kprintf(ksh, ">>> Running faber_fs_thread_test()... ");
@@ -342,7 +349,7 @@ int faber_directory_test(kshell_t *ksh, int argc, char **argv) {
 	int rv = 0;		/* Return values */
 	int i = 0;		/* Scratch */
 	int passed = 1;		/* Passed all tests */
-
+	dbg(DBG_PRINT, "AAA here in thrd test\n");
         KASSERT(NULL != ksh);
 	kprintf(ksh, ">>> Running faber_directory_test()... ");
 	if ( argc == 1 ) {

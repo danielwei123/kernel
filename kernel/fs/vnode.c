@@ -126,7 +126,7 @@ vref(vnode_t *vn)
         KASSERT(vn);
         KASSERT(0 < vn->vn_refcount);
         vn->vn_refcount++;
-        dbg(DBG_VNREF, "PPP vref: 0x%p, 0x%p ino %ld up to %d, nrespages=%d\n",
+        dbg(DBG_VNREF, "CC vref: 0x%p, 0x%p ino %ld up to %d, nrespages=%d\n",
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount, vn->vn_nrespages);
 }
 
@@ -252,7 +252,7 @@ vput(struct vnode *vn)
         KASSERT(vn);
 
         KASSERT(0 <= vn->vn_nrespages);
-        dbg(DBG_PRINT, "QQ  inode: %ld \n",vn->vn_vno);
+
 
         KASSERT(vn->vn_nrespages < vn->vn_refcount);
 

@@ -235,6 +235,7 @@ proc_cleanup(int status)
 	{
 		if(curproc->p_files[i]!=NULL)
 		{
+			dbg(DBG_PRINT, "EE File Closing ");
 			do_close(i);
 		}
 		

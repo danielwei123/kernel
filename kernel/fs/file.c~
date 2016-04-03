@@ -96,17 +96,21 @@ fput(file_t *f)
         if (f->f_refcount != 1) KASSERT(f->f_vnode);
 
         f->f_refcount--;
-
+	
         if (f->f_vnode) {
                 dbg(DBG_FREF, "fput: 0x%p, 0x%p ino %lu, down to %d (vnode refcount = %d, nrespages = %d)\n",
                     f, f->f_vnode->vn_fs, (unsigned long) f->f_vnode->vn_vno,
                     f->f_refcount, f->f_vnode->vn_refcount, f->f_vnode->vn_nrespages);
         } else {
-                dbg(DBG_FREF, "fput: 0x%p down to %d\n", f, f->f_refcount);
+                dbg(DBG_FREF, "CC fput: 0x%p down to %d\n", f, f->f_refcount);
         }
 
         if (f->f_refcount == 0) {
-                if (f->f_vnode) vput(f->f_vnode);
+        	dbg(DBG_PRINT, "CC fput for inode: %d\n", f->f_vnode->vn_vno);
+                if (f->f_vnode){
+                	vput(f->f_vnode);
+                	
+                } 
                 slab_obj_free(file_allocator, f);
         }
 }

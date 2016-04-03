@@ -927,10 +927,11 @@ int vfstest_main(int argc, char **argv)
         }
 
         test_init();
+        
         vfstest_start();
-
+	
         syscall_success(chdir(root_dir));
-
+	/*
         vfstest_stat();
         vfstest_chdir();
         vfstest_mkdir();
@@ -939,17 +940,17 @@ int vfstest_main(int argc, char **argv)
         vfstest_open();
         vfstest_read();
         vfstest_getdents();
-
+	*/
 #ifdef __VM__
         vfstest_s5fs_vm();
 #endif
 
         /*vfstest_infinite();*/
-
+	/*
         syscall_success(chdir(".."));
 
         vfstest_term();
-        test_fini();
-
+        test_fini(); 
+	*/
         return 0;
 }

@@ -158,7 +158,7 @@ proc_create(char *name)
     {
         pt->p_files[i] = NULL;
     }
-    if(pt->p_pid > 3)
+    if(pt->p_pid > 1)
     {	
     	dbg(DBG_PRINT, "proc create 1\n");	
         pt->p_cwd = pt->p_pproc->p_cwd;
@@ -235,6 +235,7 @@ proc_cleanup(int status)
 	{
 		if(curproc->p_files[i]!=NULL)
 		{
+			dbg(DBG_PRINT, "EE File Closing ");
 			do_close(i);
 		}
 		

@@ -77,9 +77,9 @@ extern void *sunghan_test(int, void*);
 extern void *sunghan_deadlock_test(int, void*);
 extern void *faber_thread_test(int, void*);
 
-extern void *faber_fs_thread_test(int, void*);
-extern void *faber_directory_test(int, void*);
-extern void *vfs_test_main(int, void*);
+extern int  faber_fs_thread_test(kshell_t*, int, char **);
+extern int  faber_directory_test(kshell_t*, int, char **);
+extern void *vfstest_main(int, void*);
 
 static context_t bootstrap_context;
 extern int gdb_wait;
@@ -444,31 +444,6 @@ badargs1(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
-int
-faber_test_func(kshell_t *kshell, int argc, char **argv)
-{
-    KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1D 1\n");
-    int status = 0;
-	proc_t *faber_test_proc = proc_create("faber_fs_thread_test");
-    	kthread_t *faber_thread = kthread_create(faber_test_proc, faber_fs_thread_test, 0, 0);
- 	sched_make_runnable(faber_thread);
- 	do_waitpid(faber_test_proc->p_pid , 0, &status);
-    return 0;
-}
-
-int
-faber_test_dir(kshell_t *kshell, int argc, char **argv)
-{
-    KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1D 1\n");
-    int status = 0;
-	proc_t *faber_test_dir = proc_create("faber_fs_dir");
-    	kthread_t *faber_thread_dir = kthread_create(faber_test_dir, faber_directory_test, 0, 0);
- 	sched_make_runnable(faber_thread_dir);
- 	do_waitpid(faber_test_dir->p_pid , 0, &status);
-    return 0;
-}
 
 int
 vfs_test(kshell_t *kshell, int argc, char **argv)
@@ -478,7 +453,7 @@ vfs_test(kshell_t *kshell, int argc, char **argv)
     dbg(DBG_PRINT, "GRADING1E 2\n");
     int status = 0;
 	proc_t *pt = proc_create("vfs");
-   	kthread_t *thr = kthread_create(pt, vfs_test_main, 0, NULL);
+   	kthread_t *thr = kthread_create(pt, vfstest_main, 1, NULL);
  	sched_make_runnable(thr);
  	do_waitpid(pt->p_pid , 0, &status);
     return 0;
@@ -515,10 +490,9 @@ badargs2(kshell_t *kshell, int argc, char **argv)
          kshell_add_command("thrselfcancel", thread_self_cancel, "Cancelling the current thread");
          kshell_add_command("initclean", init_clean, "Proc clean called on init(Works similar to exit)");
          kshell_add_command("badargs1", badargs1, "Pid other than -1 and positive numbers");
-         kshell_add_command("badargs2", badargs2, "Options other than 0");
          
-         kshell_add_command("faber", faber_test_func, "faber fs thread test");
-         kshell_add_command("faber_dir", faber_test_dir, "faber fs dir");
+         kshell_add_command("faber_a", faber_fs_thread_test, "faber fs thread test");
+         kshell_add_command("faber_dir", faber_directory_test, "faber fs dir");
          kshell_add_command("vfs", vfs_test, "invoke vfs tests");
          
          kshell_t *kshell = kshell_create(0);

@@ -47,6 +47,9 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/	
     
+    
+    
+    
      dbg(DBG_PRINT,"PP lookup: %s(%d) vn:0x%p called\n",name,len, dir);
 	if(dir->vn_ops->lookup == NULL)
 	{
@@ -118,10 +121,12 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         }
         else if( base == NULL)
         {
+        	dbg(DBG_PRINT,"DD base is null1\n");
             myBase = curproc->p_cwd;
         }
         else 
         {
+        	dbg(DBG_PRINT,"DD base is null2\n");
         	myBase = base;
         }
 
@@ -225,29 +230,28 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
         }
         
         res = lookup(ret_node, name, namelen, res_vnode);
+        dbg(DBG_PRINT,"AA after lookup in openv :%d, name: %s\n", res, name);
         
+        int ret_val = res;	
         if(res == -ENOENT)
         {
             if((flag & O_CREAT) == O_CREAT)
             {
                 int x = (ret_node)->vn_ops->create(ret_node, name, namelen, res_vnode);
+                dbg(DBG_PRINT,"AA created ret_val:%d, name:%s\n", x, name);	
                 
-                if(x != 0)
-                {
-                	vput(ret_node);
-                    return x;
-                }
-
+                    	ret_val =  x;
             }
             else
             { 
-            	vput(ret_node);
-            	return res;
+            	dbg(DBG_PRINT,"AA flag not set \n");
+            	ret_val = res;
+  
             }
         }
         
         vput(ret_node);
-        return	res;
+        return	ret_val;
 }
 
 #ifdef __GETCWD__

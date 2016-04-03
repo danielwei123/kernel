@@ -92,7 +92,7 @@ int
 do_open(const char *filename, int oflags)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
-    
+     	dbg(DBG_PRINT, "CC do_open\n");
     dbg(DBG_PRINT,"PPQ Start do open\n"); 
     int	fd;
 	file_t	*f;
@@ -122,35 +122,24 @@ do_open(const char *filename, int oflags)
 	
 	flags = (oflags & O_RDONLY)|(oflags & O_WRONLY)|(oflags & O_RDWR);
 	
-	if((oflags & O_WRONLY) && !(oflags & O_RDWR))
-	{
-		flags = FMODE_WRITE;
+	
+	if(oflags & O_RDONLY){
+		flags = FMODE_READ;	
 	}
-	else
-	{
-		if((oflags & O_RDWR))
-		{
-			flags =  FMODE_WRITE | FMODE_READ;
-		}
-		else
-		{
-			if((oflags & O_RDONLY) && !(oflags & O_RDWR))
-			{
-				flags = FMODE_READ;
-			}
-			else
-			{
-				fput(f);
-				return -EINVAL;
-			}
-		}
+	if(oflags &  O_WRONLY){
+		flags = FMODE_WRITE;	
 	}
+	if(oflags & O_RDWR){
+		flags = FMODE_WRITE | FMODE_READ;
+	}
+	
 
 	dbg(DBG_PRINT,"PPQ After flags set\n");
 	if((oflags&O_APPEND) == O_APPEND)
 	{
 		flags = flags | FMODE_APPEND;
 	}
+	
 	
 	f->f_mode = flags; 
 	dbg(DBG_PRINT,"PPQ Before namev %s\n",filename);
