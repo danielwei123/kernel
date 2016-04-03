@@ -62,13 +62,16 @@ do_read(int fd, void *buf, size_t nbytes)
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
         int	bytes_read = -1;
         
+        
+        dbg(DBG_PRINT, "QQread(0)\n");
+        
         if(fd < 0 || fd >= NFILES)
  	{
  		return	-EBADF;
  	}
         
         file_t	*f = fget(fd);
-        
+        dbg(DBG_PRINT, "QQread(1)\n");
         if(f == NULL)
         {
         	return	-EBADF;	
@@ -79,18 +82,30 @@ do_read(int fd, void *buf, size_t nbytes)
         	return	-EBADF;
         }
         
-        
+        dbg(DBG_PRINT, "QQread(2)\n");
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
+        int ret_val = bytes_read;
+        dbg(DBG_PRINT, "QQread(3)\n");
         
-        if(bytes_read != -1)
+        if(bytes_read > 0)
         {
-        	do_lseek(fd, bytes_read, SEEK_CUR);
-        	fput(f);
-        	return	bytes_read;
+        	int x = do_lseek(fd, bytes_read, SEEK_CUR);
+        	if(x<0)
+            {
+                ret_val=x;
+            }
         }
-        
+        else if( bytes_read == 0)
+        {
+            int x=do_lseek(fd, bytes_read, SEEK_END);
+            if(x<0)
+            {
+                ret_val=x;
+            }
+        }
+        dbg(DBG_PRINT, "QQread(4)\n");
         fput(f);
-        return -1;
+        return ret_val;
 }
 
 /* Very similar to do_read.  Check f_mode to be sure the file is writable.  If
@@ -108,7 +123,7 @@ do_write(int fd, const void *buf, size_t nbytes)
         
         int	bytes_written = -1;
         
-        if(fd < 0 || fd >= NFILES)
+    if(fd < 0 || fd >= NFILES)
  	{
  		return	-EBADF;
  	}
@@ -121,6 +136,7 @@ do_write(int fd, const void *buf, size_t nbytes)
 	
 	if((f->f_mode&FMODE_WRITE) != FMODE_WRITE)
 	{
+        fput(f);
 		return	-EBADF;
 	}
 	
@@ -130,16 +146,19 @@ do_write(int fd, const void *buf, size_t nbytes)
 	}
 	
 	bytes_written = f->f_vnode->vn_ops->write(f->f_vnode, f->f_pos, buf, nbytes);
-        
-        if(bytes_written != -1)
+    int ret_val = bytes_written;
+        if(bytes_written > 0)
         {
-   		do_lseek(fd, bytes_written, SEEK_CUR);
-        	fput(f);
-        	return	bytes_written;
+   		    int x = do_lseek(fd, bytes_written, SEEK_CUR);
+        	if( x < 0)
+            {
+                ret_val = x;
+            }
+        	
         }
         
         fput(f);
-        return -1;
+        return ret_val;
 }
 
 /*
@@ -154,7 +173,7 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
  
- 	if(fd < 0 || fd >= NFILES)
+ 	if(fd < 0 || fd >= NFILES || curproc->p_files[fd] == NULL)
  	{
  		return	-EBADF;
  	}
@@ -204,16 +223,15 @@ do_dup(int fd)
 
         fd_new = get_empty_fd(curproc);
 
-        if(fd_new == -EMFILE)
+        if(fd_new < 0)
         {
                fput(f);
-               return -EMFILE; 
+               return fd_new; 
         }
-        else
-        {
-                curproc->p_files[fd_new] = f;
-                return fd_new;
-        }
+        
+       curproc->p_files[fd_new] = f;
+        return fd_new;
+        
 
 }
 
@@ -231,28 +249,32 @@ do_dup2(int ofd, int nfd)
 {
         NOT_YET_IMPLEMENTED("VFS: do_dup2");
         file_t  *f_ofd;
-        file_t  *f_nfd
         int   fd_new;
  	
- 	if(ofd < 0 || ofd >= NFILES || (curproc->p_files[ofd] == NULL))
+ 	if(ofd < 0 || ofd >= NFILES || (curproc->p_files[ofd] == NULL) ||nfd < 0 || nfd >= NFILES)
  	{
  		return	-EBADF;
  	}
- 	
-        f_ofd = fget(ofd);
-        /* fd isn't an open file descriptor. */
-        if( f_ofd == NULL || nfd < 0 || nfd >= NFILES)
-        {
-                return -EBADF;
-        }
 
-        f_nfd = curproc->p_files[nfd];
-        if( f_nfd != NULL && nfd != ofd)
-        {
-                do_close(nfd);
-        }
-        curproc->p_files[nfd] = f_ofd;
-        return nfd;
+    if(ofd == nfd)
+    {
+        return ofd;
+    }
+ 	
+    f_ofd = fget(ofd);
+    /* fd isn't an open file descriptor. */
+    if( f_ofd == NULL)
+    {
+            return -EBADF;
+    }
+
+    if(curproc->p_files[nfd])
+    {
+        do_close(nfd);
+    }
+
+    curproc->p_files[nfd] = f_ofd;
+    return nfd;
 
 }
 
@@ -285,36 +307,46 @@ int
 do_mknod(const char *path, int mode, unsigned devid)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
-        
-        if((mode != S_IFCHR) || (mode != S_IFBLK))
-        {
-        	return	-EINVAL;		
-        }
+    dbg(DBG_PRINT,"PPP path %s \n", path);
 
-        size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
-        vnode_t	*ret_node = NULL;
+    if((mode != S_IFCHR) && (mode != S_IFBLK))
+    {
+        dbg(DBG_PRINT,"PPP flag check \n");
+    	return	-EINVAL;		
+    }
+    dbg(DBG_PRINT,"PPP after flag check gone right \n");
+    size_t	nameLength ;
+    const char *name;
+    vnode_t	*result_node = NULL;
+    vnode_t	*ret_node = NULL;
 
-	//might have to change BASE
-	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
-	
+	/* might have to change BASE */
+    dbg(DBG_PRINT,"PPP before dir name v \n");
+	int res = dir_namev(path, &nameLength, &name, NULL, &result_node);
+	 dbg(DBG_PRINT,"PPP after dir name v \n");
 	if( res < 0){
 	
 		return	res;
 	}
-	
+	dbg(DBG_PRINT,"PPP before lookup \n");
 	res = lookup(result_node, name, nameLength, &ret_node);
-	
-	if(res == -ENAMETOOLONG){
-		return	res;
-	}
-	
-	if(res == 0){
-		return	-EEXIST;
-	}
-	        
-        return	result_node->vn_ops->mknod(result_node, name, nameLength, mode, devid);
+    dbg(DBG_PRINT,"PPP after lookup \n");
+	int ret_val = res;
+    if(res == 0){
+
+        dbg(DBG_PRINT,"PPP before trying to access len \n");
+        ret_val = -EEXIST;
+        
+        vput(ret_node);
+    }
+    else if( res == -ENOENT )
+    {
+        dbg(DBG_PRINT,"PPP error no 2 %s %d \n",name,nameLength);
+        ret_val = (result_node)->vn_ops->mknod(result_node, name, nameLength, mode, devid);
+    }
+    dbg(DBG_PRINT,"PPP before vput %s %d \n",name,nameLength);
+    vput(result_node); 
+    return ret_val;
       
 }
 
@@ -337,28 +369,45 @@ do_mkdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
         
-       size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
-        vnode_t	*ret_node = NULL;
+       size_t	nameLength ;
+        const char	*name;
+        vnode_t	*result_node ;
+        vnode_t	*ret_node ;
 
-	//might have to change BASE
-	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
-	
+	/*might have to change BASE */
+	int	res = dir_namev(path, &nameLength, &name, NULL, &result_node);
+	if( result_node == NULL)
+    {
+         dbg(DBG_PRINT,"PP null node of result\n");
+    }
 	if( res < 0){
 	
 		return	res;
 	}
 	
+    dbg(DBG_PRINT,"PP noww calling lookup \n");
+
 	res = lookup(result_node, name, nameLength, &ret_node);
+
+    int ret_val = res;
+    if(res == 0){
+
+        ret_val = -EEXIST;
+        vput(ret_node);
+    }
+    else if( res == -ENOENT )
+    {
+        dbg(DBG_PRINT,"PP before calling mkdir thru vn_ops \n");
+        ret_val = (result_node)->vn_ops->mkdir(result_node, name, nameLength);
+        dbg(DBG_PRINT,"PP dir made vn:0x%p \n", result_node);
+    }
+
+    dbg(DBG_PRINT,"PPP before calling vput for result node %s %d \n",name,nameLength);
+    vput(result_node);
+    dbg(DBG_PRINT,"PPP after  calling vput of result node \n");
+
+    return ret_val;
 	
-	if(res == -ENAMETOOLONG){
-		return	res;
-	}
-	if(res == 0){
-		return	-EEXIST;
-	}
-        return	result_node->vn_ops->mkdir(result_node, name, nameLength);
 }
 
 /* Use dir_namev() to find the vnode of the directory containing the dir to be
@@ -384,30 +433,30 @@ do_rmdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_rmdir");*/
 	        
-        size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
-        vnode_t	*ret_node = NULL;
+    size_t	*nameLength = NULL;
+    const char	*name;
+    vnode_t	**result_node = NULL;
 
-	//might have to change BASE
-	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
+	/*might have to change BASE*/
+	int res = dir_namev(path, nameLength, &name, NULL, result_node);
+    int ret_val = res;
 	
-	
-	if(name[0] == '.'){
-	
-		if(name[1] == '.')
+	if(name[0] == '.')
+    {
+	   if(name[1] == '.')
 		{
-			return	-ENOTEMPTY;
+			ret_val	= -ENOTEMPTY;
 		}	
 		
-		return	-EINVAL;
+		ret_val = -EINVAL;
 	}
-	if( res < 0){
+    else if (res >= 0)
+    {
+        ret_val = (*result_node)->vn_ops->rmdir(*result_node, name, *nameLength);
+    }
 	
-		return	res;
-	}
-        
-        return	result_node->vn_ops->rmdir(result_node, name, nameLength);
+    vput(*result_node);
+    return ret_val;
 }
 
 /*
@@ -427,32 +476,36 @@ int
 do_unlink(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_unlink");*/
-         size_t	*nameLength;
-        char	*name;
-        vnode_t	**result_node;
-        vnode_t	*ret_node = NULL;
+    size_t	*nameLength = NULL;
+    const char	*name;
+    vnode_t	**result_node = NULL;
+    vnode_t	*ret_node = NULL;
 
-	//might have to change BASE
+	/*might have to change BASE*/
 	int	res = dir_namev(path, nameLength, &name, NULL, result_node);
 	
-	if( res < 0){
-	
+	if( res < 0)
+    {
+	    vput(*result_node);
 		return	res;
 	}
 	
-        res = lookup(result_node, name, nameLength, &ret_node);
-        
-        if(res < 0)
-        {
-        	return	res;
-        }
-        
-        if(ret_node->vn_mode & S_IFDIR )
+    res = lookup(*result_node, name, *nameLength, &ret_node);
+    if(res < 0)
+    {
+        vput(*result_node);
+    	return	res;
+    }
+    
+    if(ret_node->vn_mode & S_IFDIR )
 	{
+        vput(*result_node);
 		return -EISDIR;
 	}        
         
-        return	result_node->vn_ops->unlink(result_node, name, nameLength);
+    int x =	(*result_node)->vn_ops->unlink(*result_node, name, *nameLength);
+    vput(*result_node);
+    return x;
 
 }
 
@@ -481,11 +534,11 @@ int
 do_link(const char *from, const char *to)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_link");*/
-        vnode_t	**ret;
-        vnode_t	**res_vnode;
-        vnode_t **ret_vnode;
-        char	**name;
-        size_t	*nameLength;
+        vnode_t	**ret = NULL;
+        vnode_t	**res_vnode = NULL;
+        vnode_t **ret_vnode = NULL;
+        const char	*name;
+        size_t	*nameLength = NULL;
         
         int res = open_namev(from, O_RDONLY, ret, NULL);
         
@@ -494,20 +547,20 @@ do_link(const char *from, const char *to)
 		return res;
 	}    
 	    
-        res = dir_namev(to, nameLength, name, NULL, res_vnode);
+        res = dir_namev(to, nameLength, &name, NULL, res_vnode);
       
         if( res < 0)
         {
         	return res;
         }
         
-        res = lookup(ret, name, nameLength, ret_vnode);
+        res = lookup(*ret, name, *nameLength, ret_vnode);
         if(res == 0)
         {
         	return -EEXIST;
         }
         
-        return res_vnode->vn_ops->link(*res_vnode, *ret, name, nameLength);
+        return (*res_vnode)->vn_ops->link(*res_vnode, *ret, name, *nameLength);
 }
 
 /*      o link newname to oldname
@@ -547,8 +600,8 @@ int
 do_chdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_chdir");*/
-        vnode_t	**ret;
-        vnode_t	**out;
+        vnode_t	**ret = NULL;
+        vnode_t	**out = NULL;
         
         int res = open_namev(path, 0, ret, NULL);
         
@@ -592,7 +645,7 @@ do_getdent(int fd, struct dirent *dirp)
  		return	-EBADF;
  	}
         
-        f = fgets(fd);
+        f = fget(fd);
         
         if(f == NULL)
         {
@@ -654,14 +707,15 @@ do_lseek(int fd, int offset, int whence)
 	}
         if(whence == SEEK_SET){
         
-        	f->f_pos = offset;
         	
-        	if(f->p_files[fd]->f_pos < 0){
+        	
+        	if(offset < 0){
         		fput(f);
         		return	EINVAL;
         	}
+                f->f_pos = offset;
         	fput(f);
-        	return	f[fd]->f_pos;
+        	return	offset;
         }
         else
         {
@@ -683,7 +737,7 @@ do_lseek(int fd, int offset, int whence)
         	{
         		if(whence == SEEK_END){
         			
-        			x = f->f_vnode + offset;
+        			x = f->f_pos + offset;
         			if(x < 0){
         				fput(f);
         				return	EINVAL;
@@ -722,20 +776,21 @@ do_stat(const char *path, struct stat *buf)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_stat");*/
         /* Find the base directory*/
-        size_t *namelen = -1;
-        const char **name;
-        vnode_t *base = NULL;
-        vnode_t **res_vnode = NULL;
 
-        int res = open_namev(path, 0, base, res_vnode);
+        vnode_t *base = NULL;
+        vnode_t *res_vnode = NULL;
+
+        int res = open_namev(path, 0, &res_vnode, base);
         if( res == 0)
         {
-                return res_vnode->vn_ops->stat(res_vnode, buf);
+                return (res_vnode)->vn_ops->stat(res_vnode, buf);
         }
         else 
         {
         	return res;
         }
+
+        return -1;
 
 }
 

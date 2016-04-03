@@ -159,12 +159,16 @@ proc_create(char *name)
         pt->p_files[i] = NULL;
     }
     if(pt->p_pid > 3)
-    {
+    {	
+    	dbg(DBG_PRINT, "proc create 1\n");	
         pt->p_cwd = pt->p_pproc->p_cwd;
-        vref(pt->p_cwd);
+        dbg(DBG_PRINT, "proc create 2\n");
+        /*vref(pt->p_cwd);*/
+        dbg(DBG_PRINT, "proc create 3\n");
     }
     else
     {
+    	dbg(DBG_PRINT,"\nQQ proc_creat else");
         pt->p_cwd = NULL;
     }
     return pt;
@@ -225,8 +229,25 @@ proc_cleanup(int status)
             dbg(DBG_PRINT, "GRADING1C 6\n");
 		}
 	}
+	
+	int i = 0;
+	for(i=0;i<NFILES;i++)
+	{
+		if(curproc->p_files[i]!=NULL)
+		{
+			do_close(i);
+		}
+		
+	}
+	
+	if(curproc->p_pid == 1)
+	{
+		vput(curproc->p_cwd);
+	}
+	
 	curproc->p_status = status;
 	curproc->p_state = PROC_DEAD;
+	
 	list_remove(&(curproc->p_list_link));
 	KASSERT(NULL != curproc->p_pproc);
 	dbg(DBG_PRINT, "GRADING1A 2.b\n");

@@ -68,6 +68,7 @@ int kshell_write(kshell_t *ksh, const void *buf, size_t nbytes)
 
 int kshell_read(kshell_t *ksh, void *buf, size_t nbytes)
 {
+	dbg(DBG_PRINT, "QQio.c\n");
         return do_read(ksh->ksh_in_fd, buf, nbytes);
 }
 

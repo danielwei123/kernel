@@ -134,7 +134,7 @@ vnode_t *
 vget(struct fs *fs, ino_t vno)
 {
 
-     dbg(DBG_PRINT," QQ calling vget \n");
+     dbg(DBG_PRINT," QQ calling vget for inode: %ld\n", vno);
         vnode_t *vn = NULL;
 
         KASSERT(fs);
@@ -252,7 +252,7 @@ vput(struct vnode *vn)
         KASSERT(vn);
 
         KASSERT(0 <= vn->vn_nrespages);
-        dbg(DBG_PRINT, "QQ PPP before kassert nrespages: %d, refcount: %d vn:0x%p \n",vn->vn_nrespages,vn->vn_refcount,vn);
+        dbg(DBG_PRINT, "QQ  inode: %ld \n",vn->vn_vno);
 
         KASSERT(vn->vn_nrespages < vn->vn_refcount);
 
@@ -478,7 +478,7 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
         }
         
         
-        int res = file->vn_ops->read(file, offset, buf, count); 
+        int res = file->vn_cdev->cd_ops->read(file->vn_cdev, offset, buf, count); 
         
         return res;
 }
@@ -500,7 +500,7 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
         }
         
       
-        int res = file->vn_ops->write(file, offset, buf, count); 
+        int res = file->vn_cdev->cd_ops->write(file->vn_cdev, offset, buf, count); 
         
         return res;
         

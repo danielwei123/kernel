@@ -97,7 +97,7 @@ do_open(const char *filename, int oflags)
     int	fd;
 	file_t	*f;
 	int	flags = 0;
-	vnode_t **res_vnode = NULL;
+	vnode_t *res_vnode;
 	vnode_t *base = NULL;
 	int	error_code = 0;
 	dbg(DBG_PRINT,"PPQ Before get_empty_fd\n");
@@ -154,7 +154,7 @@ do_open(const char *filename, int oflags)
 	
 	f->f_mode = flags; 
 	dbg(DBG_PRINT,"PPQ Before namev %s\n",filename);
-	error_code = open_namev(filename, oflags, res_vnode, base);
+	error_code = open_namev(filename, oflags, &res_vnode, base);
 	if(error_code < 0)
 	{
 		curproc->p_files[fd] = NULL;
@@ -164,7 +164,7 @@ do_open(const char *filename, int oflags)
 	
 	dbg(DBG_PRINT,"PPQ ALl well\n");
 	f->f_pos = 0;
-	f->f_vnode = *res_vnode;
+	f->f_vnode = res_vnode;
 
 	f->f_refcount = 1;
 	

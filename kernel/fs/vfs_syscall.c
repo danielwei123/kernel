@@ -62,13 +62,16 @@ do_read(int fd, void *buf, size_t nbytes)
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
         int	bytes_read = -1;
         
+        
+        dbg(DBG_PRINT, "QQread(0)\n");
+        
         if(fd < 0 || fd >= NFILES)
  	{
  		return	-EBADF;
  	}
         
         file_t	*f = fget(fd);
-        
+        dbg(DBG_PRINT, "QQread(1)\n");
         if(f == NULL)
         {
         	return	-EBADF;	
@@ -79,10 +82,11 @@ do_read(int fd, void *buf, size_t nbytes)
         	return	-EBADF;
         }
         
-        
+        dbg(DBG_PRINT, "QQread(2)\n");
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         int ret_val = bytes_read;
-
+        dbg(DBG_PRINT, "QQread(3)\n");
+        
         if(bytes_read > 0)
         {
         	int x = do_lseek(fd, bytes_read, SEEK_CUR);
@@ -99,6 +103,7 @@ do_read(int fd, void *buf, size_t nbytes)
                 ret_val=x;
             }
         }
+        dbg(DBG_PRINT, "QQread(4)\n");
         fput(f);
         return ret_val;
 }
@@ -771,15 +776,14 @@ do_stat(const char *path, struct stat *buf)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_stat");*/
         /* Find the base directory*/
-        size_t *namelen;
-        const char **name;
-        vnode_t *base = NULL;
-        vnode_t **res_vnode = NULL;
 
-        int res = open_namev(path, 0, res_vnode, base);
+        vnode_t *base = NULL;
+        vnode_t *res_vnode = NULL;
+
+        int res = open_namev(path, 0, &res_vnode, base);
         if( res == 0)
         {
-                return (*res_vnode)->vn_ops->stat(*res_vnode, buf);
+                return (res_vnode)->vn_ops->stat(res_vnode, buf);
         }
         else 
         {

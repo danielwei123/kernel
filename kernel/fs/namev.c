@@ -56,11 +56,14 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
      dbg(DBG_PRINT,"PP before KASSERT\n");
 	KASSERT(name!= NULL);
      dbg(DBG_PRINT,"PP before len\n");
+     /*
 	if(len > NAME_LEN)
 	{
         dbg(DBG_PRINT,"PP end of lokkup nametoolong\n");
 		return -ENAMETOOLONG;
 	}
+	
+	*/
      dbg(DBG_PRINT,"PP after len check \n");
      dbg(DBG_PRINT," QQ calling lookup with %s \n",name);
 	int res = dir->vn_ops->lookup(dir, name, len, result);
@@ -103,6 +106,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         {
              dbg(DBG_PRINT,"PP if it is /\n");
             myBase = vfs_root_vn; 
+
              if(myBase == NULL)
              {
                  dbg(DBG_PRINT,"PP base is null\n");
@@ -125,7 +129,8 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
              {
                  dbg(DBG_PRINT,"PP base is null 2\n");
              }
-
+             
+	vref(myBase);
  
 	int	nextslash = 0;
 	int	prevslash = 0;

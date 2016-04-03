@@ -77,6 +77,10 @@ extern void *sunghan_test(int, void*);
 extern void *sunghan_deadlock_test(int, void*);
 extern void *faber_thread_test(int, void*);
 
+extern void *faber_fs_thread_test(int, void*);
+extern void *faber_directory_test(int, void*);
+extern void *vfs_test_main(int, void*);
+
 static context_t bootstrap_context;
 extern int gdb_wait;
 
@@ -248,13 +252,13 @@ idleproc_run(int arg1, void *arg2)
             y = do_mknod("/dev/zero",S_IFCHR,MEM_ZERO_DEVID);
 
             
-           /* y = do_mknod("/dev/tty1",S_IFCHR,MKDEVID(2,1));
-            y = do_mknod("/dev/tty2",S_IFCHR,MKDEVID(2,2));*/
+            y = do_mknod("/dev/tty1",S_IFCHR,MKDEVID(2,1));
+            y = do_mknod("/dev/tty2",S_IFCHR,MKDEVID(2,2));
 
         }
     
-        /*x = do_mkdir("/tmp");
-         dbg(DBG_PRINT,"PP END of VFS \n");*/
+        x = do_mkdir("/tmp");
+         dbg(DBG_PRINT,"PP END of VFS \n");
 
 #endif
 
@@ -417,6 +421,7 @@ thread_self_cancel(kshell_t *kshell, int argc, char **argv)
     return 0;
 }
 
+
 int
 init_clean(kshell_t *kshell, int argc, char **argv)
 {
@@ -438,6 +443,47 @@ badargs1(kshell_t *kshell, int argc, char **argv)
     }
     return 0;
 }
+
+int
+faber_test_func(kshell_t *kshell, int argc, char **argv)
+{
+    KASSERT(kshell != NULL);
+    dbg(DBG_PRINT, "GRADING1D 1\n");
+    int status = 0;
+	proc_t *faber_test_proc = proc_create("faber_fs_thread_test");
+    	kthread_t *faber_thread = kthread_create(faber_test_proc, faber_fs_thread_test, 0, 0);
+ 	sched_make_runnable(faber_thread);
+ 	do_waitpid(faber_test_proc->p_pid , 0, &status);
+    return 0;
+}
+
+int
+faber_test_dir(kshell_t *kshell, int argc, char **argv)
+{
+    KASSERT(kshell != NULL);
+    dbg(DBG_PRINT, "GRADING1D 1\n");
+    int status = 0;
+	proc_t *faber_test_dir = proc_create("faber_fs_dir");
+    	kthread_t *faber_thread_dir = kthread_create(faber_test_dir, faber_directory_test, 0, 0);
+ 	sched_make_runnable(faber_thread_dir);
+ 	do_waitpid(faber_test_dir->p_pid , 0, &status);
+    return 0;
+}
+
+int
+vfs_test(kshell_t *kshell, int argc, char **argv)
+{
+    KASSERT(kshell != NULL);
+    
+    dbg(DBG_PRINT, "GRADING1E 2\n");
+    int status = 0;
+	proc_t *pt = proc_create("vfs");
+   	kthread_t *thr = kthread_create(pt, vfs_test_main, 0, NULL);
+ 	sched_make_runnable(thr);
+ 	do_waitpid(pt->p_pid , 0, &status);
+    return 0;
+}
+
 
 int
 badargs2(kshell_t *kshell, int argc, char **argv)
@@ -462,18 +508,24 @@ badargs2(kshell_t *kshell, int argc, char **argv)
 
  #ifdef __DRIVERS__
 
-         kshell_add_command("faber", do_foo, "Invoke faber tests");
+         kshell_add_command("faberproc", do_foo, "Invoke faber tests");
          kshell_add_command("sunghan", sunghan_test_func, "Sunghan test");
- 	     kshell_add_command("sunghan_dead", sunghan_deadlock_test_func, "Sunghan deadlock test");
+ 	 kshell_add_command("sunghan_dead", sunghan_deadlock_test_func, "Sunghan deadlock test");
          kshell_add_command("bigprocname", big_process_name, "Additional test for long process name");
          kshell_add_command("thrselfcancel", thread_self_cancel, "Cancelling the current thread");
          kshell_add_command("initclean", init_clean, "Proc clean called on init(Works similar to exit)");
          kshell_add_command("badargs1", badargs1, "Pid other than -1 and positive numbers");
          kshell_add_command("badargs2", badargs2, "Options other than 0");
-
+         
+         kshell_add_command("faber", faber_test_func, "faber fs thread test");
+         kshell_add_command("faber_dir", faber_test_dir, "faber fs dir");
+         kshell_add_command("vfs", vfs_test, "invoke vfs tests");
+         
          kshell_t *kshell = kshell_create(0);
-        dbg(DBG_PRINT,"Before kShell\n");
+         dbg(DBG_PRINT,"QQ Before kShell\n");
+        
          if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
+         dbg(DBG_PRINT,"QQ after if\n");
          while (kshell_execute_next(kshell));
          kshell_destroy(kshell);
 
