@@ -47,6 +47,10 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/
         
+        KASSERT(NULL != dir);
+        
+        KASSERT(NULL != result);
+        
 	if(len > NAME_LEN)
 	{
         	dbg(DBG_PRINT,"ABCD end of lokkup nametoolong %d\n",len);
@@ -73,7 +77,7 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
      dbg(DBG_PRINT,"PP lookup: %s(%d) vn:0x%p called\n",name,len, dir);
 
      dbg(DBG_PRINT,"PP before KASSERT\n");
-	KASSERT(name!= NULL);
+	KASSERT(NULL != name);
      dbg(DBG_PRINT,"PP before len\n");
 
 	
@@ -113,6 +117,11 @@ int
 dir_namev(const char *pathname, size_t *namelen, const char **name,
           vnode_t *base, vnode_t **res_vnode)
 {
+	KASSERT(NULL != pathname);
+            KASSERT(NULL != namelen);
+            KASSERT(NULL != name);
+            KASSERT(NULL != res_vnode);
+           
 	
         if(pathname[0]=='\0')
 	{
@@ -207,8 +216,13 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         {
         	*namelen = len;
         	*name = (pathname + prevslash);
+    	
+	
     		*res_vnode = myBase;
+    		KASSERT(NULL != *res_vnode);
         }
+        
+        
         return retval;
         /*
         while(retval>=0 && pathname[nextslash]!='\0')
@@ -312,6 +326,8 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
         {
             if((flag & O_CREAT) == O_CREAT)
             {
+           
+                KASSERT(NULL != (ret_node)->vn_ops->create);
                 int x = (ret_node)->vn_ops->create(ret_node, name, namelen, res_vnode);
                 
                 if(res_vnode){

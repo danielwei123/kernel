@@ -483,15 +483,22 @@ static int
 special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VFS: special_file_read");*/
+        KASSERT(file);
+        KASSERT((S_ISCHR(file->vn_mode) || S_ISBLK(file->vn_mode)));
+        
         
         if(file->vn_mode&S_IFBLK)
         {
         	return	-ENOTSUP;
         }
         
+        int res = -1;
+        if (S_ISCHR(file->vn_mode)){
+           KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->read);
         
-        int res = file->vn_cdev->cd_ops->read(file->vn_cdev, offset, buf, count); 
         
+        	res = file->vn_cdev->cd_ops->read(file->vn_cdev, offset, buf, count); 
+        }
         return res;
 }
 
@@ -505,15 +512,20 @@ static int
 special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VFS: special_file_write");*/
+        KASSERT(file);
+        KASSERT((S_ISCHR(file->vn_mode) || S_ISBLK(file->vn_mode)));
+        
+        
         
         if(file->vn_mode&S_IFBLK)
         {
         	return	-ENOTSUP;
         }
-        
-      
-        int res = file->vn_cdev->cd_ops->write(file->vn_cdev, offset, buf, count); 
-        
+        int res = -1;
+      if (S_ISCHR(file->vn_mode)){
+                                       KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->write);
+        res = file->vn_cdev->cd_ops->write(file->vn_cdev, offset, buf, count); 
+        }
         return res;
         
         

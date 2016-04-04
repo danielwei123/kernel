@@ -161,6 +161,13 @@ do_write(int fd, const void *buf, size_t nbytes)
     	        dbg(DBG_PRINT,"AA write 6\n");
         if(bytes_written > 0)
         {
+        
+       
+                                 KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
+                                         (S_ISBLK(f->f_vnode->vn_mode)) ||
+                                         ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)))
+                                         
+                                         
    		    int x = do_lseek(fd, bytes_written, SEEK_CUR);
    		     dbg(DBG_PRINT,"AA write 7\n");
         	if( x < 0)
@@ -361,6 +368,7 @@ do_mknod(const char *path, int mode, unsigned devid)
     else if( res == -ENOENT )
     {
         dbg(DBG_PRINT,"PPP error no 2 %s %d \n",name,nameLength);
+        KASSERT(NULL != (result_node)->vn_ops->mknod);
         ret_val = (result_node)->vn_ops->mknod(result_node, name, nameLength, mode, devid);
     }
     dbg(DBG_PRINT,"PPP before vput %s %d \n",name,nameLength);
@@ -425,6 +433,7 @@ do_mkdir(const char *path)
     else if( res == -ENOENT )
     {
         dbg(DBG_PRINT,"PP before calling mkdir thru vn_ops \n");
+        KASSERT(NULL != (result_node)->vn_ops->mkdir);
         ret_val = (result_node)->vn_ops->mkdir(result_node, name, nameLength);
         dbg(DBG_PRINT,"PP dir made vn:0x%p \n", result_node);
     }
@@ -487,6 +496,7 @@ do_rmdir(const char *path)
     else if (res >= 0)
     {
     	dbg(DBG_PRINT,"MM Rmdir with good dir\n");
+    	KASSERT(NULL != (result_node)->vn_ops->rmdir);
         ret_val = (result_node)->vn_ops->rmdir(result_node, name, nameLength);
     }
 	        dbg(DBG_PRINT,"FD rmdir\n");
@@ -518,6 +528,7 @@ do_unlink(const char *path)
      	dbg(DBG_PRINT, "CC unlink\n");
 dbg(DBG_PRINT,"AA called unlink for %s \n",path);
 	/*might have to change BASE*/
+	
 	int	res = dir_namev(path, &nameLength, &name, NULL, &result_node);
 	
 	if( res < 0)
@@ -552,6 +563,7 @@ dbg(DBG_PRINT,"AA called unlink 3\n");
 	} else
 	{
 	       dbg(DBG_PRINT,"AA called unlink 4\n");
+	       KASSERT(NULL != (result_node)->vn_ops->unlink);
     		int x =	(result_node)->vn_ops->unlink(result_node, name, nameLength);
     		        dbg(DBG_PRINT,"FD unlink\n");
 		vput(ret_node);
@@ -853,7 +865,7 @@ do_stat(const char *path, struct stat *buf)
 	{
 		return	res;
 	}
-
+KASSERT((res_vnode)->vn_ops->stat);
         int ret =  (res_vnode)->vn_ops->stat(res_vnode, buf);
         
  	vput(res_vnode);
