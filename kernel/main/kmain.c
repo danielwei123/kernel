@@ -449,13 +449,14 @@ int
 vfs_test(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    
+    dbg(DBG_PRINT, "START OF RUN\n");	
     dbg(DBG_PRINT, "GRADING1E 2\n");
     int status = 0;
 	proc_t *pt = proc_create("vfs");
    	kthread_t *thr = kthread_create(pt, vfstest_main, 1, NULL);
  	sched_make_runnable(thr);
  	do_waitpid(pt->p_pid , 0, &status);
+ 	dbg(DBG_PRINT, "END OF RUN\n");	
     return 0;
 }
 

@@ -132,20 +132,16 @@ static void *make_dir_thread(int arg1, void *arg2) {
 	int rv = 0;		/* return values */
 	int i = 0;		/* Scratch */
 
-
-
 	/* Make the directory name and the directory.  Snprintf is safe - it
 	 * always zero-terminates and never overflows the buffer. */
 	snprintf(dir, TESTBUFLEN, "/dir%03d", arg1);
 	do_mkdir(dir);
-
 	for (i = 0; i < 20 ; i++ ) {
 	    int f= 0;	/* File descriptor */
 
 	    snprintf(file, TESTBUFLEN, "%s/test%03d", dir, i);
 	    /* Open a file (creating it if it's not there) */
 	    if ( (f = do_open(file, O_WRONLY | O_CREAT)) < 0 ) {
-	    	dbg(DBG_PRINT,"FF failed while creating %s(%d)\n", dir, i);
 		rv = f;
 		goto fail;
 	    }
@@ -158,7 +154,6 @@ static void *make_dir_thread(int arg1, void *arg2) {
 	}
 	rv = 0;
 fail:
-	dbg(DBG_PRINT,"FF do exit for  %s(%d)\n", dir,arg1 );
 	do_exit(rv);
 	return NULL;
 }
@@ -178,19 +173,12 @@ static void *rm_dir_thread(int arg1, void *arg2) {
 
 	/* Make the directory */
 	snprintf(dir, TESTBUFLEN, "/dir%03d", arg1);
-	int x = do_mkdir(dir);
-	/*
-	if(x != -EEXIST)
-	{
-		dbg(DBG_PRINT,"FF cerate dir in rmdir()\n");
-	}
-*/
+	do_mkdir(dir);
+
 	/* Unlink the files */
 	for (i = 0; i < 20 ; i++ ) {
 	    snprintf(file, TESTBUFLEN, "%s/test%03d", dir, i);
-	    int u = do_unlink(file);
-	    if(arg1 == 36)
-	    dbg(DBG_PRINT,"FX suc do_link  %s(%d) ret: %d\n", dir, i, u);
+	    do_unlink(file);
 	}
 	do_exit(rv);
 	return NULL;
@@ -267,10 +255,6 @@ int faber_fs_thread_test(kshell_t *ksh, int argc, char **argv) {
 	int rv = 0;		    /* Return value */
 	int i = 0;		    /* Scratch */
 	int passed = 1;		    /* Passed all tests */
-	
-	
-	dbg(DBG_PRINT, "AAA here in thrd test\n");
-
 
         KASSERT(NULL != ksh);
 	kprintf(ksh, ">>> Running faber_fs_thread_test()... ");
@@ -358,7 +342,7 @@ int faber_directory_test(kshell_t *ksh, int argc, char **argv) {
 	int rv = 0;		/* Return values */
 	int i = 0;		/* Scratch */
 	int passed = 1;		/* Passed all tests */
-	dbg(DBG_PRINT, "AAA here in thrd test\n");
+
         KASSERT(NULL != ksh);
 	kprintf(ksh, ">>> Running faber_directory_test()... ");
 	if ( argc == 1 ) {
@@ -403,12 +387,8 @@ int faber_directory_test(kshell_t *ksh, int argc, char **argv) {
 		kprintf(ksh, "\nChild %d: %d", pid, rv);
 	    }
 	}
-	
-	dbg(DBG_PRINT,"FE before for loop rm\n");
-	
         for ( i = 0; i< lim; i++) {
             int rv2;
-            dbg(DBG_PRINT,"FE rm %d\n", i);
             snprintf(tname, TESTBUFLEN, "/dir%03d", i);
             if ((rv2 = do_rmdir(tname)) < 0) {
                 rv = rv2;
@@ -416,9 +396,6 @@ int faber_directory_test(kshell_t *ksh, int argc, char **argv) {
 		passed = 0;
             }
         }
-	dbg(DBG_PRINT,"FE after for loop rm\n");
-		
-	
 	if (passed) {
 	    kprintf(ksh, "\nNothing failed (you need to decide if this is the expected behavior or not).\n");
 	} else {

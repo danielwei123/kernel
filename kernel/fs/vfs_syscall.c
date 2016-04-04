@@ -191,6 +191,7 @@ do_close(int fd)
  
  	if(fd < 0 || fd >= NFILES || curproc->p_files[fd] == NULL)
  	{
+ 		dbg(DBG_PRINT, "EEW close\n");	
  		return	-EBADF;
  	}
 
@@ -227,6 +228,7 @@ do_dup(int fd)
 
  	if(fd < 0 || fd >= NFILES || (curproc->p_files[fd] == NULL))
  	{
+ 		 dbg(DBG_PRINT, "XYZ Dup1 bad\n");
  		return	-EBADF;
  	}
  	
@@ -248,8 +250,6 @@ do_dup(int fd)
         
        curproc->p_files[fd_new] = f;
         return fd_new;
-        
-
 }
 
 /* Same as do_dup, but insted of using get_empty_fd() to get the new fd,
@@ -270,11 +270,13 @@ do_dup2(int ofd, int nfd)
  	
  	if(ofd < 0 || ofd >= NFILES || (curproc->p_files[ofd] == NULL) ||nfd < 0 || nfd >= NFILES)
  	{
+ 		 dbg(DBG_PRINT, "XYZ Dup2 bad\n");
  		return	-EBADF;
  	}
 
     if(ofd == nfd)
     {
+    	dbg(DBG_PRINT, "XYZ2 Dup2 bad2\n");
         return ofd;
     }
  	
@@ -727,7 +729,7 @@ do_getdent(int fd, struct dirent *dirp)
         
         int x = f->f_vnode->vn_ops->readdir(f->f_vnode, f->f_pos, dirp);
         
-        if(x < 0)
+        if(x < 1)
         {
                 fput(f);
         	return	x;

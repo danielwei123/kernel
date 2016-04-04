@@ -276,48 +276,34 @@ vfstest_mkdir(void)
         syscall_fail(mkdir("file", 0777), EEXIST);
         syscall_success(mkdir("dir", 0777));
         syscall_fail(mkdir("dir", 0777), EEXIST);
-	
+
         /* mkdir an invalid path */
         syscall_fail(mkdir(LONGNAME, 0777), ENAMETOOLONG);
-        
         syscall_fail(mkdir("file/dir", 0777), ENOTDIR);
-        
         syscall_fail(mkdir("noent/dir", 0777), ENOENT);
-        
         syscall_fail(rmdir("file/dir"), ENOTDIR);
-	     
         syscall_fail(rmdir("noent/dir"), ENOENT);
-        
         syscall_fail(rmdir("noent"), ENOENT);
-	
         syscall_fail(rmdir("."), EINVAL);
-        
         syscall_fail(rmdir(".."), ENOTEMPTY);
-        
         syscall_fail(rmdir("dir/."), EINVAL);
-        
         syscall_fail(rmdir("dir/.."), ENOTEMPTY);
-        
         syscall_fail(rmdir("noent/."), ENOENT);
         syscall_fail(rmdir("noent/.."), ENOENT);
-	
+
         /* unlink and rmdir the inappropriate types */
-        
         syscall_fail(rmdir("file"), ENOTDIR);
         syscall_fail(unlink("dir"), EISDIR);
-	
+
         /* remove non-empty directory */
-        
         create_file("dir/file");
         syscall_fail(rmdir("dir"), ENOTEMPTY);
-	
+
         /* remove empty directory */
-        
         syscall_success(unlink("dir/file"));
         syscall_success(rmdir("dir"));
 
         syscall_success(chdir(".."));
-        
 }
 
 static void
@@ -373,23 +359,18 @@ vfstest_paths(void)
         syscall_success(chdir(PATHS_TEST_DIR));
 
         syscall_fail(stat("", &s), EINVAL);
-	
+
         paths_equal(".", ".");
         paths_equal("1/2/3", "1/2/3");
         paths_equal("4/5/6", "4/5/6");
 
         /* root directory */
-        
-        /*
         paths_equal("/", "/");
-        
-        
         paths_equal("/", "/..");
         paths_equal("/", "/../");
         paths_equal("/", "/../.");
-	*/
+
         /* . and .. */
-        
         paths_equal(".", "./.");
         paths_equal(".", "1/..");
         paths_equal(".", "1/../");
@@ -401,27 +382,24 @@ vfstest_paths(void)
         paths_equal(".", "1/../1/..");
         paths_equal(".", "1/2/3/../../../4/5/6/../../..");
         paths_equal(".", "1/./2/./3/./.././.././.././4/./5/./6/./.././.././..");
-	
+
         /* extra slashes */
-        
         paths_equal("1/2/3", "1/2/3/");
         paths_equal("1/2/3", "1//2/3");
         paths_equal("1/2/3", "1/2//3");
         paths_equal("1/2/3", "1//2//3");
         paths_equal("1/2/3", "1//2//3/");
         paths_equal("1/2/3", "1///2///3///");
-	
+
         /* strange names */
-        
         paths_equal("-", "-");
         paths_equal(" ", " ");
         paths_equal("\\", "\\");
         paths_equal("0", "0");
-	
+
         struct stat st;
 
         /* error cases */
-        
         syscall_fail(stat("asdf", &st), ENOENT);
         syscall_fail(stat("1/asdf", &st), ENOENT);
         syscall_fail(stat("1/../asdf", &st), ENOENT);
@@ -432,7 +410,6 @@ vfstest_paths(void)
         syscall_fail(open("1/file/other", O_RDONLY | O_CREAT, 0777), ENOTDIR);
 
         syscall_success(chdir(".."));
-        
 }
 
 static void
@@ -950,44 +927,29 @@ int vfstest_main(int argc, char **argv)
         }
 
         test_init();
-        
         vfstest_start();
-	
+
         syscall_success(chdir(root_dir));
-	
+
         vfstest_stat();
-        
-        
         vfstest_chdir();
-        
-       
         vfstest_mkdir();
-       
-       
-       
         vfstest_paths();
-        
-        
         vfstest_fd();
-        
         vfstest_open();
-        
         vfstest_read();
-        
         vfstest_getdents();
-	
+
 #ifdef __VM__
         vfstest_s5fs_vm();
 #endif
 
         /*vfstest_infinite();*/
-	
+
         syscall_success(chdir(".."));
 
         vfstest_term();
-        
-        /*
-        test_fini(); 
-	*/
+        test_fini();
+
         return 0;
 }

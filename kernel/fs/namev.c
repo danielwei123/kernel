@@ -47,10 +47,9 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
        /*NOT_YET_IMPLEMENTED("VFS: lookup");*/
         /* Check if to incremnet reference count or no*/
         
-             
 	if(len > NAME_LEN)
 	{
-        	dbg(DBG_PRINT,"PP end of lokkup nametoolong\n");
+        	dbg(DBG_PRINT,"ABCD end of lokkup nametoolong %d\n",len);
 		return -ENAMETOOLONG;
 	}
 	
@@ -114,6 +113,11 @@ int
 dir_namev(const char *pathname, size_t *namelen, const char **name,
           vnode_t *base, vnode_t **res_vnode)
 {
+	
+        if(pathname[0]=='\0')
+	{
+		return -EINVAL;
+	}
 	        /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
         dbg(DBG_PRINT,"PP dir_namev: %s called\n",pathname);
         vnode_t	*myBase = NULL;
@@ -148,17 +152,13 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
                  dbg(DBG_PRINT,"PP base is null 2\n");
              }
         
-        if(pathname[0]=='\0')
-	{
-		return -EINVAL;
-	}
      
 	vref(myBase);
  
 	int	nextslash = 0;
 	int	prevslash = 0;
      	int	retval = 1;   
-     	size_t 	len;
+     	size_t 	len=0;
         dbg(DBG_PRINT,"RR XXPP before while %s \n",pathname);
         while(retval >= 0 && pathname[nextslash]!='\0')
         {

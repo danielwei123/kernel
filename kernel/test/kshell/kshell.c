@@ -85,7 +85,6 @@ void kshell_add_command(const char *name, kshell_cmd_func_t cmd_func,
 kshell_t *kshell_create(uint8_t ttyid)
 {
         kshell_t *ksh;
-        dbg(DBG_PRINT,"PP Inside KSHELL\n");
 
         ksh = (kshell_t *)kmalloc(sizeof(kshell_t));
         if (NULL == ksh) {
@@ -94,8 +93,6 @@ kshell_t *kshell_create(uint8_t ttyid)
         }
 
 #ifdef __VFS__
-
-        dbg(DBG_PRINT,"PP Inside kshell vfs\n");
         int fd;
         char tty_path[MAXPATHLEN];
 
@@ -106,7 +103,6 @@ kshell_t *kshell_create(uint8_t ttyid)
                 return NULL;
         }
         ksh->ksh_out_fd = ksh->ksh_in_fd = ksh->ksh_fd = fd;
-        dbg(DBG_PRINT,"PP out do open kshell vfsn");
 #else
         bytedev_t *bd;
         bd = bytedev_lookup(MKDEVID(TTY_MAJOR, ttyid));
@@ -356,8 +352,6 @@ int kshell_redirect(kshell_t *ksh, const char *redirect_in,
         KASSERT(NULL != redirect_in);
         KASSERT(NULL != redirect_out);
 
-	/*dbg(DBG_PRINT, "kshell(3)\n");*/
-	
         if (redirect_in[0] != '\0') {
                 if ((fd = do_open(redirect_in, O_RDONLY | O_CREAT)) < 0) {
                         kprintf(ksh, "kshell: %s: Error opening file\n", redirect_in);
@@ -365,7 +359,6 @@ int kshell_redirect(kshell_t *ksh, const char *redirect_in,
                 }
                 ksh->ksh_in_fd = fd;
         }
-        /*dbg(DBG_PRINT, "kshell(4)\n");*/
         if (redirect_out[0] != '\0') {
                 int flags = append ? O_WRONLY | O_CREAT | O_APPEND :
                             O_WRONLY | O_CREAT;
@@ -375,7 +368,6 @@ int kshell_redirect(kshell_t *ksh, const char *redirect_in,
                 }
                 ksh->ksh_out_fd = fd;
         }
-       /* dbg(DBG_PRINT, "kshell(5)\n");*/
         return 0;
 
 error:
@@ -396,7 +388,7 @@ int kshell_execute_next(kshell_t *ksh)
         char redirect_in[MAXPATHLEN];
         char redirect_out[MAXPATHLEN];
         int append;
-	dbg(DBG_PRINT, " QQ kshell(0)\n");
+
         /*
          * Need that extra byte at the end. See comment in
          * kshell_find_next_arg.
@@ -404,10 +396,9 @@ int kshell_execute_next(kshell_t *ksh)
         char buf[KSH_BUF_SIZE + 1];
 
         KASSERT(NULL != ksh);
-	dbg(DBG_PRINT, " QQ kshell(0.5)\n");
+
         kprintf(ksh, "%s ", kshell_prompt);
 
-	
         if ((nbytes = kshell_read(ksh, buf, KSH_BUF_SIZE)) <= 0) {
                 return nbytes;
         }
@@ -427,12 +418,10 @@ int kshell_execute_next(kshell_t *ksh)
         if (kshell_find_redirection(ksh, buf, redirect_in, redirect_out, &append) < 0)
                 goto done;
 #ifdef __VFS__
-	dbg(DBG_PRINT, " QQ kshell(1)\n");
         if ((retval = kshell_redirect(ksh, redirect_in, redirect_out, append)) < 0) {
                 dprintf("Error redirecting I/O\n");
                 goto done;
         }
-        /*dbg(DBG_PRINT, "kshell(2)\n");*/
 #endif
 
         kshell_get_args(ksh, buf, args, KSH_MAX_ARGS, &argc);

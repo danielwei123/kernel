@@ -238,7 +238,7 @@ proc_cleanup(int status)
 	{
 		if(curproc->p_files[i]!=NULL)
 		{
-			dbg(DBG_PRINT, "EE File Closing ");
+			dbg(DBG_PRINT, "EEW pid: %d, file:%d File, parent: %d Closing \n",curproc->p_pid,i, curproc->p_pproc->p_pid);
 			do_close(i);
 		}
 		
