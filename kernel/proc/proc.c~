@@ -158,12 +158,12 @@ proc_create(char *name)
     {
         pt->p_files[i] = NULL;
     }
-    if(pt->p_pid > 1)
+    if(pt->p_pid > 2)
     {	
     	dbg(DBG_PRINT, "proc create 1\n");	
         pt->p_cwd = pt->p_pproc->p_cwd;
         dbg(DBG_PRINT, "proc create 2\n");
-        /*vref(pt->p_cwd);*/
+        vref(pt->p_cwd);
         dbg(DBG_PRINT, "proc create 3\n");
     }
     else
@@ -244,7 +244,7 @@ proc_cleanup(int status)
 		
 	}
 	
-	if(curproc->p_pid == 1)
+	if(curproc->p_pid != 2 )
 	{
 		vput(curproc->p_cwd);
 	}

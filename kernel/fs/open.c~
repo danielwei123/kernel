@@ -91,6 +91,11 @@ get_empty_fd(proc_t *p)
 int
 do_open(const char *filename, int oflags)
 {
+	if(oflags & O_RDWR)
+	{
+		if((oflags & O_RDONLY)||(oflags & O_WRONLY)) return -EINVAL;
+	}
+	if((oflags & O_WRONLY) && (oflags & O_RDONLY)) return -EINVAL; 
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
      	dbg(DBG_PRINT, "CC do_open\n");
     dbg(DBG_PRINT,"PPQ Start do open\n"); 
@@ -150,8 +155,15 @@ do_open(const char *filename, int oflags)
 		fput(f);
 		return error_code;
 	}
-	
-	dbg(DBG_PRINT,"PPQ ALl well\n");
+	if((res_vnode -> vn_mode & S_IFDIR)&&((oflags & O_WRONLY)||(oflags & O_RDWR)))
+	{
+		
+		fput(f);
+		vput(res_vnode);
+		dbg(DBG_PRINT,"NN ALl not well\n");
+		return -EISDIR;
+	}
+
 	f->f_pos = 0;
 	f->f_vnode = res_vnode;
 

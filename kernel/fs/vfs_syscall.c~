@@ -77,11 +77,21 @@ do_read(int fd, void *buf, size_t nbytes)
         	return	-EBADF;	
         }
         
+        if(f->f_vnode->vn_mode&S_IFDIR)
+        {
+        	fput(f);
+        	return	-EISDIR;
+        
+        }
+        
         if(!(f->f_mode&FMODE_READ)){
         	fput(f);
         	return	-EBADF;
         }
         
+
+        
+     
         dbg(DBG_PRINT, "QQread(2)\n");
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         int ret_val = bytes_read;
@@ -474,6 +484,7 @@ do_rmdir(const char *path)
 	}
     else if (res >= 0)
     {
+    	dbg(DBG_PRINT,"MM Rmdir with good dir\n");
         ret_val = (result_node)->vn_ops->rmdir(result_node, name, nameLength);
     }
 	        dbg(DBG_PRINT,"FD rmdir\n");
@@ -522,7 +533,7 @@ dbg(DBG_PRINT,"AA called unlink 2\n");
     dbg(DBG_PRINT,"AA res: %d\n", res);	
     if(res < 0)
     {
-    	
+    	vput(result_node);
     	return	res;
     }
 
@@ -649,10 +660,18 @@ do_chdir(const char *path)
         
         int res = open_namev(path, 0, &ret, NULL);
         
+        
         if(res < 0)
         {
         	return	res;
         }
+        
+        if(!(ret->vn_mode & S_IFDIR))
+        {
+        	vput(ret);
+        	return	-ENOTDIR;	
+        }
+        
         
         out = curproc->p_cwd;
 	vput(out);
@@ -714,9 +733,15 @@ do_getdent(int fd, struct dirent *dirp)
         	return	x;
         }
         
-        do_lseek(fd, x, SEEK_CUR);
+        int y = do_lseek(fd, x, SEEK_CUR);
         fput(f);
-        return x;
+        
+        if( y >=0 )
+        {
+        	return sizeof(dirent_t);
+        }
+        
+        return y;
 }
 
 /*
@@ -778,7 +803,7 @@ do_lseek(int fd, int offset, int whence)
         	{
         		if(whence == SEEK_END){
         			
-        			x = f->f_pos + offset;
+        			x = f->f_vnode->vn_len + offset;
         			if(x < 0){
         				fput(f);
         				return	-EINVAL;
@@ -797,8 +822,7 @@ do_lseek(int fd, int offset, int whence)
         		}
         	}
         }
-     
-        return -1;
+        
 }
 
 /*
@@ -821,17 +845,18 @@ do_stat(const char *path, struct stat *buf)
         vnode_t *base = NULL;
         vnode_t *res_vnode = NULL;
 
-        int res = open_namev(path, 0, &res_vnode, base);
-        if( res == 0)
-        {
-                return (res_vnode)->vn_ops->stat(res_vnode, buf);
-        }
-        else 
-        {
-        	return res;
-        }
+        int res = open_namev(path, 0, &res_vnode, NULL);
 
-        return -1;
+	if(res< 0)
+	{
+		return	res;
+	}
+
+        int ret =  (res_vnode)->vn_ops->stat(res_vnode, buf);
+        
+ 	vput(res_vnode);
+ 	
+ 	return 0;
 
 }
 
