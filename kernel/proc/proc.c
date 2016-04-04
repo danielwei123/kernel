@@ -231,6 +231,9 @@ proc_cleanup(int status)
 	}
 	
 	int i = 0;
+	
+	dbg(DBG_PRINT,"FF failed(%d)\n",  curproc->p_pid);
+	
 	for(i=0;i<NFILES;i++)
 	{
 		if(curproc->p_files[i]!=NULL)
@@ -470,6 +473,7 @@ void
 do_exit(int status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/
+        dbg(DBG_PRINT,"FF failed do_exit call (%d)\n",  curproc->p_pid);
         kthread_exit((void *)status);
 }
 

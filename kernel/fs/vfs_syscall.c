@@ -407,6 +407,7 @@ do_mkdir(const char *path)
     if(res == 0){
 
         ret_val = -EEXIST;
+        dbg(DBG_PRINT,"FD mkdir\n");
         vput(ret_node);
     }
     else if( res == -ENOENT )
@@ -417,6 +418,7 @@ do_mkdir(const char *path)
     }
 
     dbg(DBG_PRINT,"AAPPP before calling vput for result node %s %d \n",name,nameLength);
+   dbg(DBG_PRINT,"FD mkdir\n");
     vput(result_node);
     dbg(DBG_PRINT,"AA after  calling vput of result node \n");
 
@@ -474,7 +476,7 @@ do_rmdir(const char *path)
     {
         ret_val = (result_node)->vn_ops->rmdir(result_node, name, nameLength);
     }
-	
+	        dbg(DBG_PRINT,"FD rmdir\n");
     vput(result_node);
     return ret_val;
 }
@@ -520,6 +522,7 @@ dbg(DBG_PRINT,"AA called unlink 2\n");
     dbg(DBG_PRINT,"AA res: %d\n", res);	
     if(res < 0)
     {
+    	vput(result_node);
     	return	res;
     }
 
@@ -529,6 +532,7 @@ dbg(DBG_PRINT,"AA called unlink 3\n");
     	if(ret_node->vn_mode & S_IFDIR )
 	{
 		dbg(DBG_PRINT,"AAThis should not happen 1\n");
+	dbg(DBG_PRINT,"FD unlink\n");
         	vput(ret_node);
         	dbg(DBG_PRINT,"AAThis should not happen 2\n");
 		ret_val =  -EISDIR;
@@ -536,12 +540,13 @@ dbg(DBG_PRINT,"AA called unlink 3\n");
 	{
 	       dbg(DBG_PRINT,"AA called unlink 4\n");
     		int x =	(result_node)->vn_ops->unlink(result_node, name, nameLength);
+    		        dbg(DBG_PRINT,"FD unlink\n");
 		vput(ret_node);
 		ret_val = x;
 	
 	}
 	
-	
+	        dbg(DBG_PRINT,"FD unlink\n");
     vput(result_node);
     dbg(DBG_PRINT,"AA called unlink 5\n");
     return ret_val;

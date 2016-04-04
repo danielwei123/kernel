@@ -238,8 +238,10 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
             if((flag & O_CREAT) == O_CREAT)
             {
                 int x = (ret_node)->vn_ops->create(ret_node, name, namelen, res_vnode);
-                dbg(DBG_PRINT,"AA created ret_val:%d, name:%s\n", x, name);	
                 
+                if(res_vnode){
+                	dbg(DBG_PRINT,"AAAA created ret_val:%d, name:%s, ref:%d\n", x, name, (*res_vnode)->vn_refcount);	
+                }
                     	ret_val =  x;
             }
             else
