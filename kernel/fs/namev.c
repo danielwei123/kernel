@@ -53,25 +53,27 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
         
 	if(len > NAME_LEN)
 	{
-        	dbg(DBG_PRINT,"ABCD end of lokkup nametoolong %d\n",len);
+		dbg(DBG_PRINT," FXX 01\n");
+    
 		return -ENAMETOOLONG;
 	}
 	
         dbg(DBG_PRINT,"MM look up 1\n");
-        if(dir->vn_ops->lookup == NULL)
+        /*if(dir->vn_ops->lookup == NULL)
 	{
-	        dbg(DBG_PRINT,"QQ PP not dir\n");
-	        dbg(DBG_PRINT,"MM look up 2\n");
+		dbg(DBG_PRINT, "FXX 02\n");
+	       
 	        if(dir->vn_mode&S_IFDIR)
 	        {
-	        	dbg(DBG_PRINT,"MM look up 3\n");
+	        	dbg(DBG_PRINT, "FXX 021\n");
+	        	
 	        	return	-ENOENT;
 	        }
 	        dbg(DBG_PRINT,"MM look up 4\n");
-	        
+	        dbg(DBG_PRINT, "FXX 022\n");
 		return	-ENOTDIR;
 	}
-        
+        */
         dbg(DBG_PRINT,"MM look up 5\n");
     
      dbg(DBG_PRINT,"PP lookup: %s(%d) vn:0x%p called\n",name,len, dir);
@@ -87,6 +89,7 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 	int res = dir->vn_ops->lookup(dir, name, len, result);
     dbg(DBG_PRINT,"PP end of lookup %d\n",res);
 	dbg(DBG_PRINT,"MM look up 7\n");
+	dbg(DBG_PRINT, "FXX 03\n");
 		return	res;
 	
 	
@@ -123,43 +126,46 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
             KASSERT(NULL != res_vnode);
            
 	
-        if(pathname[0]=='\0')
+        /*if(pathname[0]=='\0')
 	{
+		dbg(DBG_PRINT, "FXX A10\n");
 		return -EINVAL;
-	}
+	}*/
 	        /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
         dbg(DBG_PRINT,"PP dir_namev: %s called\n",pathname);
         vnode_t	*myBase = NULL;
         vnode_t	*temp = NULL;
         if( pathname[0] == '/')
         {
+        	dbg(DBG_PRINT, "FXX A11\n");
              dbg(DBG_PRINT,"PP if it is /\n");
             myBase = vfs_root_vn; 
 
              if(myBase == NULL)
              {
+             	dbg(DBG_PRINT, "FXX A111\n");
                  dbg(DBG_PRINT,"PP base is null\n");
              }
             while(*pathname == '/')
             {
+            	dbg(DBG_PRINT, "FXX A1112\n");
             	pathname++;
             } 
         }
         else if( base == NULL)
         {
+        	dbg(DBG_PRINT, "FXX 12\n");
         	dbg(DBG_PRINT,"DD base is null1\n");
             	myBase = curproc->p_cwd;
         }
-        else 
+        /*else 
         {
+        	dbg(DBG_PRINT, "BFXX A13\n");
         	dbg(DBG_PRINT,"DD base is null2\n");
         	myBase = base;
-        }
+        }*/
 
-         if(myBase == NULL)
-             {
-                 dbg(DBG_PRINT,"PP base is null 2\n");
-             }
+         
         
      
 	vref(myBase);
@@ -171,20 +177,24 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         dbg(DBG_PRINT,"RR XXPP before while %s \n",pathname);
         while(retval >= 0 && pathname[nextslash]!='\0')
         {
+		dbg(DBG_PRINT, "FXX 14\n");
         	while(pathname[nextslash]!='/' && pathname[nextslash]!='\0')
         	{
+        		dbg(DBG_PRINT, "FXX 15\n");
         		nextslash++;
         	}
         	
         	len=nextslash-prevslash;
-    
+    		dbg(DBG_PRINT, "FXX 16\n");
         	while(pathname[nextslash]=='/' && pathname[nextslash]!='\0')
         	{
+        		dbg(DBG_PRINT, "FXX A17\n");
         		nextslash++;
         	}
         	
         	if(pathname[nextslash]=='\0')
         	{
+        		dbg(DBG_PRINT, "FXX 18\n");
         		break;
         	}
         	temp=myBase;
@@ -192,10 +202,12 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	retval = lookup(temp,pathname+prevslash,len,&myBase);
         	if(retval < 0)
         	{
+        		dbg(DBG_PRINT, "FXX A19\n");
         		break;	
         	}
         	if(!(myBase -> vn_mode & S_IFDIR))
         	{
+        		dbg(DBG_PRINT, "FXX A20\n");
         		dbg(DBG_PRINT,"MM Not a directory in while loop\n");
         		retval=-ENOTDIR;
         		vput(myBase);
@@ -204,16 +216,19 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	prevslash = nextslash;
         	if(temp)
         	{
+        		dbg(DBG_PRINT, "BFXX 21\n");
         		vput(temp);
         	}	
         }
         if(retval < 0)
         {
+        	dbg(DBG_PRINT, "FXX A22\n");
         	dbg(DBG_PRINT,"MM Closing base\n");
         	vput(temp);
         }
         else
         {
+        	dbg(DBG_PRINT, "FXX 23\n");
         	*namelen = len;
         	*name = (pathname + prevslash);
     	
@@ -222,7 +237,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
     		KASSERT(NULL != *res_vnode);
         }
         
-        
+        dbg(DBG_PRINT, "FXX 24\n");
         return retval;
         /*
         while(retval>=0 && pathname[nextslash]!='\0')
@@ -302,8 +317,12 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
         /*dbg(DBG_PRINT,"P open_namev path %s called",*pathname);*/
         if(pathname[0]=='\0')
         {
+        	dbg(DBG_PRINT, "YEP 90\n");
         	return -EINVAL;
         }
+        
+        
+        
         size_t	namelen = -1;
        	const char 	*name = NULL;
        	vnode_t	*ret_node ;
@@ -314,6 +333,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
         
         if(res < 0)
         {
+        dbg(DBG_PRINT, "YEP 91\n");
             dbg(DBG_PRINT,"PP returning value from dir namev\n");
         	return	res;
         }
@@ -324,10 +344,15 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
         int ret_val = res;	
         if(res == -ENOENT)
         {
+        	dbg(DBG_PRINT, "YEP 92\n");
+        
             if((flag & O_CREAT) == O_CREAT)
             {
-           
+           	
+           	
                 KASSERT(NULL != (ret_node)->vn_ops->create);
+                dbg(DBG_PRINT, "YEP 921\n");
+                
                 int x = (ret_node)->vn_ops->create(ret_node, name, namelen, res_vnode);
                 
                 if(res_vnode){
@@ -337,12 +362,13 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
             }
             else
             { 
+            dbg(DBG_PRINT, "YEP 922\n");
             	dbg(DBG_PRINT,"AA flag not set \n");
             	ret_val = res;
   
             }
         }
-        
+        dbg(DBG_PRINT, "YEP 93\n");
         vput(ret_node);
         return	ret_val;
 }

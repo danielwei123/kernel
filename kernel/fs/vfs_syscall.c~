@@ -165,7 +165,7 @@ do_write(int fd, const void *buf, size_t nbytes)
        
                                  KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
                                          (S_ISBLK(f->f_vnode->vn_mode)) ||
-                                         ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)))
+                                         ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
                                          
                                          
    		    int x = do_lseek(fd, bytes_written, SEEK_CUR);
