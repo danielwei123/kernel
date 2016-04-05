@@ -191,13 +191,13 @@ bootstrap(int arg1, void *arg2)
         proc_t *idle_proc = proc_create("idle_proc");
         curproc = idle_proc;
         KASSERT((NULL!= curproc) && "Unable to create idle process.\n");
-        dbg(DBG_PRINT, "GRADING1A 1.a\n");
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
         KASSERT(PID_IDLE == curproc->p_pid && "The process created is not idle process.\n");
-        dbg(DBG_PRINT, "GRADING1A 1.a\n");
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
         kthread_t *idle_thread = kthread_create(idle_proc, idleproc_run, arg1, arg2);
         curthr = idle_thread;
         KASSERT((NULL != curthr) && "Unable to create idle thread.\n");
-        dbg(DBG_PRINT, "GRADING1A 1.a\n");
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
         context_make_active(&(idle_thread->kt_ctx));
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
         return NULL;
@@ -247,16 +247,16 @@ idleproc_run(int arg1, void *arg2)
         {
             int y = do_mknod("/dev/tty0",S_IFCHR,MKDEVID(2,0));
             y = do_mknod("/dev/null",S_IFCHR,MEM_NULL_DEVID);
-            
+
 
             y = do_mknod("/dev/zero",S_IFCHR,MEM_ZERO_DEVID);
 
-            
+
             y = do_mknod("/dev/tty1",S_IFCHR,MKDEVID(2,1));
             y = do_mknod("/dev/tty2",S_IFCHR,MKDEVID(2,2));
 
         }
-    
+
         x = do_mkdir("/tmp");
          dbg(DBG_PRINT,"PP END of VFS \n");
 
@@ -318,12 +318,12 @@ initproc_create(void)
         /*NOT_YET_IMPLEMENTED("PROCS: initproc_create");*/
         proc_t *init_proc = proc_create("init_proc");
         KASSERT((NULL != init_proc) && "Unable to create init process.\n");
-        dbg(DBG_PRINT, "GRADING1A 1.b\n");
+        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
         KASSERT(PID_INIT == init_proc->p_pid && "The process created is not init process.\n");
-        dbg(DBG_PRINT, "GRADING1A 1.b\n");
+        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
         kthread_t *init_thread = kthread_create(init_proc, initproc_run, 0, NULL);
         KASSERT((init_thread != NULL) && "Unable to create init thread.\n");
-        dbg(DBG_PRINT, "GRADING1A 1.b\n");
+        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
         return init_thread;
 }
 
@@ -358,7 +358,7 @@ int
 do_foo(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1B\n");
+    dbg(DBG_PRINT, "(GRADING1B)\n");
     int status = 0;
 	proc_t *faber_test = proc_create("faber_test");
     kthread_t *faber_thread = kthread_create(faber_test, faber_thread_test, 0, 0);
@@ -371,7 +371,7 @@ int
 sunghan_test_func(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1D 1\n");
+    dbg(DBG_PRINT, "(GRADING1D 1)\n");
     int status = 0;
 	proc_t *sunghan_test_proc = proc_create("sunghan_test");
     kthread_t *sunghan_thread = kthread_create(sunghan_test_proc, sunghan_test, 0, 0);
@@ -384,7 +384,7 @@ int
 sunghan_deadlock_test_func(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1D 2\n");
+    dbg(DBG_PRINT, "(GRADING1D 2)\n");
     int status = 0;
 	proc_t *sunghan_deadlock_test_proc = proc_create("sunghan_test");
     kthread_t *sunghan_deadlock_thread = kthread_create(sunghan_deadlock_test_proc, sunghan_deadlock_test, 0, 0);
@@ -397,7 +397,7 @@ int
 big_process_name(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1E 1\n");
+    dbg(DBG_PRINT, "(GRADING1E 1)\n");
     int status = 0,i;
     char a[300];
     for(i=0;i<300;++i)a[i]='a';
@@ -412,7 +412,7 @@ int
 thread_self_cancel(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1E 2\n");
+    dbg(DBG_PRINT, "(GRADING1E 2)\n");
     int status = 0;
 	proc_t *pt = proc_create("ProcE2");
     kthread_t *thr = kthread_create(pt, self_cancel, 0, NULL);
@@ -426,7 +426,7 @@ int
 init_clean(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1E 3\n");
+    dbg(DBG_PRINT, "(GRADING1E 3)\n");
     kthread_cancel(curthr,0);
     return 0;
 }
@@ -435,7 +435,7 @@ int
 badargs1(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1E 4\n");
+    dbg(DBG_PRINT, "(GRADING1E 4)\n");
     int x;
     if(do_waitpid(-2,1000,&x) != -ECHILD)
     {
@@ -449,14 +449,14 @@ int
 vfs_test(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "START OF RUN\n");	
-    dbg(DBG_PRINT, "GRADING1E 2\n");
+    dbg(DBG_PRINT, "START OF RUN\n");
+    dbg(DBG_PRINT, "(GRADING1E 2)\n");
     int status = 0;
 	proc_t *pt = proc_create("vfs");
    	kthread_t *thr = kthread_create(pt, vfstest_main, 1, NULL);
  	sched_make_runnable(thr);
  	do_waitpid(pt->p_pid , 0, &status);
- 	dbg(DBG_PRINT, "END OF RUN\n");	
+ 	dbg(DBG_PRINT, "END OF RUN\n");
     return 0;
 }
 
@@ -465,7 +465,7 @@ int
 badargs2(kshell_t *kshell, int argc, char **argv)
 {
     KASSERT(kshell != NULL);
-    dbg(DBG_PRINT, "GRADING1E 5\n");
+    dbg(DBG_PRINT, "(GRADING1E 5)\n");
     int x;
     if(do_waitpid(-1,1000,&x) != -ECHILD)
     {
@@ -491,14 +491,14 @@ badargs2(kshell_t *kshell, int argc, char **argv)
          kshell_add_command("thrselfcancel", thread_self_cancel, "Cancelling the current thread");
          kshell_add_command("initclean", init_clean, "Proc clean called on init(Works similar to exit)");
          kshell_add_command("badargs1", badargs1, "Pid other than -1 and positive numbers");
-         
+
          kshell_add_command("faber_a", faber_fs_thread_test, "faber fs thread test");
          kshell_add_command("faber_dir", faber_directory_test, "faber fs dir");
          kshell_add_command("vfs", vfs_test, "invoke vfs tests");
-         
+
          kshell_t *kshell = kshell_create(0);
          dbg(DBG_PRINT,"QQ Before kShell\n");
-        
+
          if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
          dbg(DBG_PRINT,"QQ after if\n");
          while (kshell_execute_next(kshell));
