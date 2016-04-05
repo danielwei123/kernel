@@ -93,90 +93,61 @@ do_open(const char *filename, int oflags)
 {
 	if(oflags & O_RDWR)
 	{
-		dbg(DBG_PRINT, "YA 01\n");	
+			
 		if((oflags & O_RDONLY)||(oflags & O_WRONLY)) return -EINVAL;
 	}
-	/*
-	if((oflags & O_WRONLY) && (oflags & O_RDONLY)) 
-	{
-		dbg(DBG_PRINT, "YA 02\n");
-		return -EINVAL;
-	} 
-	*/
-        /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
-     	dbg(DBG_PRINT, "CC do_open\n");
-    dbg(DBG_PRINT,"PPQ Start do open\n"); 
+	
+     	
     int	fd;
 	file_t	*f;
 	int	flags = 0;
 	vnode_t *res_vnode;
 	vnode_t *base = NULL;
 	int	error_code = 0;
-	dbg(DBG_PRINT,"PPQ Before get_empty_fd\n");
+	
 	fd = get_empty_fd(curproc);
-	/*
-	if(fd == (-EMFILE))
-	{
-		dbg(DBG_PRINT, "YA A03\n");
-		return	-EMFILE;
-	}
-	*/
-	dbg(DBG_PRINT,"PPQ Before fget\n");
+	
 	f = fget(-1);
-	/*
-	if(f == NULL)
-	{
-		dbg(DBG_PRINT, "YA A04\n");
-		return -ENOMEM;
-	}
-	*/
+	
 	curproc->p_files[fd] = f;
 	
 	flags = (oflags & O_RDONLY)|(oflags & O_WRONLY)|(oflags & O_RDWR);
 	
-	/*
-	if(oflags & O_RDONLY)
-	{
-		dbg(DBG_PRINT, "YA A05\n");
-		flags = FMODE_READ;	
-	}
-	*/
 	if(oflags &  O_WRONLY)
 	{
-		dbg(DBG_PRINT, "YA 06\n");
+		
 		flags = FMODE_WRITE;	
 	}
 	if(oflags & O_RDWR)
 	{
-		dbg(DBG_PRINT, "YA 07\n");
+		
 		flags = FMODE_WRITE | FMODE_READ;
 	}	
 
-	dbg(DBG_PRINT,"PPQ After flags set\n");
 	if((oflags&O_APPEND) == O_APPEND)
 	{
-		dbg(DBG_PRINT, "YA 08\n");
+		
 		flags = flags | FMODE_APPEND;
 	}
 	
 	
 	f->f_mode = flags; 
-	dbg(DBG_PRINT,"PPQ Before namev %s\n",filename);
+	
 	error_code = open_namev(filename, oflags, &res_vnode, base);
 	if(error_code < 0)
 	{
-		dbg(DBG_PRINT, "YA 09\n");
+		
 		curproc->p_files[fd] = NULL;
 		fput(f);
 		return error_code;
 	}
 	if((res_vnode -> vn_mode & S_IFDIR)&&((oflags & O_WRONLY)||(oflags & O_RDWR)))
 	{
-		dbg(DBG_PRINT, "YA A10\n");
+
 		curproc->p_files[fd]=NULL;
 		fput(f);
 		vput(res_vnode);
-		dbg(DBG_PRINT,"NN ALl not well\n");
+		
 		return -EISDIR;
 	}
 
@@ -184,7 +155,7 @@ do_open(const char *filename, int oflags)
 	f->f_vnode = res_vnode;
 
 	f->f_refcount = 1;
-	dbg(DBG_PRINT, "YA 11\n");	
+		
   	return fd;
 
 }

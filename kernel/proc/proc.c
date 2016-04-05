@@ -168,7 +168,7 @@ proc_create(char *name)
     }
     else
     {
-    	dbg(DBG_PRINT,"\nQQ proc_creat else");
+    	dbg(DBG_PRINT,"\nWWEE proc_creat else");
         pt->p_cwd = NULL;
     }
     return pt;
@@ -238,6 +238,7 @@ proc_cleanup(int status)
 	{
 		if(curproc->p_files[i]!=NULL)
 		{
+			/*vfs*/
 			dbg(DBG_PRINT, "EEW pid: %d, file:%d File, parent: %d Closing \n",curproc->p_pid,i, curproc->p_pproc->p_pid);
 			do_close(i);
 		}
@@ -246,6 +247,7 @@ proc_cleanup(int status)
 
 	if(curproc->p_pid != 2 )
 	{
+		dbg(DBG_PRINT, "EEWW pid: %d, file:%d File, parent: %d Closing \n",curproc->p_pid,i, curproc->p_pproc->p_pid);
 		vput(curproc->p_cwd);
 	}
 
