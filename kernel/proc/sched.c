@@ -117,7 +117,7 @@ void
 sched_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
-        dbg(DBG_PRINT, "GRADING1C 1\n");
+        dbg(DBG_PRINT, "(GRADING1C 1)\n");
         curthr->kt_state = KT_SLEEP;
         ktqueue_enqueue(q, curthr);
         sched_switch();
@@ -135,10 +135,10 @@ int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
-        dbg(DBG_PRINT, "GRADING1C 3\n");
+        dbg(DBG_PRINT, "(GRADING1C 3)\n");
         if(curthr->kt_cancelled == 1)
         {
-            dbg(DBG_PRINT, "GRADING1C 5\n");
+            dbg(DBG_PRINT, "(GRADING1C 5)\n");
             return -EINTR;
         }
         curthr->kt_state = KT_SLEEP_CANCELLABLE;
@@ -147,7 +147,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
         sched_switch();
         if(curthr->kt_cancelled == 1)
         {
-            dbg(DBG_PRINT, "GRADING1C 5\n");
+            dbg(DBG_PRINT, "(GRADING1C 5)\n");
             return_value = -EINTR;
         }
         return return_value;
@@ -159,15 +159,15 @@ sched_wakeup_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
         if(sched_queue_empty(q))
         {
-            dbg(DBG_PRINT, "GRADING1C 1\n");
+            dbg(DBG_PRINT, "(GRADING1C 1)\n");
             return NULL;
         }
         else
         {
-            dbg(DBG_PRINT, "GRADING1C 1\n");
+            dbg(DBG_PRINT, "(GRADING1C 1)\n");
             kthread_t *temp_thr = ktqueue_dequeue(q);
             KASSERT(((temp_thr->kt_state == KT_SLEEP) || (temp_thr->kt_state == KT_SLEEP_CANCELLABLE)) && "Current thread is in some blocking queue!\n");
-        	dbg(DBG_PRINT, "GRADING1A 4.a\n");
+        	dbg(DBG_PRINT, "(GRADING1A 4.a)\n");
             sched_make_runnable(temp_thr);
             return temp_thr;
         }
@@ -180,7 +180,7 @@ sched_broadcast_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on");*/
         while(!sched_queue_empty(q))
         {
-            dbg(DBG_PRINT, "GRADING1C 3\n");
+            dbg(DBG_PRINT, "(GRADING1C 3)\n");
             kthread_t *temp_thr = ktqueue_dequeue(q);
             sched_make_runnable(temp_thr);
         }
@@ -202,7 +202,7 @@ sched_cancel(struct kthread *kthr)
         kthr->kt_cancelled = 1;
         if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
         {
-            dbg(DBG_PRINT, "GRADING1C 5\n");
+            dbg(DBG_PRINT, "(GRADING1C 5)\n");
             ktqueue_remove(kthr->kt_wchan, kthr);
             sched_make_runnable(kthr);
         }
@@ -254,7 +254,7 @@ sched_switch(void)
         intr_setipl(IPL_HIGH);
         while(sched_queue_empty(&kt_runq))
         {
-        	dbg(DBG_PRINT, "GRADING1D 2\n");
+        	dbg(DBG_PRINT, "(GRADING1D 2)\n");
             intr_setipl(IPL_LOW);
             intr_wait();
             intr_setipl(IPL_HIGH);
@@ -290,7 +290,7 @@ sched_make_runnable(kthread_t *thr)
         intr_setipl(IPL_HIGH);
         thr->kt_state = KT_RUN;
         KASSERT((&(kt_runq) != thr->kt_wchan) && "Thread already in run queue!\n");
-        dbg(DBG_PRINT, "GRADING1A 4.b\n");
+        dbg(DBG_PRINT, "(GRADING1A 4.b)\n");
         ktqueue_enqueue(&kt_runq, thr);
         intr_setipl(oldIPL);
 }

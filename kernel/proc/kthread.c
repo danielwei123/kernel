@@ -105,7 +105,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
         KASSERT(NULL != p);
-        dbg(DBG_PRINT, "GRADING1A 3.a\n");
+        dbg(DBG_PRINT, "(GRADING1A 3.a)\n");
         kthread_t *kthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
         KASSERT(kthr && "Unable to allocate memory for thread.\n");
         dbg(DBG_PRINT, "In kthread_create : Allocated memory for thread.\n");
@@ -138,25 +138,25 @@ kthread_cancel(kthread_t *kthr, void *retval)
 {
     /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
 	KASSERT(NULL != kthr && "Trying to cancel NULL thread!\n");
-	dbg(DBG_PRINT, "GRADING1A 3.b\n");
-    dbg(DBG_PRINT, "GRADING1C 8\n");
+	dbg(DBG_PRINT, "(GRADING1A 3.b)\n");
+    dbg(DBG_PRINT, "(GRADING1C 8)\n");
     if(kthr == curthr)
     {
-        dbg(DBG_PRINT, "GRADING1E 2\n");
+        dbg(DBG_PRINT, "(GRADING1E 2)\n");
     	kthread_exit(retval);
     }
     else
     {
-        dbg(DBG_PRINT, "GRADING1C 8\n");
+        dbg(DBG_PRINT, "(GRADING1C 8)\n");
     	kthr->kt_cancelled = 1;
     	kthr->kt_retval = retval;
     }
     if(kthr->kt_state == KT_SLEEP_CANCELLABLE)
     {
-        dbg(DBG_PRINT, "GRADING1C 8\n");
+        dbg(DBG_PRINT, "(GRADING1C 8)\n");
     	sched_wakeup_on(kthr->kt_wchan);
     }
-    dbg(DBG_PRINT, "GRADING1C 8\n");
+    dbg(DBG_PRINT, "(GRADING1C 8)\n");
 }
 
 /*
@@ -174,11 +174,11 @@ kthread_exit(void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_exit");*/
         KASSERT(curthr->kt_wchan == NULL && "Current thread is in some blocking queue!\n");
-        dbg(DBG_PRINT, "GRADING1A 3.c\n");
+        dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
         KASSERT(curthr->kt_qlink.l_next == NULL && curthr->kt_qlink.l_prev==NULL && "Current thread queue is not empty!\n");
-        dbg(DBG_PRINT, "GRADING1A 3.c\n");
+        dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
         KASSERT(curthr->kt_proc == curproc && "Current thread is magically executing without curproc!\n");
-        dbg(DBG_PRINT, "GRADING1A 3.c\n");
+        dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
         curthr->kt_retval = retval;
         curthr->kt_state = KT_EXITED;
         proc_thread_exited(retval);
