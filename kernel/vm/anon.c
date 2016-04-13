@@ -57,7 +57,8 @@ static mmobj_ops_t anon_mmobj_ops = {
 void
 anon_init()
 {
-        NOT_YET_IMPLEMENTED("VM: anon_init");
+        /*NOT_YET_IMPLEMENTED("VM: anon_init");*/
+        anon_allocator = slab_allocator_create("anon", sizeof(mmobj_t));
 }
 
 /*
@@ -69,8 +70,13 @@ anon_init()
 mmobj_t *
 anon_create()
 {
-        NOT_YET_IMPLEMENTED("VM: anon_create");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("VM: anon_create");*/
+        mmobj_t *temp = slab_obj_alloc(anon_allocator);
+        if (temp)
+        {
+            mmobj_init(temp, &anon_mmobj_ops);
+        }
+        return temp;
 }
 
 /* Implementation of mmobj entry points: */
@@ -81,7 +87,9 @@ anon_create()
 static void
 anon_ref(mmobj_t *o)
 {
-        NOT_YET_IMPLEMENTED("VM: anon_ref");
+        /*NOT_YET_IMPLEMENTED("VM: anon_ref");*/
+        o->mmo_refcount+=1;
+
 }
 
 /*
