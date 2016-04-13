@@ -196,8 +196,32 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 vmmap_t *
 vmmap_clone(vmmap_t *map)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_clone");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_clone");*/
+        vmmap_t *temp = vmmap_create();
+        if(temp == NULL)
+        {
+            return temp;
+        }
+        vmarea_t *temparea;
+        list_iterate_begin(&(map->vmm_list),temparea,vmarea_t,vma_plink)
+        {
+            vmarea_t *newtemparea = vmarea_alloc();
+            if(newtemparea == NULL)
+            {
+                vmmap_destroy(temp);
+                return NULL;
+            }
+            newtemparea->vma_start = temparea->vma_start;
+            newtemparea->vma_end = temparea->vma_end;
+            newtemparea->vma_off = temparea->vma_off;
+            newtemparea->vma_prot = temparea->vma_prot;
+            newtemparea->vma_flags = temparea->vma_flags;
+            newtemparea->vma_vmmap = NULL;
+            newtemparea->vma_obj = NULL;
+            list_insert_tail(&(temp->vmm_list),&(newtemparea->vma_plink));
+        }
+        list_iterate_end();
+        return temp;
 }
 
 /* Insert a mapping into the map starting at lopage for npages pages.
