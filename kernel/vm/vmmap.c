@@ -300,8 +300,33 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
+        if(npages==0)
+        {
+            return 1;
+        }
+        /*Check if you need to add 1 also to endvfs*/
+        uint32_t endvfs = startvfs + npages;
+        vmarea_t *temp;
+        list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
+        {
+            if (startvfn >= temp->vma_start && startvfn < temp->vma_end)
+            {
+                return 0;
+            }
+
+            if (endvfn > temp->vma_start && endvfn <= temp->vma_end)
+            {
+                return 0;
+            }
+
+            if(startvfn < temp->vma_start && endvfn >= temp->vma_end)
+            {
+                return 0;
+            }
+        }
+        list_iterate_end();
+        return 1;
 }
 
 /* Read into 'buf' from the virtual address space of 'map' starting at
