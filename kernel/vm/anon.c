@@ -103,7 +103,22 @@ anon_ref(mmobj_t *o)
 static void
 anon_put(mmobj_t *o)
 {
-        NOT_YET_IMPLEMENTED("VM: anon_put");
+        /*NOT_YET_IMPLEMENTED("VM: anon_put");*/
+        pframe *temp;
+        if(o->mmo_refcount != o->mmo_nrespages + 1)
+        {
+            o->mmo_refcount--;
+        }
+        else
+        {
+            list_iterate_begin(&(o->mmo_respages),temp,pframe_t,pf_olink)
+            {
+                pframe_unpin(temp);
+                pframe_free(temp);
+            }
+            list_iterate_end();
+            slab_obj_free(anon_allocator,(void *)o);
+        }
 }
 
 /* Get the corresponding page from the mmobj. No special handling is
