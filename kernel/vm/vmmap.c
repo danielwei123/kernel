@@ -126,8 +126,15 @@ end:
 vmmap_t *
 vmmap_create(void)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_create");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_create");*/
+        vmmap_t *temp = (vmmap_t *)slab_obj_alloc(vmmap_allocator);
+        if(temp == NULL)
+        {
+            return temp;
+        }
+        list_init(&temp->vmm_list);
+        temp->vmm_proc = NULL;
+        return temp;
 }
 
 /* Removes all vmareas from the address space and frees the
@@ -135,7 +142,8 @@ vmmap_create(void)
 void
 vmmap_destroy(vmmap_t *map)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_destroy");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_destroy");*/
+
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
@@ -168,7 +176,16 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 vmarea_t *
 vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_lookup");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_lookup");*/
+        vmarea_t *temp;
+        list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
+        {
+            if(temp -> vma_start <= vfs && temp->vma_end > vfn)
+            {
+                return temp;
+            }
+        }
+        list_iterate_end();
         return NULL;
 }
 
