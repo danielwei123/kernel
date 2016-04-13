@@ -107,7 +107,7 @@ anon_put(mmobj_t *o)
         pframe *temp;
         if(o->mmo_refcount != o->mmo_nrespages + 1)
         {
-            o->mmo_refcount--;
+            o->mmo_refcount-=1;
         }
         else
         {
