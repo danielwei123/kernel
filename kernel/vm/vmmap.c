@@ -143,7 +143,23 @@ void
 vmmap_destroy(vmmap_t *map)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_destroy");*/
-
+        vmarea_t *temp;
+        list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
+        {
+            /*CHECK STUFF HERE */
+            if(temp->vma_obj)
+            {
+                temp->vma_obj->mmo_ops->put(temp->vma_obj);
+            }
+            list_remove(&(temp->vma_plink));
+            if(list_link_is_linked(&(temp->vma_olink)))
+            {
+                list_remove(&(temp->vma_olink));
+            }
+            vmarea_free(temp);
+        }
+        list_iterate_end();
+        slab_obj_free(vmmap_allocator,map);
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
