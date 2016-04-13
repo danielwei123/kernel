@@ -58,6 +58,7 @@ void
 anon_init()
 {
         NOT_YET_IMPLEMENTED("VM: anon_init");
+        /*Hey there, I am using Windows!*/
 }
 
 /*
