@@ -111,8 +111,8 @@ anon_put(mmobj_t *o)
 static int
 anon_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
-        NOT_YET_IMPLEMENTED("VM: anon_lookuppage");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VM: anon_lookuppage");*/
+        return pframe_get(o, pagenum, pf);
 }
 
 /* The following three functions should not be difficult. */
