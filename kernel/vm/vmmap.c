@@ -153,7 +153,7 @@ vmmap_destroy(vmmap_t *map)
 void
 vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_insert");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
 }
 
 /* Find a contiguous range of free virtual pages of length npages in
