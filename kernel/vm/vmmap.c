@@ -170,7 +170,38 @@ void
 vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
+         vmarea_t 	*temp;
+         int		flag = 0;
+         
+         
+         if(list_empty(&(map->vmm_list)))
+         {
+         	list_insert_head(&(map->vmm_list, newvma->plink);
+         	newvma->vma_vmmap = map;
+         	return;
+         }
+         
+         
+        list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
+        {
+        	if(newvma->vma_start < temp->vma_end)
+        	{
+        		list_insert_before(temp->vma_plink, newvma->plink);
+        		flag = 1;
+        		list_iterate_end();	
+        	}
+        }
+        
+        
+        if(flag == 0)
+        {
+        	list_insert_tail(&(map->vmm_list, newvma->plink);
+        }
+        
+       	newvma->vma_vmmap = map;
+	return;
 }
+
 
 /* Find a contiguous range of free virtual pages of length npages in
  * the given address space. Returns starting vfn for the range,
@@ -182,8 +213,62 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 int
 vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_find_range");
-        return -1;
+       /* NOT_YET_IMPLEMENTED("VM: vmmap_find_range");*/
+       
+       
+       
+       /*
+       
+       			check for boundary limits while returning vfn
+       */
+       
+       vmarea_t 	*temp;
+       int		x = -1;
+       
+         if(list_empty(&(map->vmm_list)))
+         {
+         	return	0;
+         }
+       
+       
+       if(dir == VMMAP_DIR_HILO)
+       {
+       		       
+       		list_iterate_reverse(&(map->vmm_list), temp, vmarea_t, vma_plink)
+       		{
+       
+       			x = vmmap_is_range_empty(map, (temp->vma_end)+1, npages);
+			if(x == 1){
+			
+				list_iterate_end();
+				return	(temp->vma_end)+1;
+			}
+       
+       		}
+       }
+       else/*VMM7AP_DIR_LOHI*/
+       {
+       
+      		x = vmmap_is_range_empty(map, 0, npages);
+      		if(x == 1){
+			return	0;
+		}
+              
+                list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
+       		{
+       
+       			x = vmmap_is_range_empty(map, (temp->vma_end)+1, npages);
+			if(x == 1){
+			
+				list_iterate_end();
+				return	(temp->vma_end)+1;
+			}
+       		
+      		}
+       
+       }
+       
+       return -1;
 }
 
 /* Find the vm_area that vfn lies in. Simply scan the address space
