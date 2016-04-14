@@ -616,7 +616,8 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_write");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_write");*/
+
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
 
