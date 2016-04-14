@@ -52,8 +52,22 @@ int
 do_mmap(void *addr, size_t len, int prot, int flags,
         int fd, off_t off, void **ret)
 {
-        NOT_YET_IMPLEMENTED("VM: do_mmap");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
+        
+        vmmap_t	* newmap = vmmamp_create();
+        
+        int	ret = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO, ret);
+        
+        if(ret < 0)
+        {
+        	curproc->p_vmmap = NULL;
+       		return	ret;
+        }
+        
+        curproc->p_vmmap = newmap;
+        newmap->vmm_proc = curproc;
+        
+        return 0;
 }
 
 
