@@ -215,8 +215,6 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 {
        /* NOT_YET_IMPLEMENTED("VM: vmmap_find_range");*/
        
-       
-       
        /*
        
        			check for boundary limits while returning vfn
@@ -354,7 +352,68 @@ int
 vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
           int prot, int flags, off_t off, int dir, vmarea_t **new)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_map");
+       /* NOT_YET_IMPLEMENTED("VM: vmmap_map");*/
+       
+       int	x = 0;
+       
+       	if(lopage == 0){
+       		x = vmmap_find_range(map, npages, dir);
+       			if(x < 0)
+				{
+					return	x;
+				}
+       	}
+		else
+		{
+			x = vmmap_is_range_empty(map, lopage, npages);
+			if(x == 0)
+			{
+				int	res = vmmap_remove(map, lopage, npages);
+				
+				if(res < 0)
+				{
+					return	res;
+				}
+				
+			}
+		}
+       
+       	vmarea_t	*temp;
+       	
+       	if(lopage == 0){
+       	
+       		temp->vma_start = x;
+       	}
+       	else
+       	{
+       		temp->vma_start = lopage;
+       	}
+       
+       	temp->vma_end = temp->vma_start + npages;
+       	temp->vma_off = off;
+       	temp->vma_prot = prot;
+       	temp->vma_flags = flags;
+       	
+       	if(file == NULL)
+       	{
+       	
+       		/*
+       		
+       			anon_create should return 0'ed page directly??
+       		*/
+       	
+       	
+       		temp->vma_obj = anon_create();	
+       	}
+       	else
+       	{
+       		temp->vma_obj = &(file->vn_mmobj);
+       	}
+       	
+       vmmap_insert(map, temp);
+       
+       *new = temp;
+       
         return -1;
 }
 
