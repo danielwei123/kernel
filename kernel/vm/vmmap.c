@@ -578,9 +578,8 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
             KASSERT(vma != NULL);
 
             off_t offset = vma->vma_off + (currvfn - vma->vma_start);
-
-            uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)),
-                vma->vma_end - currvfn);
+            /* Not Sure to Align Up*/
+            uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)), vma->vma_end - currvfn);
 
             uint32_t i;
             for (i = 0; i < pages_to_read; i++){
@@ -617,5 +616,41 @@ int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
         NOT_YET_IMPLEMENTED("VM: vmmap_write");
-        return 0;
+        uint32_t dest_pos = 0;
+        const void *curraddr = vaddr;
+
+        while (dest_pos < count){
+            uint32_t currvfn = ADDR_TO_PN(curraddr);
+
+            vmarea_t *vma = vmmap_lookup(map, currvfn);
+
+            KASSERT(vma != NULL);
+
+            off_t offset = vma->vma_off + (currvfn - vma->vma_start);
+            /* Not Sure to Align Up*/
+            uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)), vma->vma_end - currvfn);
+
+            uint32_t i;
+            for (i = 0; i < pages_to_read; i++){
+                pframe_t *p;
+                int get_res = pframe_lookup(vma->vma_obj, offset + i, 0, &p);
+
+                if (get_res < 0){
+                    return get_res;
+                }
+
+                int data_offset = (int) curraddr % PAGE_SIZE;
+
+                int write_size = min(PAGE_SIZE - data_offset, count - dest_pos);
+
+                memcpy((char *) p->pf_addr + data_offset, (char *) buf + dest_pos, write_size);
+
+                p->pf_flags = PF_DIRTY;
+
+                dest_pos += write_size;
+                curraddr = (char *) curraddr + write_size;
+            }
+    }
+
+    return 0;
 }
