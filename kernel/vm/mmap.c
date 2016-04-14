@@ -54,8 +54,57 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 {
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
         
-        vmmap_t	* newmap = vmmamp_create();
+        if((!S_ISREG(curproc->pfiles[fd]->f_vnode->vn_mode)))  
+        {
+        	return	-EACCES;
+        }
         
+        if((flags==MAP_PRIVATE) && (curproc->pfiles[fd]->f_mode&FMODE_READ!= FMODE_READ))
+        {
+        	return	-EACCES;
+        }
+        
+        if((flags==MAP_SHARED) && prot == PROT_WRITE && (curproc->pfiles[fd]->f_mode&(FMODE_READ|FMODE_WRITE) != (FMODE_READ|FMODE_WRITE)))
+        {
+        	return	-EACCES;
+        }
+        
+        
+        if((flags==MAP_SHARED) && prot == PROT_WRITE && (curproc->pfiles[fd]->f_mode&(FMODE_APPEND) == (FMODE_APPEND)))
+        {
+        	return	-EACCES;
+        }
+        
+        if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len) || !PAGE_ALIGNED(off))
+        {
+        	return	-EINVAL;
+        }
+        
+        
+        if(len == 0)
+        {
+        	return	-EINVAL;
+        }
+        
+        if(flags&MAP_SHARED && flags&MAP_PRIVATE)
+        {
+        	return	-EINVAL;
+        }
+        
+        if(!(flags&MAP_SHARED || flags&MAP_PRIVATE))
+        {
+        	return	-EINVAL;
+        }       
+
+		if((fd<0 || fd >=NFILES) && !(flags&MAP_ANON))
+		{
+			return -EBADF;
+		}
+        
+        
+        
+        vmmap_t	* newmap = vmmamp_create();
+       	tlb_flush(addr);
         int	ret = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO, ret);
         
         if(ret < 0)
@@ -81,7 +130,24 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 int
 do_munmap(void *addr, size_t len)
 {
-        NOT_YET_IMPLEMENTED("VM: do_munmap");
+        /*NOT_YET_IMPLEMENTED("VM: do_munmap");*/
+		if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len) || !PAGE_ALIGNED(off))
+        {
+        	return	-EINVAL;
+        }
+        
+        
+        if(len == 0)
+        {
+        	return	-EINVAL;
+        		
+		}
+				        
+        vmmap_remove( curproc->p_vmmap, ADDR_TO_PN(addr), len);
+        
+        
+        tlb_flush(addr);
+        
         return -1;
 }
 
