@@ -69,5 +69,40 @@
 void
 handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
-        NOT_YET_IMPLEMENTED("VM: handle_pagefault");
+        /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
+        
+        vmarea_t	*area = vmmap_lookup(curproc->P-vmmap, ADDR_TO_PN(vaddr));
+        int			forwrite = 0;
+        pframe_t	*resFrame;
+        int			flags = 0;
+        
+        if(area == NULL)
+        {
+        	do_exit(EFAULT);
+        }
+        
+        if(permisssionCheck(area, cause))
+        {
+        	do_exit(EFAULT);
+        }
+        
+        if(cause&FAULT_WRITE)
+        {
+        	forwrite = 1;
+        }
+        
+        int	lookup_ret = pframe_lookup(area->vma_obj,  ADDR_TO_PN(vaddr), forwrite, &resFrame);
+        
+        if(llokup_ret<0)
+        {
+        	do_exit(EFAULT);
+        }
+        
+        /*
+        	
+        */
+        
+        pt_map(curproc->p_pagedir, ADDR_TO_PN(vaddr), resFrame->pf_addr, flags);
+        tlb_flush(ADDR_TO_PN(vaddr));
+        
 }
