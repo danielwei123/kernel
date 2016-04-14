@@ -565,7 +565,8 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_read");
+
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
 
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
