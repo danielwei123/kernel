@@ -565,8 +565,43 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_read");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
+        uint32_t dest_pos = 0;
+        const void *curraddr = vaddr;
+
+        while (dest_pos < count){
+            uint32_t currvfn = ADDR_TO_PN(curraddr);
+
+            vmarea_t *vma = vmmap_lookup(map, currvfn);
+
+            KASSERT(vma != NULL);
+
+            off_t offset = vma->vma_off + (currvfn - vma->vma_start);
+
+            uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)),
+                vma->vma_end - currvfn);
+
+            uint32_t i;
+            for (i = 0; i < pages_to_read; i++){
+                pframe_t *p;
+                int get_res = pframe_lookup(vma->vma_obj, offset + i, 0, &p);
+
+                if (get_res < 0){
+                    return get_res;
+                }
+
+                int data_offset = (int) curraddr % PAGE_SIZE;
+
+                int read_size = min(PAGE_SIZE - data_offset, count - dest_pos);
+
+                memcpy((char *) buf + dest_pos, (char *) p->pf_addr + data_offset, read_size);
+
+                dest_pos += read_size;
+                curraddr = (char *) curraddr + read_size;
+            }
+    }
+
+    return 0;
 }
 
 /* Write from 'buf' into the virtual address space of 'map' starting at
