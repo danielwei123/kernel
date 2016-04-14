@@ -45,6 +45,9 @@
 static slab_allocator_t *vmmap_allocator;
 static slab_allocator_t *vmarea_allocator;
 
+#define MIN_PAGE ADDR_TO_PN(USER_MEM_LOW)
+#define MAX_PAGE ADDR_TO_PN(USER_MEM_HIGH)
+
 void
 vmmap_init(void)
 {
@@ -189,7 +192,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
         		list_insert_before(temp->vma_plink, newvma->plink);
         		newvma->vma_vmmap = map;
         		return;
-        		
+
         	}
         }
         list_iterate_end();
@@ -201,17 +204,49 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 }
 
 /*
-	sufficient space 
+	sufficient space
 */
 
 int
 sufficient_space(vmarea_t *prev, vmarea_t	*next, int	npages)
 {
-
 	return (prev!=NULL) && (next!=NULL) && ((next->vma_start - prev->vma_end)>npages);
-	
 }
 
+/*
+    Function to check the ends of address space
+*/
+
+int
+check_boundary(vnmap_t *map,int32_t npages,int dir)
+{
+    list_t *vmareas = &(map->vmm_list);
+    if(dir == VMMAP_DIR_LOHI)
+    {
+        if(list_empty(vmm_list))
+        {
+            return MIN_PAGE;
+        }
+        vmarea_t *temp = list_item(vmareas->l_next,vmarea_t,vma_plink);
+        if(temp->vma_start - MIN_PAGE >= npages)
+        {
+            return MIN_PAGE;
+        }
+    }
+    else
+    {
+        if(list_empty(vmm_list))
+        {
+            return MAX_PAGE-npages;
+        }
+        vmarea *temp = list_item(vmareas->l_prev,vmarea_t,vma_plink);
+        if(MAX_PAGE - temp->vma_end >= npages)
+        {
+            return MAX_PAGE-npages;
+        }
+    }
+    return -1;
+}
 
 /* Find a contiguous range of free virtual pages of length npages in
  * the given address space. Returns starting vfn for the range,
@@ -228,17 +263,24 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
        /*
 
        			check for boundary limits while returning vfn
-       			
+
        			and
-       			
+
        			if else for first fit algo
-       			
+
        */
+       int x = check_boundary(map,npages,dir);
+
+       if(x != -1)
+       {
+           return x;
+       }
+
        vmarea_t 	*prev = NULL;
        vmarea_t		*cur = NULL;
        list_link_t	*prevList = NULL;
        list_link_t	*curList = NULL;
-       
+
        int		x = -1;
 
          if(list_empty(&(map->vmm_list)))
@@ -269,24 +311,24 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 				else
 				{
 					prev = NULL;
-				}				
-				
+				}
+
 				if(sufficient_space(prev, cur, npages))
 				{
 					return	cur->vma_start-npages;
 				}
-				
+
 				curList = prevList;
 				prevList = prevList->l_prev;
-				
+
 			}
-			
+
 
        }
        else/*VMM7AP_DIR_LOHI*/
        {
-       		
-       	
+
+
 			curList = ((map->vmm_list)->l_next);
 
 			while(curList != &(map->vmm_list))
@@ -307,16 +349,16 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 				else
 				{
 					prev = NULL;
-				}				
-				
+				}
+
 				if(sufficient_space(prev, cur, npages))
 				{
 					return	(cur->vma_end + 1);
 				}
-				
+
 				prevList = curList;
 				curList = curList->l_next;
-				
+
 			}
 
        }
