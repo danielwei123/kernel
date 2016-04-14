@@ -609,7 +609,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         }
         list_iterate_end();
 
-        return -1;
+        return 0;
 }
 
 /*
