@@ -172,32 +172,32 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
          vmarea_t 	*temp;
          int		flag = 0;
-         
-         
+
+
          if(list_empty(&(map->vmm_list)))
          {
          	list_insert_head(&(map->vmm_list, newvma->plink);
          	newvma->vma_vmmap = map;
          	return;
          }
-         
-         
+
+
         list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
         {
         	if(newvma->vma_start < temp->vma_end)
         	{
         		list_insert_before(temp->vma_plink, newvma->plink);
         		flag = 1;
-        		list_iterate_end();	
+        		list_iterate_end();
         	}
         }
-        
-        
+
+
         if(flag == 0)
         {
         	list_insert_tail(&(map->vmm_list, newvma->plink);
         }
-        
+
        	newvma->vma_vmmap = map;
 	return;
 }
@@ -214,58 +214,58 @@ int
 vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 {
        /* NOT_YET_IMPLEMENTED("VM: vmmap_find_range");*/
-       
+
        /*
-       
+
        			check for boundary limits while returning vfn
        */
-       
+
        vmarea_t 	*temp;
        int		x = -1;
-       
+
          if(list_empty(&(map->vmm_list)))
          {
          	return	0;
          }
-       
-       
+
+
        if(dir == VMMAP_DIR_HILO)
        {
-       		       
+
        		list_iterate_reverse(&(map->vmm_list), temp, vmarea_t, vma_plink)
        		{
-       
+
        			x = vmmap_is_range_empty(map, (temp->vma_end)+1, npages);
 			if(x == 1){
-			
+
 				list_iterate_end();
 				return	(temp->vma_end)+1;
 			}
-       
+
        		}
        }
        else/*VMM7AP_DIR_LOHI*/
        {
-       
+
       		x = vmmap_is_range_empty(map, 0, npages);
       		if(x == 1){
 			return	0;
 		}
-              
+
                 list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
        		{
-       
+
        			x = vmmap_is_range_empty(map, (temp->vma_end)+1, npages);
 			if(x == 1){
-			
+
 				list_iterate_end();
 				return	(temp->vma_end)+1;
 			}
-       		
+
       		}
-       
+
        }
-       
+
        return -1;
 }
 
@@ -353,9 +353,9 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
           int prot, int flags, off_t off, int dir, vmarea_t **new)
 {
        /* NOT_YET_IMPLEMENTED("VM: vmmap_map");*/
-       
+
        int	x = 0;
-       
+
        	if(lopage == 0){
        		x = vmmap_find_range(map, npages, dir);
        			if(x < 0)
@@ -369,54 +369,54 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			if(x == 0)
 			{
 				int	res = vmmap_remove(map, lopage, npages);
-				
+
 				if(res < 0)
 				{
 					return	res;
 				}
-				
+
 			}
 		}
-       
+
        	vmarea_t	*temp;
-       	
+
        	if(lopage == 0){
-       	
+
        		temp->vma_start = x;
        	}
        	else
        	{
        		temp->vma_start = lopage;
        	}
-       
+
        	temp->vma_end = temp->vma_start + npages;
        	temp->vma_off = off;
        	temp->vma_prot = prot;
        	temp->vma_flags = flags;
-       	
+
        	if(file == NULL)
        	{
-       	
+
        		/*
-       		
+
        			anon_create should return 0'ed page directly??
-       			
+
        			vrefs for file objects??
-       			
+
        		*/
-       	
-       	
-       		temp->vma_obj = anon_create();	
+
+
+       		temp->vma_obj = anon_create();
        	}
        	else
        	{
        		temp->vma_obj = &(file->vn_mmobj);
        	}
-       	
+
        vmmap_insert(map, temp);
-       
+
        *new = temp;
-       
+
         return -1;
 }
 
@@ -461,60 +461,60 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			{
 				/*Case 1*/
 				vmarea_t	*split;
-				
+
 				split->vma_end = temp->vma_end;
-				
+
 				temp->vma_end = lopage-1;
-				
+
 				split->vma_start = endvfs+1;
 				split->vma_off = temp->vma_off + npages +(temp->vma_end - temp->vma_start);
-				
+
 				split->vma_prot = temp->vma_prot;
 				split->vma_flags = temp->vma_flags;
-				
+
 				split->vma_vmmap = temp->vma_vmmap;
 				split->vma_obj = temp->vma_obj;
 				/*potential ref on file obj*/
-				
+
 				vmmap_insert(map, split);
 
 				/*Case 1 ends*/
-				
+
 			}
 			else if(temp->vma_start<lopage && temp->vma_end<endvfs)
 			{
 				/*Case 2*/
-				
+
 				temp->vma_end = temp->vma_end - (temp->vma_end - lopage);
-				
+
 				/*case 2 ends*/
 
 			}
 			else if(temp->vma_start>lopage && temp->vma_end>endvfs)
 			{
 				/*Case 3*/
-				
+
 				temp->vma_off = (endvfs - temp->vma_start)/PAGE_SIZE + temp->vma_off;
 				temp->vma_start = endvfs + 1;
-				
+
 				/*Case 3 ends*/
 			}
 			else if(temp->vma_start>lopage && temp->vma_end<endvfs)
 			{
 				/*Case 4*/
-				
+
 				list_remove(temp->plink);
-				
+
 				vmarea_free(temp);
 				/*
 					not sure about ref, put look at mmobj.h
 				*/
-				
+
 				/*case4 ends*/
-			}    
+			}
         }
         list_iterate_end();
-       
+
         return -1;
 }
 
@@ -565,7 +565,9 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
+
         /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
+
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
 
