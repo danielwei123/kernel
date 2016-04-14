@@ -400,6 +400,9 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
        		/*
        		
        			anon_create should return 0'ed page directly??
+       			
+       			vrefs for file objects??
+       			
        		*/
        	
        	
@@ -449,7 +452,69 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 int
 vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_remove");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_remove");*/
+        vmarea_t *temp;
+        uint32_t endvfs = lopage + npages;
+        list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
+        {
+			if( temp->vma_start<lopage && temp->vma_end>endvfs)
+			{
+				/*Case 1*/
+				vmarea_t	*split;
+				
+				split->vma_end = temp->vma_end;
+				
+				temp->vma_end = lopage-1;
+				
+				split->vma_start = endvfs+1;
+				split->vma_off = temp->vma_off + npages +(temp->vma_end - temp->vma_start);
+				
+				split->vma_prot = temp->vma_prot;
+				split->vma_flags = temp->vma_flags;
+				
+				split->vma_vmmap = temp->vma_vmmap;
+				split->vma_obj = temp->vma_obj;
+				/*potential ref on file obj*/
+				
+				vmmap_insert(map, split);
+
+				/*Case 1 ends*/
+				
+			}
+			else if(temp->vma_start<lopage && temp->vma_end<endvfs)
+			{
+				/*Case 2*/
+				
+				temp->vma_end = temp->vma_end - (temp->vma_end - lopage);
+				
+				/*case 2 ends*/
+
+			}
+			else if(temp->vma_start>lopage && temp->vma_end>endvfs)
+			{
+				/*Case 3*/
+				
+				temp->vma_off = (endvfs - temp->vma_start)/PAGE_SIZE + temp->vma_off;
+				temp->vma_start = endvfs + 1;
+				
+				/*Case 3 ends*/
+			}
+			else if(temp->vma_start>lopage && temp->vma_end<endvfs)
+			{
+				/*Case 4*/
+				
+				list_remove(temp->plink);
+				
+				vmarea_free(temp);
+				/*
+					not sure about ref, put look at mmobj.h
+				*/
+				
+				/*case4 ends*/
+			}    
+        }
+        list_iterate_end();
+       
         return -1;
 }
 
