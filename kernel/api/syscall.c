@@ -74,8 +74,33 @@ init_func(syscall_init);
 static int
 sys_read(read_args_t *arg)
 {
-        NOT_YET_IMPLEMENTED("VM: sys_read");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VM: sys_read");*/
+        read_args_t		kern_args;
+        void*			newPage = NULL;
+
+        if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
+        {
+        	curthr->kt_errno = EFAULT;
+        	return	-1;
+        }
+        
+        newPage = page_alloc();
+        
+		int	x = do_read(kern_args.fd, newPage, kern_args.nbytes);
+		int	ret_val = x;
+		
+		if(x == 0)
+		{
+			x = copy_to_user(kern_args.buf, newPage, sizeof(newPage));
+		}
+        if(x!= 0)
+        {
+        	page_free(newPage);
+        	curthr->kt_errno = -x;
+        	return	-1;
+        }
+        page_free(newPage);
+        return ret_val;
 }
 
 /*
@@ -84,7 +109,41 @@ sys_read(read_args_t *arg)
 static int
 sys_write(write_args_t *arg)
 {
-        NOT_YET_IMPLEMENTED("VM: sys_write");
+        /*NOT_YET_IMPLEMENTED("VM: sys_write");*/
+        
+        write_args_t		kern_args;
+        void*			newPage = NULL;
+
+        if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
+        {
+        	curthr->kt_errno = EFAULT;
+        	return	-1;
+        }
+        
+        newPage = page_alloc();
+  
+        if(copy_from_user( newPage, arg.buf, sizeof(arg.buf)<0))
+        {
+            curthr->kt_errno = EFAULT;
+        	return	-1;
+        }
+        
+		int	x = do_write(kern_args.fd, newPage, kern_args.nbytes);
+		int	ret_val = x;
+		
+		if(x == 0)
+		{
+			page_free(newPage);
+        	return ret_val;	
+		}
+        if(x!= 0)
+        {
+        	page_free(newPage);
+        	curthr->kt_errno = -x;
+        	return	-1;
+        }
+        
+     	/*shoudln't come here*/
         return -1;
 }
 
@@ -100,8 +159,37 @@ sys_write(write_args_t *arg)
 static int
 sys_getdents(getdents_args_t *arg)
 {
-        NOT_YET_IMPLEMENTED("VM: sys_getdents");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VM: sys_getdents");*/
+        
+        getdents_args_t		kern_args;
+
+
+        if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
+        {
+        	curthr->kt_errno = EFAULT;
+        	return	-1;
+        }
+        
+        dirent_t	dir;
+        
+        int	ret = 1;
+        int	count = kern_args.count;
+        
+        while(ret >= 0 && count > 0)
+        {
+        	ret = do_getdent(kern_args.fd, &dir);
+        	count -= sizeof(dirent_t);
+        }
+        
+        x  = copy_to_user(kern_args.dirp, &dir, sizeof(dirent_t);
+        
+        if(x != 0)
+        {
+            curthr->kt_errno = -x;
+        	return	-1;
+        }
+        
+        return 0;
 }
 
 #ifdef __MOUNTING__
