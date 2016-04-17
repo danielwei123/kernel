@@ -35,6 +35,27 @@
 #include "vm/pagefault.h"
 #include "vm/vmmap.h"
 
+/*our function to check permissions*/
+int permissionCheck(vmarea_t *vm , uint32_t cause)
+{
+    if(vm->vma_prot & PROT_NONE)
+    {
+        return 0;
+    }
+
+    if((cause & FAULT_WRITE) && !(vm->vma_prot & PROT_WRITE))
+    {
+        return 0;
+    }
+
+    if((cause & FAULT_EXEC) && !(vm->vma_prot & PROT_EXEC))
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
 /*
  * This gets called by _pt_fault_handler in mm/pagetable.c The
  * calling function has already done a lot of error checking for
@@ -70,39 +91,39 @@ void
 handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
-        
+
         vmarea_t	*area = vmmap_lookup(curproc->P-vmmap, ADDR_TO_PN(vaddr));
         int			forwrite = 0;
         pframe_t	*resFrame;
         int			flags = 0;
-        
+
         if(area == NULL)
         {
         	do_exit(EFAULT);
         }
-        
-        if(permisssionCheck(area, cause))
+
+        if(!permisssionCheck(area, cause))
         {
         	do_exit(EFAULT);
         }
-        
+
         if(cause&FAULT_WRITE)
         {
         	forwrite = 1;
         }
-        
+
         int	lookup_ret = pframe_lookup(area->vma_obj,  ADDR_TO_PN(vaddr), forwrite, &resFrame);
-        
+
         if(llokup_ret<0)
         {
         	do_exit(EFAULT);
         }
-        
+
         /*
-        	
+
         */
-        
+
         pt_map(curproc->p_pagedir, ADDR_TO_PN(vaddr), resFrame->pf_addr, flags);
         tlb_flush(ADDR_TO_PN(vaddr));
-        
+
 }
