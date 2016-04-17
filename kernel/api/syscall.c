@@ -239,24 +239,25 @@ sys_getdents(getdents_args_t *arg)
 
         dirent_t	dir;
 
-        int	ret = 1;
-        int	count = kern_args.count;
+        int total_read = 0;
+        int i = 0;
 
-        while(ret >= 0 && count > 0)
+        while(total_read < kern_args.count)
         {
-        	ret = do_getdent(kern_args.fd, &dir);
-        	count -= sizeof(dirent_t);
+            int read = do_getdent(kern_args.fd , &dir);
+            if(read < 0)
+            {
+                curthr->kt_errno = -read;
+                return -1;
+            }
+            if(read == 0)
+            {
+                break;
+            }
+            copy_to_user(kern_args.dirp + i , &dir , read);
+            total_read += read;
         }
-
-        x  = copy_to_user(kern_args.dirp, &dir, sizeof(dirent_t);
-
-        if(x != 0)
-        {
-            curthr->kt_errno = -x;
-        	return	-1;
-        }
-
-        return 0;
+        return total_read;
 }
 
 #ifdef __MOUNTING__
