@@ -97,7 +97,7 @@ sys_read(read_args_t *arg)
 		while(total_read < kern_args.nbytes && error == 0)
         {
             int to_read = 0;
-            if(kern_args.nbytes - total_read < PAGE_SIZE)
+            if(kern_args.nbytes - total_read > PAGE_SIZE)
             {
                 to_read = PAGE_SIZE;
             }
@@ -145,7 +145,7 @@ sys_write(write_args_t *arg)
         /*NOT_YET_IMPLEMENTED("VM: sys_write");*/
 
         write_args_t		kern_args;
-        void*			newPage = NULL;
+        char*			newPage = NULL;
 
         if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
         {
@@ -153,31 +153,65 @@ sys_write(write_args_t *arg)
         	return	-1;
         }
 
-        newPage = page_alloc();
+        newPage = (char *)page_alloc();
 
-        if(copy_from_user( newPage, arg.buf, sizeof(arg.buf)<0))
+        if(newPage == NULL)
         {
-            curthr->kt_errno = EFAULT;
-        	return	-1;
+            curthr->kt_errno = ENOMEN;
+            return -1;
         }
 
-		int	x = do_write(kern_args.fd, newPage, kern_args.nbytes);
-		int	ret_val = x;
+        int total_written = 0;
+        int error = 0;
 
-		if(x == 0)
-		{
-			page_free(newPage);
-        	return ret_val;
-		}
-        if(x!= 0)
+        while(total_written < kern_args.nbytes && error == 0)
         {
-        	page_free(newPage);
-        	curthr->kt_errno = -x;
-        	return	-1;
+            int to_write = 0;
+            if(kern_args.nbytes - total_written > PAGE_SIZE)
+            {
+                to_write = PAGE_SIZE;
+            }
+            else
+            {
+                to_write = kern_args.nbytes - total_written;
+            }
+
+            error = copy_from_user(newPage , (void *)kern_args.buf + total_written , to_write);
+
+            if(error < 0)
+            {
+                page_free(newPage);
+                curthr->kt_errno = -error;
+                return -1;
+            }
+
+            int bytes_written = do_write(kern_args.fd , newPage , to_write);
+
+            if(bytes_written < 0)
+            {
+                page_free(newPage);
+                curthr->kt_errno = -bytes_written;
+                return -1;
+            }
+
+            total_written += bytes_written;
+
+            if(bytes_written < to_write)
+            {
+                break;
+            }
+
         }
 
-     	/*shoudln't come here*/
-        return -1;
+        page_free(newPage);
+
+        if(error < 0)
+        {
+            curthr->kt_errno = -error;
+            return -1;
+        }
+
+        return total_written;
 }
 
 /*
