@@ -76,31 +76,64 @@ sys_read(read_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_read");*/
         read_args_t		kern_args;
-        void*			newPage = NULL;
+        char*			newPage = NULL;
 
         if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
         {
         	curthr->kt_errno = EFAULT;
         	return	-1;
         }
-        
-        newPage = page_alloc();
-        
-		int	x = do_read(kern_args.fd, newPage, kern_args.nbytes);
-		int	ret_val = x;
-		
-		if(x == 0)
-		{
-			x = copy_to_user(kern_args.buf, newPage, sizeof(newPage));
-		}
-        if(x!= 0)
+
+        newPage = (char *)page_alloc();
+
+        if(newPage == NULL)
         {
-        	page_free(newPage);
-        	curthr->kt_errno = -x;
-        	return	-1;
+            curthr->kt_errno = ENOMEN;
+            return -1;
         }
+
+		int total_read = 0;
+		int error = 0;
+		while(total_read < kern_args.nbytes && error == 0)
+        {
+            int to_read = 0;
+            if(kern_args.nbytes - total_read < PAGE_SIZE)
+            {
+                to_read = PAGE_SIZE;
+            }
+            else
+            {
+                to_read = kern_args - total_read;
+            }
+
+            int bytes_read = do_read(kern_args.fd , newPage , to_read);
+
+            if(bytes_read < 0)
+            {
+                page_free(newPage);
+                curthr->kt_errno = -bytes_read;
+                return -1;
+            }
+
+            error = copy_to_user(kern_args.buf + total_read, newPage , bytes_read);
+
+            total_read += bytes_read;
+
+            if(bytes_read < to_read)
+            {
+                break;
+            }
+        }
+
         page_free(newPage);
-        return ret_val;
+
+        if(error < 0)
+        {
+            curthr->kt_errno = -error;
+            return -1;
+        }
+
+        return total_read;
 }
 
 /*
@@ -110,7 +143,7 @@ static int
 sys_write(write_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_write");*/
-        
+
         write_args_t		kern_args;
         void*			newPage = NULL;
 
@@ -119,22 +152,22 @@ sys_write(write_args_t *arg)
         	curthr->kt_errno = EFAULT;
         	return	-1;
         }
-        
+
         newPage = page_alloc();
-  
+
         if(copy_from_user( newPage, arg.buf, sizeof(arg.buf)<0))
         {
             curthr->kt_errno = EFAULT;
         	return	-1;
         }
-        
+
 		int	x = do_write(kern_args.fd, newPage, kern_args.nbytes);
 		int	ret_val = x;
-		
+
 		if(x == 0)
 		{
 			page_free(newPage);
-        	return ret_val;	
+        	return ret_val;
 		}
         if(x!= 0)
         {
@@ -142,7 +175,7 @@ sys_write(write_args_t *arg)
         	curthr->kt_errno = -x;
         	return	-1;
         }
-        
+
      	/*shoudln't come here*/
         return -1;
 }
@@ -160,7 +193,7 @@ static int
 sys_getdents(getdents_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_getdents");*/
-        
+
         getdents_args_t		kern_args;
 
 
@@ -169,26 +202,26 @@ sys_getdents(getdents_args_t *arg)
         	curthr->kt_errno = EFAULT;
         	return	-1;
         }
-        
+
         dirent_t	dir;
-        
+
         int	ret = 1;
         int	count = kern_args.count;
-        
+
         while(ret >= 0 && count > 0)
         {
         	ret = do_getdent(kern_args.fd, &dir);
         	count -= sizeof(dirent_t);
         }
-        
+
         x  = copy_to_user(kern_args.dirp, &dir, sizeof(dirent_t);
-        
+
         if(x != 0)
         {
             curthr->kt_errno = -x;
         	return	-1;
         }
-        
+
         return 0;
 }
 
