@@ -127,7 +127,7 @@ static void *pageoutd_run(int arg1, void *arg2);
 static void pageoutd_exit(void);
 #define pageoutd_wakeup()        (sched_broadcast_on(&pageoutd_waitq))
 #define pageoutd_needed()        \
-	((page_free_count() <= nfreepages_min) && (!list_empty(&alloc_list)))
+    ((page_free_count() <= nfreepages_min) && (!list_empty(&alloc_list)))
 #define pageoutd_target_met()    (page_free_count() >= nfreepages_target)
 
 
@@ -158,8 +158,8 @@ pframe_init(void)
         nfreepages_target = page_free_count() >> 1;
         nfreepages_min = 0;
 
-		/* initialize alloc_waitq */
-		sched_queue_init(&alloc_waitq);
+        /* initialize alloc_waitq */
+        sched_queue_init(&alloc_waitq);
 }
 
 void
@@ -324,9 +324,10 @@ pframe_fill(pframe_t *pf)
         int ret;
 
         pframe_set_busy(pf);
+        dbg(DBG_PRINT,"BILL Inside fill, before call\n");
         ret = pf->pf_obj->mmo_ops->fillpage(pf->pf_obj, pf);
         pframe_clear_busy(pf);
-
+    dbg(DBG_PRINT,"BILL Inside fill, size = %d\n",pf->pf_waitq.tq_size);
         sched_broadcast_on(&pf->pf_waitq);
 
         return ret;
@@ -355,7 +356,44 @@ pframe_fill(pframe_t *pf)
 int
 pframe_get(struct mmobj *o, uint32_t pagenum, pframe_t **result)
 {
-        NOT_YET_IMPLEMENTED("S5FS: pframe_get");
+        /*NOT_YET_IMPLEMENTED("S5FS: pframe_get");*/
+        
+        *result = pframe_get_resident(o, pagenum);
+
+        if(*result == NULL)
+        {
+
+
+            *result = pframe_alloc(o, pagenum);
+            
+            if(*result == NULL)
+            {
+                return  -ENOMEM;
+            }
+            
+            int x = pframe_fill(*result);
+            
+            if( x < 0)
+            {
+                pframe_free(*result);
+                return x;
+            }
+            
+            if(pageoutd_needed())
+            {
+                pageoutd_wakeup();
+            }
+            
+
+        }
+        else
+        {
+            while(pframe_is_busy(*result)){
+                sched_sleep_on(&(*result)->pf_waitq);
+            }
+
+        }
+    
         return 0;
 }
 
@@ -375,7 +413,26 @@ pframe_get(struct mmobj *o, uint32_t pagenum, pframe_t **result)
 void
 pframe_pin(pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("S5FS: pframe_pin");
+        /*NOT_YET_IMPLEMENTED("S5FS: pframe_pin");*/
+        dbg(DBG_PRINT,"BILL Starting PIN\n");
+        if(pframe_is_pinned(pf))
+        {
+            dbg(DBG_PRINT,"BILL Pin if\n");
+            pf->pf_pincount++;
+        }
+        else
+        {
+            dbg(DBG_PRINT,"BILL Pin else cond: %d\n", pframe_is_pinned(pf));
+            pf->pf_pincount++;
+            list_remove(&pf->pf_link);
+            nallocated--;
+            
+            list_insert_head(&pinned_list, &pf->pf_link);
+            npinned++;
+        } 
+        
+        
+        
 }
 
 /*
@@ -391,7 +448,20 @@ pframe_pin(pframe_t *pf)
 void
 pframe_unpin(pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("S5FS: pframe_unpin");
+        /*NOT_YET_IMPLEMENTED("S5FS: pframe_unpin");*/
+        dbg(DBG_PRINT,"BILL Starting unpin\n");
+        pf->pf_pincount--;
+        
+        if(pf->pf_pincount == 0)
+        {
+            list_remove(&pf->pf_link);
+            npinned--;
+            
+            list_insert_head(&alloc_list, &pf->pf_link);
+            nallocated++;   
+        }
+        
+        
 }
 
 /*
@@ -642,15 +712,15 @@ pageoutd_run(int arg1, void *arg2)
                 dbg(DBG_PFRAME, "PAGEOUT DEMAON: Falling asleep\n");
                 dbg(DBG_PFRAME, "PAGEOUT DEMAON: "
                     "nfreepages_target=|%d| "
-					"nfreepages_min=|%d| "
-					"page_free_count=|%d|\n", nfreepages_target, nfreepages_min, page_free_count());
+                    "nfreepages_min=|%d| "
+                    "page_free_count=|%d|\n", nfreepages_target, nfreepages_min, page_free_count());
                 if (sched_cancellable_sleep_on(&pageoutd_waitq))
                         kthread_exit((void *)0);
                 dbg(DBG_PFRAME, "PAGEOUT DEMAON: Waking up\n");
                 dbg(DBG_PFRAME, "PAGEOUT DEMAON: "
                     "nfreepages_target=|%d| "
-					"nfreepages_min=|%d| "
-					"page_free_count=|%d|\n", nfreepages_target, nfreepages_min, page_free_count());
+                    "nfreepages_min=|%d| "
+                    "page_free_count=|%d|\n", nfreepages_target, nfreepages_min, page_free_count());
         }
         return NULL;
 }

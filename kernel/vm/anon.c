@@ -104,7 +104,7 @@ static void
 anon_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_put");*/
-        pframe *temp;
+        pframe_t *temp;
         if(o->mmo_refcount != o->mmo_nrespages + 1)
         {
             o->mmo_refcount-=1;
@@ -137,7 +137,7 @@ anon_fillpage(mmobj_t *o, pframe_t *pf)
 {
        /*NOT_YET_IMPLEMENTED("VM: anon_fillpage");*/
        
-       	memset(pf->pf_addr, 0, sizeof(mmonbj_t));
+       	memset(pf->pf_addr, 0, sizeof(mmobj_t));
         return 0;
 }
 

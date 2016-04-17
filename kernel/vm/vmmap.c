@@ -179,7 +179,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
          if(list_empty(&(map->vmm_list)))
          {
-         	list_insert_head(&(map->vmm_list, newvma->plink);
+         	list_insert_head(&(map->vmm_list), &(newvma->vma_plink));
          	newvma->vma_vmmap = map;
          	return;
          }
@@ -189,7 +189,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
         {
         	if(newvma->vma_start < temp->vma_end)
         	{
-        		list_insert_before(temp->vma_plink, newvma->plink);
+        		list_insert_before(&temp->vma_plink, &newvma->vma_plink);
         		newvma->vma_vmmap = map;
         		return;
 
@@ -197,7 +197,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
         }
         list_iterate_end();
 
-        list_insert_tail(&(map->vmm_list, newvma->plink);
+        list_insert_tail(&(map->vmm_list), &newvma->vma_plink);
        	newvma->vma_vmmap = map;
 
 		return;
@@ -218,12 +218,12 @@ sufficient_space(vmarea_t *prev, vmarea_t	*next, int	npages)
 */
 
 int
-check_boundary(vnmap_t *map,int32_t npages,int dir)
+check_boundary(vmmap_t *map,int32_t npages,int dir)
 {
     list_t *vmareas = &(map->vmm_list);
     if(dir == VMMAP_DIR_LOHI)
     {
-        if(list_empty(vmm_list))
+        if(list_empty(vmareas))
         {
             return MIN_PAGE;
         }
@@ -235,11 +235,11 @@ check_boundary(vnmap_t *map,int32_t npages,int dir)
     }
     else
     {
-        if(list_empty(vmm_list))
+        if(list_empty(vmareas))
         {
             return MAX_PAGE-npages;
         }
-        vmarea *temp = list_item(vmareas->l_prev,vmarea_t,vma_plink);
+        vmarea_t *temp = list_item(vmareas->l_prev,vmarea_t,vma_plink);
         if(MAX_PAGE - temp->vma_end >= npages)
         {
             return MAX_PAGE-npages;
@@ -281,8 +281,6 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
        list_link_t	*prevList = NULL;
        list_link_t	*curList = NULL;
 
-       int		x = -1;
-
          if(list_empty(&(map->vmm_list)))
          {
          	return	0;
@@ -291,7 +289,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 
        if(dir == VMMAP_DIR_HILO)
        {
-			prevList = ((map->vmm_list)->l_prev);
+			prevList = ((map->vmm_list).l_prev);
 
 			while(prevList != &(map->vmm_list))
 			{
@@ -329,7 +327,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
        {
 
 
-			curList = ((map->vmm_list)->l_next);
+			curList = ((map->vmm_list).l_next);
 
 			while(curList != &(map->vmm_list))
 			{
@@ -376,7 +374,7 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
         vmarea_t *temp;
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
-            if(temp -> vma_start <= vfs && temp->vma_end > vfn)
+            if(temp->vma_start <= vfn && temp->vma_end > vfn)
             {
                 return temp;
             }
@@ -597,7 +595,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			{
 				/*Case 4*/
 
-				list_remove(temp->plink);
+				list_remove(&(temp->vma_plink));
 
 				vmarea_free(temp);
 				/*
@@ -625,7 +623,7 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
             return 1;
         }
         /*Check if you need to add 1 also to endvfs*/
-        uint32_t endvfs = startvfs + npages;
+        uint32_t endvfn = startvfn + npages;
         vmarea_t *temp;
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
@@ -660,7 +658,7 @@ int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
 
-        /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_read");
 
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
@@ -673,7 +671,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
             KASSERT(vma != NULL);
 
             off_t offset = vma->vma_off + (currvfn - vma->vma_start);
-            /* Not Sure to Align Up*/
+            /* Not Sure to Align Up
             uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)), vma->vma_end - currvfn);
 
             uint32_t i;
@@ -695,7 +693,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
                 curraddr = (char *) curraddr + read_size;
             }
     }
-
+*/
     return 0;
 }
 
@@ -710,7 +708,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
-        /*NOT_YET_IMPLEMENTED("VM: vmmap_write");*/
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_write");
 
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
@@ -723,7 +721,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
             KASSERT(vma != NULL);
 
             off_t offset = vma->vma_off + (currvfn - vma->vma_start);
-            /* Not Sure to Align Up*/
+            /* Not Sure to Align Up
             uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)), vma->vma_end - currvfn);
 
             uint32_t i;
@@ -747,6 +745,6 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
                 curraddr = (char *) curraddr + write_size;
             }
     }
-
+*/
     return 0;
 }

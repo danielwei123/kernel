@@ -51,11 +51,22 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
         
         KASSERT(NULL != result);
         
+        
+
+        
+        
 	if(len > NAME_LEN)
 	{
 		
 		return -ENAMETOOLONG;
 	}
+	
+        if(len==0)
+        {
+        	vref(dir);
+        	*result = dir;
+        	return	0;
+        }
 	
        
 	KASSERT(NULL != name);
