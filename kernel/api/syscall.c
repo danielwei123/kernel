@@ -74,7 +74,8 @@ init_func(syscall_init);
 static int
 sys_read(read_args_t *arg)
 {
-        /*NOT_YET_IMPLEMENTED("VM: sys_read");*/
+        /*NOT_YET_IMPLEMENTED("VM: sys_read");
+        
         read_args_t		kern_args;
         void*			newPage = NULL;
 
@@ -101,6 +102,9 @@ sys_read(read_args_t *arg)
         }
         page_free(newPage);
         return ret_val;
+        
+        */
+        return	0;
 }
 
 /*
@@ -110,7 +114,7 @@ static int
 sys_write(write_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_write");*/
-        
+        /*
         write_args_t		kern_args;
         void*			newPage = NULL;
 
@@ -142,7 +146,7 @@ sys_write(write_args_t *arg)
         	curthr->kt_errno = -x;
         	return	-1;
         }
-        
+        */
      	/*shoudln't come here*/
         return -1;
 }
@@ -160,7 +164,7 @@ static int
 sys_getdents(getdents_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_getdents");*/
-        
+        /*
         getdents_args_t		kern_args;
 
 
@@ -188,8 +192,9 @@ sys_getdents(getdents_args_t *arg)
             curthr->kt_errno = -x;
         	return	-1;
         }
-        
+        */
         return 0;
+        
 }
 
 #ifdef __MOUNTING__

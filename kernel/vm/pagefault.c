@@ -66,12 +66,18 @@
  *              address which caused the fault, possible values
  *              can be found in pagefault.h
  */
+int	permissionCheck(vmarea_t *t, uint32_t c){
+	return	0;
+}
+ 
+
+ 
 void
 handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
-        
-        vmarea_t	*area = vmmap_lookup(curproc->P-vmmap, ADDR_TO_PN(vaddr));
+        /*
+        vmarea_t	*area = vmmap_lookup(curproc->p_vmmap, ADDR_TO_PN(vaddr));
         int			forwrite = 0;
         pframe_t	*resFrame;
         int			flags = 0;
@@ -81,7 +87,7 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         	do_exit(EFAULT);
         }
         
-        if(permisssionCheck(area, cause))
+        if(permissionCheck(area, cause))
         {
         	do_exit(EFAULT);
         }
@@ -93,16 +99,16 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         
         int	lookup_ret = pframe_lookup(area->vma_obj,  ADDR_TO_PN(vaddr), forwrite, &resFrame);
         
-        if(llokup_ret<0)
+        if(lookup_ret<0)
         {
         	do_exit(EFAULT);
         }
         
         /*
         	
+        
+        
+        pt_map(curproc->p_pagedir, ADDR_TO_PN(vaddr), resFrame->pf_addr, PD_PRESENT|PD_USER , PT_PRESENT|PT_USER);
+        /*tlb_flush(ADDR_TO_PN(vaddr));
         */
-        
-        pt_map(curproc->p_pagedir, ADDR_TO_PN(vaddr), resFrame->pf_addr, flags);
-        tlb_flush(ADDR_TO_PN(vaddr));
-        
 }
