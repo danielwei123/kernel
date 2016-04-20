@@ -72,7 +72,7 @@ static int _elf32_map_segment(vmmap_t *map, vnode_t *file, int32_t memoff, const
             segment->p_type, segment->p_offset, segment->p_vaddr,
             segment->p_filesz, segment->p_memsz, segment->p_flags,
             segment->p_align);
-
+dbg(DBG_PRINT, "XXE 41\n");
         /* check for bad data in the segment header */
         if (PAGE_SIZE != segment->p_align) {
                 dbg(DBG_ELF, "ERROR: segment does not have correct alignment\n");
@@ -95,8 +95,9 @@ static int _elf32_map_segment(vmmap_t *map, vnode_t *file, int32_t memoff, const
         if (PF_X & segment->p_flags) {
                 perms |= PROT_EXEC;
         }
-
+dbg(DBG_PRINT, "XXEE 42\n");
         if (0 < filesz) {
+                dbg(DBG_PRINT, "XXEE 42.5\n");
                 /* something needs to be mapped from the file */
                 /* start from the starting address and include enough pages to
                  * map all filesz bytes of the file */
@@ -106,15 +107,18 @@ static int _elf32_map_segment(vmmap_t *map, vnode_t *file, int32_t memoff, const
 
                 int ret;
                 if (!vmmap_is_range_empty(map, lopage, npages)) {
+                dbg(DBG_PRINT, "XXEE 43\n");
                         dbg(DBG_ELF, "ERROR: ELF file contains overlapping segments\n");
                         return -ENOEXEC;
                 } else if (0 > (ret = vmmap_map(map, file, lopage, npages, perms,
                                                 MAP_PRIVATE | MAP_FIXED, fileoff,
                                                 0, NULL))) {
+                                                dbg(DBG_PRINT, "XXEE 44\n");
                         return ret;
                 }
+                        dbg(DBG_PRINT, "XXEE 42.75\n");
         }
-
+dbg(DBG_PRINT, "XXEE 45\n");
         if (memsz > filesz) {
                 /* there is left over memory in the segment which must
                  * be initialized to 0 (anonymously mapped) */
@@ -123,12 +127,15 @@ static int _elf32_map_segment(vmmap_t *map, vnode_t *file, int32_t memoff, const
 
                 int ret;
                 if (npages > 1 && !vmmap_is_range_empty(map, lopage + 1, npages - 1)) {
+                dbg(DBG_PRINT, "XXEE 46\n");
                         dbg(DBG_ELF, "ERROR: ELF file contains overlapping segments\n");
                         return -ENOEXEC;
                 } else if (0 > (ret = vmmap_map(map, NULL, lopage, npages, perms,
                                                 MAP_PRIVATE | MAP_FIXED, 0, 0, NULL))) {
+                                                dbg(DBG_PRINT, "XXEE 47\n");
                         return ret;
                 } else if (!PAGE_ALIGNED(addr + filesz) && filesz > 0) {
+                dbg(DBG_PRINT, "XXEE 48\n");
                         /* In this case, we have accidentally zeroed too much of memory, as
                          * we zeroed all memory in the page containing addr + filesz.
                          * However, the remaining part of the data is not a full page, so we
@@ -141,15 +148,22 @@ static int _elf32_map_segment(vmmap_t *map, vnode_t *file, int32_t memoff, const
                         void *buf;
                         if (NULL == (buf = page_alloc()))
                                 return -ENOMEM;
+                                dbg(DBG_PRINT, "XXEE 49\n");
                         if (!(0 > (ret = file->vn_ops->read(file, (off_t) PAGE_ALIGN_DOWN(off + filesz),
                                                             buf, PAGE_OFFSET(addr + filesz))))) {
+                                                            dbg(DBG_PRINT, "XXEE 50\n");
                                 ret = vmmap_write(map, PAGE_ALIGN_DOWN(addr + filesz),
                                                   buf, PAGE_OFFSET(addr + filesz));
+                                                  dbg(DBG_PRINT, "XXEE 51\n");
                         }
+                        dbg(DBG_PRINT, "XXEE 52\n");
                         page_free(buf);
+                        dbg(DBG_PRINT, "XXEE 53\n");
                         return ret;
                 }
+                dbg(DBG_PRINT, "XXEE 54\n");
         }
+        dbg(DBG_PRINT, "XXEE 55\n");
         return 0;
 }
 
@@ -163,14 +177,17 @@ static int _elf32_load_ehdr(int fd, Elf32_Ehdr *header, int interp)
 {
         int err;
         memset(header, 0, sizeof(*header));
-
+dbg(DBG_PRINT, "XXE fd here 12:%d\n", fd);
         /* Preliminary check that this is an ELF file */
         if (0 > (err = do_read(fd, header, sizeof(*header)))) {
+        dbg(DBG_PRINT, "XXE fd here 13:%d\n", fd);
                 return err;
         } else if ((SELFMAG > err) || 0 != memcmp(&header->e_ident[0], ELFMAG, SELFMAG)) {
+        dbg(DBG_PRINT, "XXE fd here 14:%d\n", fd);
                 dbg(DBG_ELF, "ELF load failed: no magic number present\n");
                 return -ENOEXEC;
         } else if (header->e_ehsize > err) {
+        dbg(DBG_PRINT, "XXE fd here 15:%d\n", fd);
                 dbg(DBG_ELF, "ELF load failed: bad file size\n");
                 return -ENOEXEC;
         }
@@ -236,28 +253,34 @@ done:
 static int _elf32_map_progsegs(vnode_t *vnode, vmmap_t *map, Elf32_Ehdr *header, char *pht, int32_t memoff)
 {
         int err = 0;
-
+dbg(DBG_PRINT, "XXEE 31\n");
         uint32_t i = 0;
         int loadcount = 0;
         for (i = 0; i < header->e_phnum; ++i) {
+        dbg(DBG_PRINT, "XXEE 32\n");
                 Elf32_Phdr *phtentry = (Elf32_Phdr *)(pht + (i * header->e_phentsize));
                 if (PT_LOAD == phtentry->p_type) {
                         if (0 > (err = _elf32_map_segment(map, vnode, memoff, phtentry))) {
+                        dbg(DBG_PRINT, "XXEE 32.5\n");
                                 goto done;
                         } else {
+                        dbg(DBG_PRINT, "XXEE 32.75\n");
                                 ++loadcount;
                         }
                 }
         }
+        dbg(DBG_PRINT, "XXE 33\n");
 
         if (0 == loadcount) {
+        dbg(DBG_PRINT, "XXE 34\n");
                 dbg(DBG_ELF, "ERROR: ELF file contained no loadable sections\n");
                 err = -ENOEXEC;
                 goto done;
         }
-
+dbg(DBG_PRINT, "XXE 35\n");
         err = loadcount;
 done:
+dbg(DBG_PRINT, "XXE 36\n");
         return err;
 }
 
@@ -463,6 +486,8 @@ static int _elf32_load(const char *filename, int fd, char *const argv[],
         Elf32_Ehdr header;
         Elf32_Ehdr interpheader;
 
+
+		 dbg(DBG_PRINT, "XXEE fd here:%d\n", fd);
         /* variables to clean up on failure */
         vmmap_t *map = NULL;
         file_t *file = NULL;
@@ -479,43 +504,49 @@ static int _elf32_load(const char *filename, int fd, char *const argv[],
         file = fget(fd);
         KASSERT(NULL != file);
 
+		dbg(DBG_PRINT, "XXEE fd here 2:%d\n", fd);
+
         /* Load and verify the ELF header */
         if (0 > (err = _elf32_load_ehdr(fd, &header, 0))) {
                 goto done;
         }
 
+		dbg(DBG_PRINT, "XXEE fd here 3:%d\n", fd);
+
         if (NULL == (map = vmmap_create())) {
                 err = -ENOMEM;
                 goto done;
         }
-
+dbg(DBG_PRINT, "XXEE fd here 4:%d\n", fd);
         size_t phtsize = header.e_phentsize * header.e_phnum;
         if (NULL == (pht = kmalloc(phtsize))) {
                 err = -ENOMEM;
                 goto done;
         }
+        dbg(DBG_PRINT, "XXEE fd here 5:%d\n", fd);
         /* Read in the program header table */
         if (0 > (err = _elf32_load_phtable(fd, &header, pht, phtsize))) {
                 goto done;
         }
+        dbg(DBG_PRINT, "XXEE fd here 6:%d\n", fd);
         /* Load the segments in the program header table */
         if (0 > (err = _elf32_map_progsegs(file->f_vnode, map, &header, pht, 0))) {
                 goto done;
         }
-
+dbg(DBG_PRINT, "XXEE fd here 7:%d\n", fd);
         Elf32_Phdr *phinterp = NULL;
         /* Check if program requires an interpreter */
         if (0 > (err = _elf32_find_phinterp(&header, pht, &phinterp))) {
                 goto done;
         }
-
+dbg(DBG_PRINT, "XXEE fd here 8:%d\n", fd);
         /* Calculate program bounds for future reference */
         void *proglow;
         void *proghigh;
         _elf32_calc_progbounds(&header, pht, &proglow, &proghigh);
 
         entry = (uintptr_t) header.e_entry;
-
+dbg(DBG_PRINT, "XXEE fd here 9:%d\n", fd);
         /* if an interpreter was requested load it */
         if (NULL != phinterp) {
                 /* read the file name of the interpreter from the binary */
@@ -639,7 +670,7 @@ static int _elf32_load(const char *filename, int fd, char *const argv[],
                 }
                 auxv->a_type = AT_NULL;
         }
-
+dbg(DBG_PRINT, "XXEE fd here 10:%d\n", fd);
         /* Allocate a stack. We put the stack immediately below the program text.
          * (in the Intel x86 ELF supplement pp 59 "example stack", that is where the
          * stack is located). I suppose we can add this "extra page for magic data" too */
@@ -650,7 +681,7 @@ static int _elf32_load(const char *filename, int fd, char *const argv[],
         dbg(DBG_ELF, "Mapped stack at low addr 0x%p, size %#x\n",
             PN_TO_ADDR(stack_lopage), DEFAULT_STACK_SIZE + PAGE_SIZE);
 
-
+dbg(DBG_PRINT, "XXEE fd here 10.1:%d\n", fd);
         /* Copy out arguments onto the user stack */
         int argc, envc, auxc;
         size_t argsize = _elf32_calc_argsize(argv, envp, auxv, phtsize, &argc, &envc, &auxc);
@@ -669,18 +700,23 @@ static int _elf32_load(const char *filename, int fd, char *const argv[],
         /* Copy everything into the user address space, modifying addresses in
          * argv, envp, and auxv to be user addresses as we go. */
         _elf32_load_args(map, arglow, argsize, argbuf, argv, envp, auxv, argc, envc, auxc, phtsize);
-
+dbg(DBG_PRINT, "XXEE fd here 10.2:%d\n", fd);
         dbg(DBG_ELF, "Past the point of no return. Swapping to map at 0x%p, setting brk to 0x%p\n", map, proghigh);
         /* the final threshold / What warm unspoken secrets will we learn? / Beyond
          * the point of no return ... */
-
+dbg(DBG_PRINT, "XXEE fd here 10.3:%d\n", fd);
         /* Give the process the new mappings. */
         vmmap_t *tempmap = curproc->p_vmmap;
+        dbg(DBG_PRINT, "XXEE fd here 10.31:%d\n", fd);
         curproc->p_vmmap = map;
+        dbg(DBG_PRINT, "XXEE fd here 10.32:%d\n", fd);
         map = tempmap; /* So the old maps are cleaned up */
+        dbg(DBG_PRINT, "XXEE fd here 10.33:%d\n", fd);
         curproc->p_vmmap->vmm_proc = curproc;
+        dbg(DBG_PRINT, "XXEE fd here 10.34:%d\n", fd);
         map->vmm_proc = NULL;
-
+        dbg(DBG_PRINT, "XXEE fd here 10.35:%d\n", fd);
+dbg(DBG_PRINT, "XXEE fd here 10.4:%d\n", fd);
         /* Flush the process pagetables and TLB */
         pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH);
         tlb_flush_all();
@@ -703,6 +739,7 @@ static int _elf32_load(const char *filename, int fd, char *const argv[],
         err = 0;
 
 done:
+dbg(DBG_PRINT, "XXEE fd here 11:%d\n", fd);
         if (NULL != map) {
                 vmmap_destroy(map);
         }
@@ -730,6 +767,7 @@ done:
         if (NULL != argbuf) {
                 kfree(argbuf);
         }
+        dbg(DBG_PRINT, "XXEF Error in load : %d\n",err);
         return err;
 }
 

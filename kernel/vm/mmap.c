@@ -53,24 +53,25 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         int fd, off_t off, void **ret)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
-        
+        /*
         if((!S_ISREG(curproc->pfiles[fd]->f_vnode->vn_mode)))  
         {
         	return	-EACCES;
         }
+        */
         
-        if((flags==MAP_PRIVATE) && (curproc->pfiles[fd]->f_mode&FMODE_READ!= FMODE_READ))
+        if((flags==MAP_PRIVATE) && ((curproc->p_files[fd]->f_mode&FMODE_READ)!= FMODE_READ))
         {
         	return	-EACCES;
         }
         
-        if((flags==MAP_SHARED) && prot == PROT_WRITE && (curproc->pfiles[fd]->f_mode&(FMODE_READ|FMODE_WRITE) != (FMODE_READ|FMODE_WRITE)))
+        if((flags==MAP_SHARED) && prot == PROT_WRITE && ((curproc->p_files[fd]->f_mode&(FMODE_READ|FMODE_WRITE)) != (FMODE_READ|FMODE_WRITE)))
         {
         	return	-EACCES;
         }
         
         
-        if((flags==MAP_SHARED) && prot == PROT_WRITE && (curproc->pfiles[fd]->f_mode&(FMODE_APPEND) == (FMODE_APPEND)))
+        if((flags==MAP_SHARED) && prot == PROT_WRITE && ((curproc->p_files[fd]->f_mode&(FMODE_APPEND)) == (FMODE_APPEND)))
         {
         	return	-EACCES;
         }
@@ -103,14 +104,14 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         
         
         
-        vmmap_t	* newmap = vmmamp_create();
+        vmmap_t	* newmap = vmmap_create();
        	tlb_flush(addr);
-        int	ret = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO, ret);
+        int	ret_val = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO, ret);
         
-        if(ret < 0)
+        if(ret_val < 0)
         {
         	curproc->p_vmmap = NULL;
-       		return	ret;
+       		return	ret_val;
         }
         
         curproc->p_vmmap = newmap;
@@ -131,7 +132,7 @@ int
 do_munmap(void *addr, size_t len)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_munmap");*/
-		if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len) || !PAGE_ALIGNED(off))
+		if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len))
         {
         	return	-EINVAL;
         }

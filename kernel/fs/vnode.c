@@ -164,10 +164,7 @@ find:
                            mounted then vn->vn_mount should
                            point back to vn) */
                         vref(vn);
-                        	if(vn->vn_vno == 44)
-	{
-	     dbg(DBG_PRINT,"FD calling vget for inode: %ld\n", vn->vn_vno);
-	}
+
                         return vn;
 #else
                         vref(vn->vn_mount);
@@ -224,10 +221,7 @@ find:
                 init_special_vnode(vn);
 
         vn->vn_refcount = 1;
-	if(vn->vn_vno == 44)
-	{
-	     dbg(DBG_PRINT," FD calling vget for inode: %ld\n", vn->vn_vno);
-	}
+
         return vn;
 }
 
@@ -266,10 +260,6 @@ vput(struct vnode *vn)
 
         KASSERT(!(VN_BUSY & vn->vn_flags));
 
-	if(vn->vn_vno == 44)
-	{
-	     dbg(DBG_PRINT," FD vput: %ld\n", vn->vn_vno);
-	}
 	
         dbg(DBG_VNREF, " PPPvput: 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount - 1, vn->vn_nrespages);

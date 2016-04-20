@@ -11,9 +11,9 @@
 # are built. To enable something set it to 1, otherwise set it to 0.
 #
      DRIVERS=1
-         VFS=0
-        S5FS=0
-          VM=0
+         VFS=1
+        S5FS=1
+          VM=1
      DYNAMIC=0
 # When you finish S5FS, first enable "VM"; once this is working, then enable
 # "DYNAMIC".
@@ -45,7 +45,7 @@
 
 # Currently, CS402INITCHOICE is not used in the kernel.  You can use it for
 # anything you want (mainly to select which way to go in initproc_run()).
-        CS402INITCHOICE=0
+        CS402INITCHOICE=1
 
 #
 # Set the number of terminals that we should be launching.

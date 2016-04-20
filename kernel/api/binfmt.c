@@ -63,7 +63,7 @@ int binfmt_load(const char *filename, char *const *argv, char *const *envp, uint
 {
         int err, fd = -1;
         if (0 > (fd = do_open(filename, O_RDONLY))) {
-                dbg(DBG_EXEC, "ERROR: exec failed to open file %s\n", filename);
+                dbg(DBG_EXEC, "XXERROR: exec failed to open file %s\n", filename);
                 return fd;
         }
 
@@ -82,14 +82,17 @@ int binfmt_load(const char *filename, char *const *argv, char *const *envp, uint
 
         struct binfmt *fmt;
         list_iterate_begin(&binfmt_list, fmt, struct binfmt, bf_link) {
-                dbg(DBG_EXEC, "Trying to exec %s using binary loader %s\n", filename, fmt->bf_id);
+                dbg(DBG_EXEC, "XXETrying to exec %s using binary loader %s\n", filename, fmt->bf_id);
 
                 /* ENOEXE indicates that the given loader is unable to load
                  * the given file, any other error indicates that the file
                  * was recognized, but some other error existed which should
                  * be returned to the user, only if all loaders specify ENOEXEC
                  * do we actually return ENOEXEC */
+                dbg(DBG_PRINT, "XXE args: filename:%s, fd:%d, argv:0x%p, envp:0x%p\n", filename, fd,argv,envp);
+                
                 if (-ENOEXEC != (err = fmt->bf_load(filename, fd, argv, envp, eip, esp))) {
+                		dbg(DBG_PRINT, "XXER if retval: %d, fd: %d filename:%s\n", err, fd,filename);
                         goto cleanup;
                 }
         } list_iterate_end();
@@ -101,5 +104,7 @@ cleanup:
         if (0 <= fd) {
                 do_close(fd);
         }
+        
+         dbg(DBG_PRINT, "XXER retval: %d\n", err);
         return err;
 }

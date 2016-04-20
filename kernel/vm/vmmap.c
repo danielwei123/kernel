@@ -448,10 +448,12 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
           int prot, int flags, off_t off, int dir, vmarea_t **new)
 {
        /* NOT_YET_IMPLEMENTED("VM: vmmap_map");*/
+       dbg(DBG_PRINT, "XXE Amey funtion\n");
 
        int	x = 0;
 
        	if(lopage == 0){
+       	dbg(DBG_PRINT, "XXE Amey funtion 2\n");
        		x = vmmap_find_range(map, npages, dir);
        			if(x < 0)
 				{
@@ -460,6 +462,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
        	}
 		else
 		{
+		dbg(DBG_PRINT, "XXE Amey funtion 3\n");
 			x = vmmap_is_range_empty(map, lopage, npages);
 			if(x == 0)
 			{
@@ -472,26 +475,28 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 
 			}
 		}
-
-       	vmarea_t	*temp;
+dbg(DBG_PRINT, "XXE Amey funtion 4\n");
+       	vmarea_t	*temp = vmarea_alloc();;
+       	
 
        	if(lopage == 0){
-
+dbg(DBG_PRINT, "XXE Amey funtion 5\n");
        		temp->vma_start = x;
        	}
        	else
        	{
+       	dbg(DBG_PRINT, "XXE Amey funtion 6\n");
        		temp->vma_start = lopage;
        	}
-
+       	dbg(DBG_PRINT, "XXE Amey funtion 6.5\n");
        	temp->vma_end = temp->vma_start + npages;
        	temp->vma_off = off;
        	temp->vma_prot = prot;
        	temp->vma_flags = flags;
-
+       	dbg(DBG_PRINT, "XXE Amey funtion 6.75\n");
        	if(file == NULL)
        	{
-
+dbg(DBG_PRINT, "XXE Amey funtion 7\n");
        		/*
        			anon_create should return 0'ed page directly??
        			vrefs for file objects??
@@ -502,14 +507,19 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
        	}
        	else
        	{
+       	dbg(DBG_PRINT, "XXE Amey funtion 8\n");
        		temp->vma_obj = &(file->vn_mmobj);
        	}
 
+dbg(DBG_PRINT, "XXE Amey funtion 9\n");
        vmmap_insert(map, temp);
-
-       *new = temp;
-
-        return -1;
+dbg(DBG_PRINT, "XXE Amey funtion 10\n");
+		if(new)
+		{
+       		*new = temp;
+       	}
+dbg(DBG_PRINT, "XXE Amey funtion 11\n");
+        return 0;
 }
 
 /*
@@ -618,31 +628,39 @@ int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
+        dbg(DBG_PRINT, "XXE Anirudh function\n");
         if(npages==0)
         {
             return 1;
         }
+        dbg(DBG_PRINT, "XXE Anirudh function 2\n");
         /*Check if you need to add 1 also to endvfs*/
         uint32_t endvfn = startvfn + npages;
         vmarea_t *temp;
+                dbg(DBG_PRINT, "XXE Anirudh function 3\n");
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
+                dbg(DBG_PRINT, "XXE Anirudh function 4\n");
             if (startvfn >= temp->vma_start && startvfn < temp->vma_end)
             {
+                    dbg(DBG_PRINT, "XXE Anirudh function 5\n");
                 return 0;
             }
 
             if (endvfn > temp->vma_start && endvfn <= temp->vma_end)
             {
+                    dbg(DBG_PRINT, "XXE Anirudh function 6\n");
                 return 0;
             }
 
             if(startvfn < temp->vma_start && endvfn >= temp->vma_end)
             {
+                    dbg(DBG_PRINT, "XXE Anirudh function 7\n");
                 return 0;
             }
         }
         list_iterate_end();
+                dbg(DBG_PRINT, "XXE Anirudh function 9\n");
         return 1;
 }
 
@@ -658,7 +676,7 @@ int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
 
-        /*NOT_YET_IMPLEMENTED("VM: vmmap_read");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
 
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
@@ -671,9 +689,14 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
             KASSERT(vma != NULL);
 
             off_t offset = vma->vma_off + (currvfn - vma->vma_start);
-            /* Not Sure to Align Up
-            uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)), vma->vma_end - currvfn);
-
+            /* Not Sure to Align Up*/
+            uint32_t pages_to_read = 0;
+            if (ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)) < vma->vma_end - currvfn){
+            	pages_to_read = ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos));
+            }
+            else{
+            	pages_to_read = vma->vma_end - currvfn;
+            }
             uint32_t i;
             for (i = 0; i < pages_to_read; i++){
                 pframe_t *p;
@@ -685,7 +708,14 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 
                 int data_offset = (int) curraddr % PAGE_SIZE;
 
-                int read_size = min(PAGE_SIZE - data_offset, count - dest_pos);
+                int read_size = 0;
+                
+                if (PAGE_SIZE - data_offset < count - dest_pos){
+                	read_size = PAGE_SIZE - data_offset;
+                }
+                else{
+                	read_size = count - dest_pos;
+                }
 
                 memcpy((char *) buf + dest_pos, (char *) p->pf_addr + data_offset, read_size);
 
@@ -693,7 +723,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
                 curraddr = (char *) curraddr + read_size;
             }
     }
-*/
+
     return 0;
 }
 
@@ -708,7 +738,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
-        /*NOT_YET_IMPLEMENTED("VM: vmmap_write");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_write"); */
 
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
@@ -721,9 +751,14 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
             KASSERT(vma != NULL);
 
             off_t offset = vma->vma_off + (currvfn - vma->vma_start);
-            /* Not Sure to Align Up
-            uint32_t pages_to_read = min(ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)), vma->vma_end - currvfn);
-
+            /* Not Sure to Align Up */
+            uint32_t pages_to_read = 0;
+             if (ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)) < vma->vma_end - currvfn){
+            	pages_to_read = ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos));
+            }
+            else{
+            	pages_to_read = vma->vma_end - currvfn;
+            }
             uint32_t i;
             for (i = 0; i < pages_to_read; i++){
                 pframe_t *p;
@@ -735,8 +770,14 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 
                 int data_offset = (int) curraddr % PAGE_SIZE;
 
-                int write_size = min(PAGE_SIZE - data_offset, count - dest_pos);
-
+               int write_size = 0;
+                
+                if (PAGE_SIZE - data_offset < count - dest_pos){
+                	write_size = PAGE_SIZE - data_offset;
+                }
+                else{
+                	write_size = count - dest_pos;
+                }
                 memcpy((char *) p->pf_addr + data_offset, (char *) buf + dest_pos, write_size);
 
                 p->pf_flags = PF_DIRTY;
@@ -745,6 +786,6 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
                 curraddr = (char *) curraddr + write_size;
             }
     }
-*/
+
     return 0;
 }

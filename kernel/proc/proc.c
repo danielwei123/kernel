@@ -171,6 +171,11 @@ proc_create(char *name)
     	dbg(DBG_PRINT,"\nWWEE proc_creat else");
         pt->p_cwd = NULL;
     }
+    
+    pt->p_vmmap = vmmap_create();
+    pt->p_vmmap->vmm_proc = pt;
+    
+    
     return pt;
 }
 
@@ -404,7 +409,12 @@ do_waitpid(pid_t pid, int options, int *status)
 		dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
         KASSERT((pid==-1 || pt->p_pid==pid)&&("PID argument invalid\n!"));
         dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
-		*status = pt->p_status;
+        
+        if(status != NULL)
+        {
+			*status = pt->p_status;
+		}
+		
 		link = pt->p_threads.l_next;
     	return_value = pt->p_pid;
 		while( link != &(pt->p_threads))

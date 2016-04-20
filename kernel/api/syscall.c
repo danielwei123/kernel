@@ -88,11 +88,11 @@ sys_read(read_args_t *arg)
 
         if(newPage == NULL)
         {
-            curthr->kt_errno = ENOMEN;
+            curthr->kt_errno = ENOMEM;
             return -1;
         }
 
-		int total_read = 0;
+		uint32_t total_read = 0;
 		int error = 0;
 		while(total_read < kern_args.nbytes && error == 0)
         {
@@ -103,7 +103,7 @@ sys_read(read_args_t *arg)
             }
             else
             {
-                to_read = kern_args - total_read;
+                to_read = kern_args.nbytes - total_read;
             }
 
             int bytes_read = do_read(kern_args.fd , newPage , to_read);
@@ -115,7 +115,7 @@ sys_read(read_args_t *arg)
                 return -1;
             }
 
-            error = copy_to_user(kern_args.buf + total_read, newPage , bytes_read);
+            error = copy_to_user(  (void *)((uint32_t)kern_args.buf + total_read), newPage , bytes_read);
 
             total_read += bytes_read;
 
@@ -157,11 +157,11 @@ sys_write(write_args_t *arg)
 
         if(newPage == NULL)
         {
-            curthr->kt_errno = ENOMEN;
+            curthr->kt_errno = ENOMEM;
             return -1;
         }
 
-        int total_written = 0;
+        uint32_t total_written = 0;
         int error = 0;
 
         while(total_written < kern_args.nbytes && error == 0)
@@ -176,7 +176,7 @@ sys_write(write_args_t *arg)
                 to_write = kern_args.nbytes - total_written;
             }
 
-            error = copy_from_user(newPage , (void *)kern_args.buf + total_written , to_write);
+            error = copy_from_user(newPage , (void *)((uint32_t)kern_args.buf + total_written) , to_write);
 
             if(error < 0)
             {
@@ -239,7 +239,7 @@ sys_getdents(getdents_args_t *arg)
 
         dirent_t	dir;
 
-        int total_read = 0;
+        uint32_t total_read = 0;
         int i = 0;
 
         while(total_read < kern_args.count)

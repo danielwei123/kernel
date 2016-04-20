@@ -481,12 +481,43 @@ badargs2(kshell_t *kshell, int argc, char **argv)
  initproc_run(int arg1, void *arg2)
  {
          /*NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
-
+         /*
+      #if CS402INITCHOICE > 0
+      #if CS402INITCHOICE > 1
+        #if CS402INITCHOICE > 2
+          #if CS402INITCHOICE > 3
+            #if CS402INITCHOICE > 4
+              kernel_execve("/usr/bin/memtest", argvec, envvec);
+            #else
+              kernel_execve("/usr/bin/vfstest", argvec, envvec);
+            #endif
+          #else
+            kernel_execve("/bin/uname", argvec, envvec);
+          #endif
+        #else
+          kernel_execve("/usr/bin/fork-and-wait", argvec, envvec);
+        #endif
+      #else
+       
+      #endif
+    #else
+      kernel_execve("/sbin/init", argvec, envvec);
+    #endif
+         */
+        char  	*argvec[] = { NULL };
+        char  	*envvec[] = { NULL };
+ 
+ 		
  #ifdef __DRIVERS__
+
+
+ 		kernel_execve("/usr/bin/hello", argvec, envvec);
+  		dbg(DBG_PRINT,"EEQQ after if\n");
+
 
          kshell_add_command("faberproc", do_foo, "Invoke faber tests");
          kshell_add_command("sunghan", sunghan_test_func, "Sunghan test");
- 	 kshell_add_command("sunghan_dead", sunghan_deadlock_test_func, "Sunghan deadlock test");
+ 	 	 kshell_add_command("sunghan_dead", sunghan_deadlock_test_func, "Sunghan deadlock test");
          kshell_add_command("bigprocname", big_process_name, "Additional test for long process name");
          kshell_add_command("thrselfcancel", thread_self_cancel, "Cancelling the current thread");
          kshell_add_command("initclean", init_clean, "Proc clean called on init(Works similar to exit)");
@@ -501,6 +532,9 @@ badargs2(kshell_t *kshell, int argc, char **argv)
 
          if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
          dbg(DBG_PRINT,"QQ after if\n");
+         
+        
+         
          while (kshell_execute_next(kshell));
          kshell_destroy(kshell);
 

@@ -97,6 +97,7 @@ do_open(const char *filename, int oflags)
 		if((oflags & O_RDONLY)||(oflags & O_WRONLY)) return -EINVAL;
 	}
 	
+	 dbg(DBG_PRINT, "XXE in do open\n");
      	
     int	fd;
 	file_t	*f;
@@ -134,6 +135,8 @@ do_open(const char *filename, int oflags)
 	f->f_mode = flags; 
 	
 	error_code = open_namev(filename, oflags, &res_vnode, base);
+	dbg(DBG_PRINT, "XXE error_code: %d\n", error_code);
+	
 	if(error_code < 0)
 	{
 		
@@ -155,7 +158,8 @@ do_open(const char *filename, int oflags)
 	f->f_vnode = res_vnode;
 
 	f->f_refcount = 1;
-		
+	
+		dbg(DBG_PRINT, "XXE before retrun %d\n", fd);
   	return fd;
 
 }

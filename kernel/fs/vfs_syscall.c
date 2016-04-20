@@ -63,36 +63,45 @@ do_read(int fd, void *buf, size_t nbytes)
         int	bytes_read = -1;
         if(fd < 0 || fd >= NFILES)
         {
+        dbg(DBG_PRINT, "XXE fd here 22:%d\n", fd);
             dbg(DBG_PRINT, "(GRADING2B)\n");
             return	-EBADF;
         }
         file_t	*f = fget(fd);
         if(f == NULL)
         {
+        dbg(DBG_PRINT, "XXE fd here 23:%d\n", fd);
             dbg(DBG_PRINT, "(GRADING2B)\n");
         	return	-EBADF;
         }
         if(f->f_vnode->vn_mode&S_IFDIR)
         {
+        dbg(DBG_PRINT, "XXE fd here 24:%d\n", fd);
             dbg(DBG_PRINT, "(GRADING2B)\n");
         	fput(f);
         	return	-EISDIR;
 
         }
+        /*
         if(!(f->f_mode&FMODE_READ))
         {
+        dbg(DBG_PRINT, "XXE fd here 25:%d\n", fd);
             dbg(DBG_PRINT, "(GRADING2B)\n");
         	fput(f);
         	return	-EBADF;
         }
+        */
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         int ret_val = bytes_read;
        	if(bytes_read > 0)
         {
+        dbg(DBG_PRINT, "XXE fd here 26:%d\n", fd);
             dbg(DBG_PRINT, "(GRADING2B)\n");
         	int x = do_lseek(fd, bytes_read, SEEK_CUR);
         }
+        dbg(DBG_PRINT, "XXE fd here 27:%d\n", fd);
         fput(f);
+        dbg(DBG_PRINT, "XXE fd here 28:%d\n", fd);
         dbg(DBG_PRINT, "(GRADING2B)\n");
         return ret_val;
 }
@@ -269,6 +278,8 @@ int
 do_mknod(const char *path, int mode, unsigned devid)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
+        dbg(DBG_PRINT,"BILL In mknod \n");
+
     	size_t	nameLength ;
     	const char *name;
     	vnode_t	*result_node = NULL;
@@ -284,6 +295,7 @@ do_mknod(const char *path, int mode, unsigned devid)
         }
     	vput(result_node);
         dbg(DBG_PRINT, "(GRADING2D 1)\n");
+        dbg(DBG_PRINT,"BILL end of mknod \n");
         return ret_val;
 }
 
@@ -305,18 +317,22 @@ int
 do_mkdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
+        
        	size_t	nameLength ;
         const char	*name;
         vnode_t	*result_node ;
         vnode_t	*ret_node ;
-
+        
     	int	res = dir_namev(path, &nameLength, &name, NULL, &result_node);
+        
     	if( res < 0)
     	{
             dbg(DBG_PRINT, "(GRADING2B)\n");
     		return	res;
     	}
+        
     	res = lookup(result_node, name, nameLength, &ret_node);
+        
     	int ret_val = res;
     	if(res == 0)
     	{
@@ -332,6 +348,7 @@ do_mkdir(const char *path)
     	}
     	vput(result_node);
         dbg(DBG_PRINT, "(GRADING2B)\n");
+        dbg(DBG_PRINT,"BILL end of mkdir\n");
         return ret_val;
 }
 
@@ -598,10 +615,14 @@ do_lseek(int fd, int offset, int whence)
         /*NOT_YET_IMPLEMENTED("VFS: do_lseek");*/
         int	x;
         int retval = -1;
+        
+         dbg(DBG_PRINT, "XXE fd here:%d\n", fd);
+        
  	if(fd < 0 || fd >= NFILES)
  	{
         dbg(DBG_PRINT, "(GRADING2B)\n");
  		retval = -EBADF;
+ 		return	retval;
  	}
 	file_t	*f = fget(fd);
 	if(f == NULL)

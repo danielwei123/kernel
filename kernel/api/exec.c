@@ -33,8 +33,12 @@
  */
 void userland_entry(const regs_t *regs)
 {
+
+  dbg(DBG_EXEC, "Entering userland 21\n");
         intr_disable();
+        dbg(DBG_EXEC, "Entering userland 22\n");
         intr_setipl(IPL_LOW);
+        dbg(DBG_EXEC, "Entering userland 23\n");
         /* We "return from the interrupt" to get into userland */
         __asm__ __volatile__(
                 "movl %%eax, %%esp\n\t" /* Move stack pointer up to regs */
@@ -51,6 +55,7 @@ void userland_entry(const regs_t *regs)
                 : /* No outputs */
                 : "a"(regs)
         );
+        dbg(DBG_EXEC, "Entering userland 24\n");
 }
 
 int do_execve(const char *filename, char *const *argv, char *const *envp, struct regs *regs)
@@ -84,10 +89,11 @@ void kernel_execve(const char *filename, char *const *argv, char *const *envp)
         regs.r_ds = regs.r_ss;
         regs.r_es = regs.r_ss;
 
+  dbg(DBG_EXEC, "Entering userland 7  with eip %#08x, esp %#08x\n", eip, esp);
         /* Userland instruction pointer and stack pointer */
         regs.r_eip = eip;
         regs.r_useresp = esp;
-
+  dbg(DBG_EXEC, "Entering userland 8 with eip %#08x, esp %#08x\n", eip, esp);
 #if 0
         uint32_t eflags;
         /* Get the current eflags register */
@@ -111,5 +117,8 @@ void kernel_execve(const char *filename, char *const *argv, char *const *envp)
         regs.r_edx = 0;
         regs.r_ebp = 0;
         regs.r_esp = 0;
+        
+          dbg(DBG_EXEC, "Entering userland 9 with eip %#08x, esp %#08x\n", eip, esp);
         userland_entry(&regs);
+          dbg(DBG_EXEC, "Entering userland 10 with eip %#08x, esp %#08x\n", eip, esp);
 }
