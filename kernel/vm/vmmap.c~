@@ -447,7 +447,51 @@ int
 vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
           int prot, int flags, off_t off, int dir, vmarea_t **new)
 {
-       /* NOT_YET_IMPLEMENTED("VM: vmmap_map");*/
+
+        /*Anirudh's vmmap_map()*/
+        vmarea_t *temp = vmarea_alloc();
+
+        int x=lopage;
+
+        if(lopage == 0)
+        {
+            x=vmmap_find_range(map,npages,dir);
+            if(x < 0)
+            {
+                vmarea_free(temp);
+                return -ENOMEM;
+            }
+        }
+
+        temp->vma_start=x;
+        temp->vma_end=x+npages;
+        temp->vma_off=ADDR_TO_PN(off);
+
+        list_link_init(&(temp->vma_plink));
+        list_link_init(&(temp->vma_olink));
+
+        mmobj_t *tempobj;
+
+		int	ret_val = 0;
+
+        if(file==NULL)
+        {
+            tempobj=anon_create();
+        }
+        else
+        {
+            ret_val=file->vn_ops->mmap(file,temp,&tempobj);
+        }
+        int remove_status = vmmap_remove(map,x,npages);
+        temp->vma_obj=tempobj;
+        tempobj->mmo_ops->ref(tempobj);
+        vmmap_insert(map,temp);
+        if(new)
+        {
+            *new = temp;
+        }
+        return 0;
+        /*
        dbg(DBG_PRINT, "XXE Amey funtion\n");
 
        int	x = 0;
@@ -477,7 +521,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		}
 dbg(DBG_PRINT, "XXE Amey funtion 4\n");
        	vmarea_t	*temp = vmarea_alloc();;
-       	
+
 
        	if(lopage == 0){
 dbg(DBG_PRINT, "XXE Amey funtion 5\n");
@@ -497,10 +541,6 @@ dbg(DBG_PRINT, "XXE Amey funtion 5\n");
        	if(file == NULL)
        	{
 dbg(DBG_PRINT, "XXE Amey funtion 7\n");
-       		/*
-       			anon_create should return 0'ed page directly??
-       			vrefs for file objects??
-       		*/
 
 
        		temp->vma_obj = anon_create();
@@ -520,6 +560,9 @@ dbg(DBG_PRINT, "XXE Amey funtion 10\n");
        	}
 dbg(DBG_PRINT, "XXE Amey funtion 11\n");
         return 0;
+        */
+
+
 }
 
 /*
@@ -709,7 +752,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
                 int data_offset = (int) curraddr % PAGE_SIZE;
 
                 int read_size = 0;
-                
+
                 if (PAGE_SIZE - data_offset < count - dest_pos){
                 	read_size = PAGE_SIZE - data_offset;
                 }
@@ -771,7 +814,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
                 int data_offset = (int) curraddr % PAGE_SIZE;
 
                int write_size = 0;
-                
+
                 if (PAGE_SIZE - data_offset < count - dest_pos){
                 	write_size = PAGE_SIZE - data_offset;
                 }

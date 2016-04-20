@@ -97,7 +97,7 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         pframe_t	*resFrame;
         int			flags = 0;
 
-		dbg(DBG_PRINT, "EEXX here in page fault"); 
+		dbg(DBG_PRINT, "EEXX here in page fault cause: %d\n", cause); 
 
         if(area == NULL)
         {
@@ -121,7 +121,7 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         	do_exit(EFAULT);
         }
 
-        pt_map(curproc->p_pagedir, (uintptr_t)PAGE_ALIGN_UP(vaddr), (uintptr_t)pt_virt_to_phys((uintptr_t)resFrame->pf_addr), PD_PRESENT|PD_USER, PT_PRESENT|PT_USER);
+        pt_map(curproc->p_pagedir, (uintptr_t)PAGE_ALIGN_DOWN(vaddr), (uintptr_t)pt_virt_to_phys((uintptr_t)resFrame->pf_addr), PD_PRESENT|PD_USER, PT_PRESENT|PT_USER);
         /*tlb_flush_all();*/
 
 }

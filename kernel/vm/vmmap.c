@@ -467,10 +467,12 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         temp->vma_end=x+npages;
         temp->vma_off=ADDR_TO_PN(off);
 
-        list_link_init(&(vma->vma_plink));
-        list_link_init(&(vma->vma_olink));
+        list_link_init(&(temp->vma_plink));
+        list_link_init(&(temp->vma_olink));
 
         mmobj_t *tempobj;
+
+		int	ret_val = 0;
 
         if(file==NULL)
         {
@@ -478,11 +480,11 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         }
         else
         {
-            tempobj=file->vn_ops->mmobj(file,temp,&tempobj);
+            ret_val=file->vn_ops->mmap(file,temp,&tempobj);
         }
         int remove_status = vmmap_remove(map,x,npages);
         temp->vma_obj=tempobj;
-        tempobj->mm_ops->ref(tempobj);
+        tempobj->mmo_ops->ref(tempobj);
         vmmap_insert(map,temp);
         if(new)
         {

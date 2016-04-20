@@ -97,7 +97,7 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         pframe_t	*resFrame;
         int			flags = 0;
 
-		dbg(DBG_PRINT, "EEXX here in page fault"); 
+		dbg(DBG_PRINT, "EEXX here in page fault cause: %d\n", cause); 
 
         if(area == NULL)
         {
