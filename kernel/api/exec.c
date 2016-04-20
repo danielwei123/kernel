@@ -55,6 +55,7 @@ void userland_entry(const regs_t *regs)
                 : /* No outputs */
                 : "a"(regs)
         );
+        
         dbg(DBG_EXEC, "Entering userland 24\n");
 }
 

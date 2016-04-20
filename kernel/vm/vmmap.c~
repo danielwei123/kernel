@@ -594,26 +594,58 @@ dbg(DBG_PRINT, "XXE Amey funtion 11\n");
  * The region completely contains the vmarea. Remove the vmarea from the
  * list.
  */
+ 
+vmarea_t*
+area_clone(vmarea_t	*t)
+{
+	vmarea_t	*new = vmarea_alloc();
+	
+	new->vma_prot = t->vma_prot;
+	new->vma_flags = t->vma_flags;
+	new->vma_vmmap = t->vma_vmmap;
+	new->vma_obj = t->vma_obj;
+	new->vma_end = t->vma_end;
+	new->vma_start = t->vma_start;
+	new->vma_off = t->vma_off;
+	new->vma_plink = t->vma_plink;
+	new->vma_olink = t->vma_olink;
+	
+	if(new->vma_obj != NULL)
+	{
+		new->vma_obj->mmo_ops->ref(new->vma_obj);
+	}
+	
+	return	new;
+
+} 
+ 
+ 
 int
 vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_remove");*/
         vmarea_t *temp;
         uint32_t endvfs = lopage + npages;
-        list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
-        {
+        list_link_t	*link = &(map->vmm_list).l_next;
+        list_link_t	*linknext = NULL;
+        
+        while(link != &(map->vmm_list)){
+
+			temp = list_item(link, vmarea_t, vma_plink);
+		
+			linknext = link->l_next;
+		
 			if( temp->vma_start<lopage && temp->vma_end>endvfs)
 			{
 				/*Case 1*/
-				vmarea_t	*split;
+				vmarea_t	*split = vmarea_clone(temp);
+	
+				temp->vma_end = lopage;
 
-				split->vma_end = temp->vma_end;
-
-				temp->vma_end = lopage-1;
-
-				split->vma_start = endvfs+1;
-				split->vma_off = temp->vma_off + npages +(temp->vma_end - temp->vma_start);
-
+				split->vma_start = endvfs;
+				split->vma_off = temp->vma_off + npages + lopage - temp->vma_start;
+				
+				/*
 				split->vma_prot = temp->vma_prot;
 				split->vma_flags = temp->vma_flags;
 
@@ -630,24 +662,25 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			{
 				/*Case 2*/
 
-				temp->vma_end = temp->vma_end - (temp->vma_end - lopage);
+				temp->vma_end = lopage;
 
 				/*case 2 ends*/
 
 			}
-			else if(temp->vma_start>lopage && temp->vma_end>endvfs)
+			else if(temp->vma_start>=lopage && temp->vma_end>endvfs)
 			{
 				/*Case 3*/
 
-				temp->vma_off = (endvfs - temp->vma_start)/PAGE_SIZE + temp->vma_off;
-				temp->vma_start = endvfs + 1;
+				temp->vma_off = (endvfs - temp->vma_start)+ temp->vma_off;
+				temp->vma_start = endvfs;
 
 				/*Case 3 ends*/
 			}
-			else if(temp->vma_start>lopage && temp->vma_end<endvfs)
+			else if(temp->vma_start>=lopage && temp->vma_end<=endvfs)
 			{
 				/*Case 4*/
-
+				temp->vma_obj->mmo_ops->put(temp->vma_obj);
+				
 				list_remove(&(temp->vma_plink));
 
 				vmarea_free(temp);
@@ -657,9 +690,12 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 
 				/*case4 ends*/
 			}
+			
+			link = linknext;
         }
-        list_iterate_end();
 
+
+		
         return 0;
 }
 

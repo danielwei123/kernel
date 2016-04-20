@@ -132,12 +132,10 @@ int
 do_munmap(void *addr, size_t len)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_munmap");*/
-		if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len) || !PAGE_ALIGNED(off))
+		if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len))
         {
         	return	-EINVAL;
         }
-        
-        
         if(len == 0)
         {
         	return	-EINVAL;
@@ -146,8 +144,7 @@ do_munmap(void *addr, size_t len)
 				        
         vmmap_remove( curproc->p_vmmap, ADDR_TO_PN(addr), len);
         
-        
-        tlb_flush(addr);
+        tlb_flush_all();
         
         return -1;
 }
