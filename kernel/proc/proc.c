@@ -256,12 +256,14 @@ proc_cleanup(int status)
 		vput(curproc->p_cwd);
 	}
 
+
 	curproc->p_status = status;
 	curproc->p_state = PROC_DEAD;
 
 	list_remove(&(curproc->p_list_link));
 	KASSERT(NULL != curproc->p_pproc);
 	dbg(DBG_PRINT, "(GRADING1A 2.b)\n");
+	/*vmmap_destroy(curproc->p_vmmap);*/
 	sched_wakeup_on(&(curproc->p_pproc->p_wait));
 }
 

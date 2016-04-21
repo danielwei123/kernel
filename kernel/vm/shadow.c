@@ -70,7 +70,8 @@ static mmobj_ops_t shadow_mmobj_ops = {
 void
 shadow_init()
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_init");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_init");*/
+         shadow_allocator = slab_allocator_create("shadowobj",  sizeof(mmobj_t);
 }
 
 /*
@@ -82,8 +83,14 @@ shadow_init()
 mmobj_t *
 shadow_create()
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_create");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("VM: shadow_create");*/
+        
+        mmobj_t *temp = slab_obj_alloc(shadow_allocator);
+        if (temp)
+        {
+            mmobj_init(temp, &shadow_mmobj_ops);
+        }
+        return temp;
 }
 
 /* Implementation of mmobj entry points: */
@@ -94,7 +101,8 @@ shadow_create()
 static void
 shadow_ref(mmobj_t *o)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_ref");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_ref");*/
+           o->mmo_refcount+=1;
 }
 
 /*
@@ -108,7 +116,25 @@ shadow_ref(mmobj_t *o)
 static void
 shadow_put(mmobj_t *o)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_put");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_put");*/
+        
+        pframe_t *temp;
+        if(o->mmo_refcount != o->mmo_nrespages + 1)
+        {
+            o->mmo_refcount-=1;
+        }
+        else
+        {
+            list_iterate_begin(&(o->mmo_respages),temp,pframe_t,pf_olink)
+            {
+                pframe_unpin(temp);
+                pframe_free(temp);
+            }
+            list_iterate_end();
+            slab_obj_free(shadow_allocator,(void *)o);
+        }
+        
+        
 }
 
 /* This function looks up the given page in this shadow object. The
@@ -123,7 +149,41 @@ shadow_put(mmobj_t *o)
 static int
 shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");*/
+        
+        int	x = -1;
+        if(forwrite == 0)
+        {
+        	
+        	while(x != 0)
+        	{
+        		x = pframe_get(o, pagenum, pf);
+        		
+        		if(x == 0)
+        		{
+        			break;
+        		}
+        		else
+        		{
+        			o = o->mmo_shadowed;
+        		}
+        	}
+        }
+        else
+        {
+        
+        }
+        
+        
+        
+        return	x;
+        
+        
+        
+        
+        
+        
+        
         return 0;
 }
 
@@ -150,13 +210,13 @@ shadow_fillpage(mmobj_t *o, pframe_t *pf)
 static int
 shadow_dirtypage(mmobj_t *o, pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_dirtypage");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VM: shadow_dirtypage");*/
+        return 0;
 }
 
 static int
 shadow_cleanpage(mmobj_t *o, pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_cleanpage");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VM: shadow_cleanpage");*/
+        return 0;
 }
