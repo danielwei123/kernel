@@ -146,6 +146,6 @@ do_munmap(void *addr, size_t len)
         
         tlb_flush_all();
         
-        return -1;
+        return 0;
 }
 

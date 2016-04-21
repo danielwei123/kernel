@@ -101,9 +101,7 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 		{
 			return -EBADF;
 		}
-        
-        
-        
+
         vmmap_t	* newmap = vmmap_create();
        	tlb_flush_all();
     int	ret_val = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO,(vmarea_t **)ret);
@@ -146,6 +144,6 @@ do_munmap(void *addr, size_t len)
         
         tlb_flush_all();
         
-        return -1;
+        return 0;
 }
 

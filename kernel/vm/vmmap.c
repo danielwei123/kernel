@@ -461,6 +461,9 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
                 vmarea_free(temp);
                 return -ENOMEM;
             }
+        }else if(!vmmap_is_range_empty(map, lopage, npages))
+        {
+        	int remove_status = vmmap_remove(map,x,npages);
         }
 
         temp->vma_start=x;
@@ -469,6 +472,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         
       	temp->vma_prot = prot;
        	temp->vma_flags = flags;
+       	temp->vma_off = off;
 
         list_link_init(&(temp->vma_plink));
         list_link_init(&(temp->vma_olink));
@@ -490,12 +494,8 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		{
 		}        
 	        
-        int remove_status = vmmap_remove(map,x,npages);
-        temp->vma_obj=tempobj;
-        temp->vma_off = off;
+       temp->vma_obj=tempobj;
 
-        
-        
         tempobj->mmo_ops->ref(tempobj);
         vmmap_insert(map,temp);
         if(new)
@@ -706,6 +706,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         }
 
 
+		pt_unmap_range(curproc->p_pagedir, ADDR_TO_PN(lopage), ADDR_TO_PN(endvfs));
 		
         return 0;
 }
