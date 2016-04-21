@@ -140,7 +140,7 @@ do_munmap(void *addr, size_t len)
         		
 		}
 				        
-        vmmap_remove( curproc->p_vmmap, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_DOWN(len)/PAGE_SIZE));
+        vmmap_remove( curproc->p_vmmap, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE));
         
         tlb_flush_all();
         

@@ -97,15 +97,13 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         int			forwrite = 0;
         pframe_t	*resFrame;
         int			flags = 0;
+        int			pt_map1 = PT_PRESENT|PT_USER;
+        int			pt_map2 = PD_PRESENT|PD_USER;
         char		buf[1000];
        
 
-		dbg(DBG_PRINT, "EEXX here in page fault cause: %d\n", cause); 
+		dbg(DBG_PRINT, "EEXX here in page fault cause: %d", cause); 
 		vmmap_mapping_info(curproc->p_vmmap, buf, 1000);
-		
-		
-		
-		
 
         if(area == NULL)
         {
@@ -120,6 +118,8 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         if(cause&FAULT_WRITE)
         {
         	forwrite = 1;
+        	pt_map1 = pt_map1 | PT_WRITE;
+        	pt_map2 = pt_map2 | PD_WRITE;
         }
 
         int	lookup_ret = pframe_lookup(area->vma_obj,  ADDR_TO_PN(vaddr) + area->vma_off - area->vma_start, forwrite, &resFrame);
@@ -129,7 +129,9 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         	do_exit(EFAULT);
         }
 
-        pt_map(curproc->p_pagedir, (uintptr_t)PAGE_ALIGN_DOWN(vaddr), (uintptr_t)pt_virt_to_phys((uintptr_t)resFrame->pf_addr), PD_PRESENT|PD_USER, PT_PRESENT|PT_USER);
+		
+
+        pt_map(curproc->p_pagedir, (uintptr_t)PAGE_ALIGN_DOWN(vaddr), (uintptr_t)pt_virt_to_phys((uintptr_t)resFrame->pf_addr), pt_map2, pt_map1);
         /*tlb_flush_all();*/
 
 }
