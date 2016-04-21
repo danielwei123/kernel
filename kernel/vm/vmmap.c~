@@ -185,7 +185,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
         list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
         {
-        	if(  temp->vma_end > newvma->vma_start )
+        	if(  temp->vma_start >= newvma->vma_end )
         	{
         		list_insert_before(&temp->vma_plink, &newvma->vma_plink);
         		newvma->vma_vmmap = map;
@@ -208,7 +208,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 int
 sufficient_space(vmarea_t *prev, vmarea_t	*next, int	npages)
 {
-	return ((prev!=NULL) && (next!=NULL) && ((next->vma_start - prev->vma_end)>(uint32_t)npages));
+	return ((prev!=NULL) && (next!=NULL) && ((next->vma_start - prev->vma_end)>=(uint32_t)npages));
 }
 
 /*
@@ -267,6 +267,8 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
        			if else for first fit algo
 
        */
+       
+       
        int x = check_boundary(map,npages,dir);
 
        if(x != -1)
@@ -278,11 +280,6 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
        vmarea_t		*cur = NULL;
        list_link_t	*prevList = NULL;
        list_link_t	*curList = NULL;
-
-         if(list_empty(&(map->vmm_list)))
-         {
-         	return	0;
-         }
 
 
        if(dir == VMMAP_DIR_HILO)
@@ -349,7 +346,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 
 				if(sufficient_space(prev, cur, npages))
 				{
-					return	(cur->vma_end + 1);
+					return	(cur->vma_end);
 				}
 
 				prevList = curList;
@@ -369,18 +366,17 @@ vmarea_t *
 vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_lookup");*/
-        vmarea_t	*temp;
-        vmarea_t	*ret_map = NULL;	
+        vmarea_t	*temp;	
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
             if(temp->vma_start <= vfn && temp->vma_end > vfn)
             {
-                ret_map = temp;
-                break;
+                return temp;
+              
             }
         }
         list_iterate_end();
-        return ret_map;
+        return NULL;
 }
 
 /* Allocates a new vmmap containing a new vmarea for each area in the
@@ -396,6 +392,8 @@ vmmap_clone(vmmap_t *map)
         {
             return temp;
         }
+        
+        temp->vmm_proc = map->vmm_proc;
         vmarea_t *temparea;
         list_iterate_begin(&(map->vmm_list),temparea,vmarea_t,vma_plink)
         {
@@ -410,8 +408,10 @@ vmmap_clone(vmmap_t *map)
             newtemparea->vma_off = temparea->vma_off;
             newtemparea->vma_prot = temparea->vma_prot;
             newtemparea->vma_flags = temparea->vma_flags;
-            newtemparea->vma_vmmap = NULL;
+            newtemparea->vma_vmmap = temp;
             newtemparea->vma_obj = NULL;
+            list_link_init(&(newtemparea->vma_olink));
+            list_link_init(&(newtemparea->vma_plink));
             list_insert_tail(&(temp->vmm_list),&(newtemparea->vma_plink));
         }
         list_iterate_end();
@@ -466,6 +466,9 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         temp->vma_start=x;
         temp->vma_end=x+npages;
         temp->vma_off=ADDR_TO_PN(off);
+        
+      	temp->vma_prot = prot;
+       	temp->vma_flags = flags;
 
         list_link_init(&(temp->vma_plink));
         list_link_init(&(temp->vma_olink));
@@ -490,8 +493,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         int remove_status = vmmap_remove(map,x,npages);
         temp->vma_obj=tempobj;
         temp->vma_off = off;
-       	temp->vma_prot = prot;
-       	temp->vma_flags = flags;
+
         
         
         tempobj->mmo_ops->ref(tempobj);
@@ -610,13 +612,13 @@ vmarea_clone(vmarea_t	*t)
 	
 	new->vma_prot = t->vma_prot;
 	new->vma_flags = t->vma_flags;
-	new->vma_vmmap = t->vma_vmmap;
 	new->vma_obj = t->vma_obj;
 	new->vma_end = t->vma_end;
 	new->vma_start = t->vma_start;
 	new->vma_off = t->vma_off;
-	new->vma_plink = t->vma_plink;
-	new->vma_olink = t->vma_olink;
+
+	list_link_init(&(new->vma_plink));
+	list_link_init(&(new->vma_olink));
 	
 	if(new->vma_obj != NULL)
 	{
