@@ -106,7 +106,7 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         
         vmmap_t	* newmap = vmmap_create();
        	tlb_flush_all();
-        int	ret_val = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO, ret);
+    int	ret_val = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO,(vmarea_t **)ret);
         
         if(ret_val < 0)
         {

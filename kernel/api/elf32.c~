@@ -767,7 +767,7 @@ dbg(DBG_PRINT, "XXEE fd here 11:%d\n", fd);
         if (NULL != argbuf) {
                 kfree(argbuf);
         }
-        dbg(DBG_PRINT, "XXE Error in load : %d\n",err);
+        dbg(DBG_PRINT, "XXEF Error in load : %d\n",err);
         return err;
 }
 

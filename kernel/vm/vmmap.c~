@@ -175,8 +175,6 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
          vmarea_t 	*temp;
 
-
-
          if(list_empty(&(map->vmm_list)))
          {
          	list_insert_head(&(map->vmm_list), &(newvma->vma_plink));
@@ -187,7 +185,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
         list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
         {
-        	if(newvma->vma_start < temp->vma_end)
+        	if(  temp->vma_end > newvma->vma_start )
         	{
         		list_insert_before(&temp->vma_plink, &newvma->vma_plink);
         		newvma->vma_vmmap = map;
@@ -210,7 +208,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 int
 sufficient_space(vmarea_t *prev, vmarea_t	*next, int	npages)
 {
-	return (prev!=NULL) && (next!=NULL) && ((next->vma_start - prev->vma_end)>npages);
+	return ((prev!=NULL) && (next!=NULL) && ((next->vma_start - prev->vma_end)>(uint32_t)npages));
 }
 
 /*
@@ -228,7 +226,7 @@ check_boundary(vmmap_t *map,int32_t npages,int dir)
             return MIN_PAGE;
         }
         vmarea_t *temp = list_item(vmareas->l_next,vmarea_t,vma_plink);
-        if(temp->vma_start - MIN_PAGE >= npages)
+        if(temp->vma_start - MIN_PAGE >= (uint32_t)npages)
         {
             return MIN_PAGE;
         }
@@ -240,7 +238,7 @@ check_boundary(vmmap_t *map,int32_t npages,int dir)
             return MAX_PAGE-npages;
         }
         vmarea_t *temp = list_item(vmareas->l_prev,vmarea_t,vma_plink);
-        if(MAX_PAGE - temp->vma_end >= npages)
+        if(MAX_PAGE - temp->vma_end >= (uint32_t) npages)
         {
             return MAX_PAGE-npages;
         }
@@ -371,16 +369,18 @@ vmarea_t *
 vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_lookup");*/
-        vmarea_t *temp;
+        vmarea_t	*temp;
+        vmarea_t	*ret_map = NULL;	
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
             if(temp->vma_start <= vfn && temp->vma_end > vfn)
             {
-                return temp;
+                ret_map = temp;
+                break;
             }
         }
         list_iterate_end();
-        return NULL;
+        return ret_map;
 }
 
 /* Allocates a new vmmap containing a new vmarea for each area in the
@@ -482,8 +482,18 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         {
             ret_val=file->vn_ops->mmap(file,temp,&tempobj);
         }
+        
+		if(ret_val < 0)
+		{
+		}        
+	        
         int remove_status = vmmap_remove(map,x,npages);
         temp->vma_obj=tempobj;
+        temp->vma_off = off;
+       	temp->vma_prot = prot;
+       	temp->vma_flags = flags;
+        
+        
         tempobj->mmo_ops->ref(tempobj);
         vmmap_insert(map,temp);
         if(new)
@@ -534,9 +544,7 @@ dbg(DBG_PRINT, "XXE Amey funtion 5\n");
        	}
        	dbg(DBG_PRINT, "XXE Amey funtion 6.5\n");
        	temp->vma_end = temp->vma_start + npages;
-       	temp->vma_off = off;
-       	temp->vma_prot = prot;
-       	temp->vma_flags = flags;
+
        	dbg(DBG_PRINT, "XXE Amey funtion 6.75\n");
        	if(file == NULL)
        	{
@@ -596,7 +604,7 @@ dbg(DBG_PRINT, "XXE Amey funtion 11\n");
  */
  
 vmarea_t*
-area_clone(vmarea_t	*t)
+vmarea_clone(vmarea_t	*t)
 {
 	vmarea_t	*new = vmarea_alloc();
 	
@@ -626,7 +634,8 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         /*NOT_YET_IMPLEMENTED("VM: vmmap_remove");*/
         vmarea_t *temp;
         uint32_t endvfs = lopage + npages;
-        list_link_t	*link = &(map->vmm_list).l_next;
+        
+        list_link_t	*link = (map->vmm_list).l_next;
         list_link_t	*linknext = NULL;
         
         while(link != &(map->vmm_list)){
@@ -651,7 +660,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 
 				split->vma_vmmap = temp->vma_vmmap;
 				split->vma_obj = temp->vma_obj;
-				/*potential ref on file obj*/
+				potential ref on file obj*/
 
 				vmmap_insert(map, split);
 

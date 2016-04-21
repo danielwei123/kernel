@@ -92,12 +92,18 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
 
+		
         vmarea_t	*area = vmmap_lookup(curproc->p_vmmap, ADDR_TO_PN(vaddr));
         int			forwrite = 0;
         pframe_t	*resFrame;
         int			flags = 0;
+        char		buf[1000];
+       
 
-		dbg(DBG_PRINT, "EEXX here in page fault cause: %d\n", cause); 
+		dbg(DBG_PRINT, "EEXX here in page fault cause: %d", cause); 
+		vmmap_mapping_info(curproc->p_vmmap, buf, 1000);
+		
+
 
         if(area == NULL)
         {
