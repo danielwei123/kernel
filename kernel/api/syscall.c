@@ -78,7 +78,7 @@ sys_read(read_args_t *arg)
         read_args_t		kern_args;
         char*			newPage = NULL;
 
-        if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
+        if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
         {
         	curthr->kt_errno = EFAULT;
         	return	-1;
@@ -147,7 +147,7 @@ sys_write(write_args_t *arg)
         write_args_t		kern_args;
         char*			newPage = NULL;
 
-        if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
+        if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
         {
         	curthr->kt_errno = EFAULT;
         	return	-1;

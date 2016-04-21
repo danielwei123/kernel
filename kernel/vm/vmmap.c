@@ -629,7 +629,6 @@ vmarea_clone(vmarea_t	*t)
 
 } 
  
- 
 int
 vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 {
@@ -637,12 +636,10 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         vmarea_t *temp;
         uint32_t endvfs = lopage + npages;
         
-        
         if(npages == 0)
         {
         	return	0;
         }
-        
         
         list_link_t	*link = (map->vmm_list).l_next;
         list_link_t	*linknext = NULL;
@@ -878,7 +875,11 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
                 }
                 memcpy((char *) p->pf_addr + data_offset, (char *) buf + dest_pos, write_size);
 
-                p->pf_flags = PF_DIRTY;
+                int res = pframe_dirty(p);
+                
+                if(res < 0){
+                	return res;
+                }
 
                 dest_pos += write_size;
                 curraddr = (char *) curraddr + write_size;

@@ -504,17 +504,15 @@ badargs2(kshell_t *kshell, int argc, char **argv)
       kernel_execve("/sbin/init", argvec, envvec);
     #endif
          */
-        char  	*argvec[] = { NULL };
-        char  	*envvec[] = { NULL };
+
  
  		
  #ifdef __DRIVERS__
 
 
- 		kernel_execve("/usr/bin/hello", argvec, envvec);
-  		dbg(DBG_PRINT,"EEQQ after if\n");
+ 		
 
-
+		/*
          kshell_add_command("faberproc", do_foo, "Invoke faber tests");
          kshell_add_command("sunghan", sunghan_test_func, "Sunghan test");
  	 	 kshell_add_command("sunghan_dead", sunghan_deadlock_test_func, "Sunghan deadlock test");
@@ -537,7 +535,13 @@ badargs2(kshell_t *kshell, int argc, char **argv)
          
          while (kshell_execute_next(kshell));
          kshell_destroy(kshell);
-
+*/
  #endif /* __DRIVERS__ */
-         return NULL;
+ 
+        char  	*argvec[] = { NULL };
+        char  	*envvec[] = { NULL };
+ 		kernel_execve("/usr/bin/hello", argvec, envvec);
+  		dbg(DBG_PRINT,"EEQQ after if\n");
+ 
+        return NULL;
  }
