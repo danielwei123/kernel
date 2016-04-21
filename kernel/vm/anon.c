@@ -145,14 +145,15 @@ static int
 anon_dirtypage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_dirtypage");*/
-	pframe_set_dirty(pf);
-	return -1;
+	/*pframe_set_dirty(pf);*/
+	return 0;
+	
 }
 
 static int
 anon_cleanpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_cleanpage");*/
-       	pframe_clear_dirty(pf);
-        return -1;
+       	/*pframe_clear_dirty(pf);*/
+        return 0;
 }
