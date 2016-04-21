@@ -637,6 +637,13 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         vmarea_t *temp;
         uint32_t endvfs = lopage + npages;
         
+        
+        if(npages == 0)
+        {
+        	return	0;
+        }
+        
+        
         list_link_t	*link = (map->vmm_list).l_next;
         list_link_t	*linknext = NULL;
         
@@ -706,7 +713,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         }
 
 
-		pt_unmap_range(curproc->p_pagedir, ADDR_TO_PN(lopage), ADDR_TO_PN(endvfs));
+		pt_unmap_range(curproc->p_pagedir, (uint32_t)PN_TO_ADDR(lopage), (uint32_t)PN_TO_ADDR(endvfs));
 		
         return 0;
 }
