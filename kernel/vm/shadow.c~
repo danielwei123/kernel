@@ -71,7 +71,7 @@ void
 shadow_init()
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_init");*/
-         shadow_allocator = slab_allocator_create("shadowobj",  sizeof(mmobj_t);
+         shadow_allocator = slab_allocator_create("shadowobj",  sizeof(mmobj_t));
 }
 
 /*
@@ -151,40 +151,78 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");*/
         
-        int	x = -1;
+        int	ret_val = 0;
+        pframe_t	*res = NULL;
         if(forwrite == 0)
         {
-        	
-        	while(x != 0)
+        	while(1)
         	{
-        		x = pframe_get(o, pagenum, pf);
-        		
-        		if(x == 0)
+        		if(res)
         		{
         			break;
         		}
-        		else
+        		if(o->mmo_shadowed == NULL)
         		{
-        			o = o->mmo_shadowed;
+        			break;
         		}
+        		res = pframe_get_resident(o, pagenum);
+        		o = o->mmo_shadowed;
+        	}
+        	if(res)
+        	{
+        		*pf=res;
+        		return 0;
+        	}
+        	else
+        	{
+        	
+        		pframe_lookup(o, pagenum, forwrite, &res);
+        		/*res=pframe_get_resident(o,pagenum);*/
+        		if(res!=NULL)
+        		{
+        			*pf=res;
+        			return 0;
+        		}
+        		return -1;
         	}
         }
         else
         {
-        
+        	
+        	while(1)
+        	{
+        		if(res)
+        		{
+        			break;
+        		}
+        		if(o->mmo_shadowed == NULL)
+        		{
+        			break;
+        		}
+        		res = pframe_get_resident(o, pagenum);
+        		o = o->mmo_shadowed;
+        	}
+        	if(res)
+        	{
+        		*pf=res;
+        		return 0;
+        	}
+        	else
+        	{
+        	
+        		pframe_lookup(o, pagenum, forwrite, &res);
+        		/*res=pframe_get_resident(o,pagenum);*/
+        		if(res!=NULL)
+        		{
+        			*pf=res;
+        			return 0;
+        		}
+        		return -1;
+        	}
+        	
+        	
+        	
         }
-        
-        
-        
-        return	x;
-        
-        
-        
-        
-        
-        
-        
-        return 0;
 }
 
 /* As per the specification in mmobj.h, fill the page frame starting
@@ -201,7 +239,19 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 static int
 shadow_fillpage(mmobj_t *o, pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_fillpage");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_fillpage");*/
+        
+       	pframe_t	*res = NULL;
+       	
+       	int	x = shadow_lookuppage(o, pf->pagenum, &res);
+       	
+       	if(x < 0)
+       	{
+       		return	x;
+       	}
+       	
+       	memcpy(pf->pf_addr, res->pf_addr, PAGE_SIZE);
+       	
         return 0;
 }
 
