@@ -194,8 +194,28 @@ kthread_exit(void *retval)
 kthread_t *
 kthread_clone(kthread_t *thr)
 {
-        NOT_YET_IMPLEMENTED("VM: kthread_clone");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("VM: kthread_clone");*/
+        kthread_t *temp = slab_obj_alloc(kthread_allocator);
+        if(temp==NULL)
+        {
+            return temp;
+        }
+        char *stack = alloc_stack();
+        if(stack==NULL)
+        {
+            slab_obj_free(kthread_allocator,temp);
+            return NULL;
+        }
+        temp->kt_kstack=stack;
+        temp->kt_retval=thr->kt_retval;
+        temp->kt_errno=thr->kt_errno;
+        /*DONT KNOW WHAT TO SET PROC TO, IF I SET IT TO SAME, THEN IT'LL BE MTP*/
+        temp->kt_proc=NULL;
+        temp->kt_cancelled=thr->kt_canclled;
+        temp->kt_wchan=thr->kt_wchan;
+        list_link_init(&(temp->kt_qlink));
+        list_link_init(&(temp->kt_plink));
+        return temp;
 }
 
 /*
