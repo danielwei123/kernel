@@ -132,6 +132,7 @@ shadow_put(mmobj_t *o)
                 pframe_free(temp);
             }
             list_iterate_end();
+            /*Might need to put bottom obj too here*/
             slab_obj_free(shadow_allocator,(void *)o);
         }
 
