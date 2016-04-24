@@ -61,46 +61,164 @@ fork_setup_stack(const regs_t *regs, void *kstack)
 }
 
 /*
+ * Modular function to link a shadow object
+ * to an area
+ */
+void link_shadow_obj(vmarea_t *area, mmobj_t *shadow)
+{
+    mmobj_t lower_obj = mmobj_bottom_obj(area->vma_obj);
+
+    /* Link the shadow object directly to bottom object*/
+    shadow->mmo_un.mmo_bottom_obj = lower_obj;
+    /*Ref once?*/
+    lower_obj->mmo_ops->ref(lower_obj);
+
+    /*Should I ref the vma_obj of area here? Not really sure. Maybe we should put and ref once but it wont matter then?*/
+    shadow->mmo_shadowed = area->vma_obj;
+
+    /*Really not sure about this part. Need to check*/
+    if(list_link_is_linked(&area->vma_olink))
+    {
+        list_remove(&vma->vma_olink);
+    }
+    list_insert_tail(&lower_obj->mmo_un.mmo_vmas,&area->vma_olink);
+
+    /*No need to ref for shadow object since I did it in previous function*/
+    area->vma_obj = shadow;
+}
+
+
+/*
+ * Modular function to create shadow objects
+ */
+
+int create_shadow_objects(vmarea_t parent_area , vmarea_t child_area)
+{
+    mmobj_t *shadow1 = shadow_create();
+
+    if(shadow1 == NULL)
+    {
+        return -ENOSPC;
+    }
+
+    shadow1->mmo_ops->ref(shadow1);
+
+    mmobj_t *shadow2 = shadow_create();
+
+    if(shadow2 == NULL)
+    {
+        shadow1->mmo_ops->put(shadow1);
+        return -ENOSPC;
+    }
+
+    shadow2->mmo_ops->ref(shadow2);
+
+    link_shadow_obj(parent_area,shadow1);
+    link_shadow_obj(child_area,shadow2);
+}
+
+/*
+ * Modular function to clean up the vmmap I
+ * created. This is to be done in case of
+ * problems while creating the vmmap for
+ * child process
+ */
+
+void clean_my_vmmap(list_t *parent_list,list_t *child_list)
+{
+    list_link_t *parent_link = parent_list->l_next;
+    list_link_t *child_link = child_list->l_next;
+
+    while(parent_link != parent_list)
+    {
+        vmarea_t *parent_area = list_item(parent_link,vmarea_t,vma_plink);
+        vmarea_t *child_area = list_item(child_link,vmarea_t,vma_plink);
+
+        /*If we find an area with no object, we can stop cleaning up*/
+        if(child_area->vma_obj == NULL)
+        {
+            return;
+        }
+
+        int map = parent_area->vma_flags & MAP_TYPE;
+
+        /*Screwed. Need to clean shadow objects*/
+        /*SOMEONE PLEASE CHECK THIS PART AGAIN!!!*/
+        if(map == MAP_PRIVATE)
+        {
+            mmobj_t *lower_obj = parent_area->vma_obj->mmo_shadowed;
+            lower_obj->mmo_ops->ref(lower_obj);
+
+            parent_area->vma_obj->mmo_ops->put(parent_area->vma_obj);
+            parent_area->vma_obj=lower_obj;
+        }
+
+        parent_link = parent_link->l_next;
+        child_link = child_link->l_next;
+    }
+}
+
+/*
  * Modular function to copy vmmap of parent
  * to child. Returning 0 on success. Negative
  * value on error
  */
 
- int vmmap_copy(proc_t *child)
+int vmmap_copy(proc_t *child)
  {
-     int error = 0;
+    int error = 0;
 
-     vmmap_t *childmap = vmmap_clone(curproc->p_vmmap);
+    vmmap_t *childmap = vmmap_clone(curproc->p_vmmap);
 
-     if(childmap == NULL)
-     {
-         return -ENOMEM;
-     }
+    if(childmap == NULL)
+    {
+        return -ENOMEM;
+    }
 
-     childmap->vmm_proc = child;
+    childmap->vmm_proc = child;
 
-     list_t *parent_list = &curproc->p_vmmap->vmm_list;
-     list_t *child_list = childmap->vmm_list;
-     list_link_t *parent_link = parent_list->l_next;
-     list_link_t *child_link = child_list->l_next;
+    list_t *parent_list = &curproc->p_vmmap->vmm_list;
+    list_t *child_list = childmap->vmm_list;
+    list_link_t *parent_link = parent_list->l_next;
+    list_link_t *child_link = child_list->l_next;
 
-     while(parent_link != parent_list)
-     {
-         vmarea_t parent_area = list_item(parent_link,vmarea_t,vma_plink);
-         vmarea_t child_area = list_item(child_link,vmarea_t,vma_plink);
+    while(parent_link != parent_list && error == 0)
+    {
+        vmarea_t parent_area = list_item(parent_link,vmarea_t,vma_plink);
+        vmarea_t child_area = list_item(child_link,vmarea_t,vma_plink);
 
-         child_area->vma_obj = parent_area->vma_obj;
-         child_area->vma_obj->mmo_ops->ref(child_area->vma_obj);
+        child_area->vma_obj = parent_area->vma_obj;
+        child_area->vma_obj->mmo_ops->ref(child_area->vma_obj);
 
-         /*DO SHADOW STUFF HERE TOMORROW */
+        /*DO SHADOW STUFF HERE TOMORROW */
+        int map = parent_area->vma_flags & MAP_TYPE;
 
-         child_link = child_link->l_next;
-         parent_link = parent_link->l_next;
+        if(map == MAP_PRIVATE)
+        {
+            error = create_shadow_objects(parent_area,child_area);
 
-         vmmap_destroy(child->p_vmmap);
-         child->p_vmmap = childmap;
-         return 0;
-     }
+            if(error < 0)
+            {
+                child_area->vma_obj->mmo_ops->put(child_area->vma_obj);
+                child_area->vma_obj=NULL;
+            }
+        }
+
+        child_link = child_link->l_next;
+        parent_link = parent_link->l_next;
+
+        if(error != 0)
+        {
+            clean_my_vmmap(parent_list,child_list);
+            vmmap_destroy(childmap);
+            return error;
+        }
+
+        vmmap_destroy(child->p_vmmap);
+        child->p_vmmap = childmap;
+        return 0;
+    }
+
  }
 
 
