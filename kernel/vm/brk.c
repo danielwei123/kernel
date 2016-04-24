@@ -75,28 +75,55 @@ int
 do_brk(void *addr, void **ret)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_brk");*/
-        
+
         if(addr == NULL)
         {
         	*ret  = curproc->p_brk;
         	return	0;
         }
  		if(addr < curproc->p_start_brk || ((uint32_t)addr > USER_MEM_HIGH))
- 		{		
- 			return	-ENOMEM;
- 		}
- 		
- 		if((uint32_t)addr == (uint32_t)curproc->p_brk){
-			*ret = curproc->p_brk;
-			return	0;
- 		}
- 		
- 		int	ret_val = vmmap_is_range_empty(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)), (ADDR_TO_PN(PAGE_ALIGN_UP(addr))) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)));
- 		
- 		if(ret_val == 0)
  		{
  			return	-ENOMEM;
  		}
- 		
+        /*addr same as p_brk*/
+ 		if((uint32_t)addr == (uint32_t)curproc->p_brk))
+        {
+            *ret  = curproc->p_brk;
+        	return	0;
+        }
+ 		/*addr < p_brk*/
+        else if((uint32_t)addr < (uint32_t)curproc->p_brk)
+        {
+            uint32_t npages = ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)) - ADDR_TO_PN(PAGE_ALIGN_UP(addr));
+            vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(addr)), npages);
+        }
+        /*addr > p_brk*/
+ 		else
+        {
+            uint32_t npages = ADDR_TO_PN(PAGE_ALIGN_UP(addr)) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk));
+            int	ret_val = vmmap_is_range_empty(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)), napges);
+
+     		if(ret_val == 0)
+     		{
+     			return	-ENOMEM;
+     		}
+
+            vmarea_t * vma = vmmap_lookup(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk)));
+
+            if(vma == NULL)
+            {
+                /*Assuption : flag = 0, prot = MAP_PRIVATE, npages should by PAGE_SIZE*/
+
+                npages = ADDR_TO_PN(PAGE_ALIGN_UP(addr)) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk));
+                vmmap_map(curproc->p_vmmap, NULL , ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk)), npages,  MAP_PRIVATE, 0 , 0, VMMAP_DIR_HILO, &vma);
+
+            }
+            else
+            {
+                vma->vma_end = ADDR_TO_PN(PAGE_ALIGN_UP(addr));
+            }
+        }
+        curproc->p_brk = addr;
+        *ret = addr;
         return 0;
 }
