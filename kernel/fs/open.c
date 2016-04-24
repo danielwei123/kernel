@@ -161,6 +161,11 @@ do_open(const char *filename, int oflags)
 
 	f->f_pos = 0;
 	f->f_vnode = res_vnode;
+	
+	if(f->f_vnode->vn_vno == 26 )
+	{
+		dbg(DBG_PRINT, "XW %s\n", filename);
+	}
 
 	f->f_refcount = 1;
 	

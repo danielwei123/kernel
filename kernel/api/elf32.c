@@ -741,6 +741,7 @@ dbg(DBG_PRINT, "XXEE fd here 10.4:%d\n", fd);
 done:
 dbg(DBG_PRINT, "XXEE fd here 11:%d\n", fd);
         if (NULL != map) {
+        		
                 vmmap_destroy(map);
         }
         if (NULL != file) {

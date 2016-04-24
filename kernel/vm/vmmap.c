@@ -187,7 +187,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
          }
 */
 
-        list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
+/*        list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
         {
         	if(  temp->vma_start >= newvma->vma_end )
         	{
@@ -201,6 +201,33 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
         list_insert_tail(&(map->vmm_list), &newvma->vma_plink);
        	newvma->vma_vmmap = map;
+*/
+
+	list_t	*	insertionList = &map->vmm_list;
+	list_link_t	*traverse = insertionList->l_next;
+	
+	while(traverse != insertionList)
+	{
+	
+		temp = list_item(traverse, vmarea_t, vma_plink);
+	
+		if(temp->vma_start >= newvma->vma_end)
+		{
+			list_insert_before(traverse, &newvma->vma_plink);
+			 dbg(DBG_PRINT, "e L %d\n", list_empty(&(map->vmm_list)));
+			newvma->vma_vmmap = map;
+        	return;
+			
+		}
+		
+		traverse = traverse->l_next;
+	
+	}
+	 dbg(DBG_PRINT, "e L %d\n", list_empty(&(map->vmm_list)));
+	list_insert_tail(insertionList, &newvma->vma_plink);
+    newvma->vma_vmmap = map;
+	
+	
 
 		return;
 }
@@ -481,13 +508,14 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         list_link_init(&(temp->vma_plink));
         list_link_init(&(temp->vma_olink));
 
-        mmobj_t *tempobj;
+        mmobj_t *tempobj = NULL;
 
 		int	ret_val = 0;
 
         if(file==NULL)
         {
             tempobj=anon_create();
+            tempobj->mmo_ops->ref(tempobj);
         }
         else
         {
@@ -499,11 +527,12 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		}        
 	        
        	temp->vma_obj=tempobj;
-        tempobj->mmo_ops->ref(tempobj);
+        
+        /*tempobj->mmo_ops->ref(tempobj);
         
         mmobj_t	*t = mmobj_bottom_obj(temp->vma_obj);
         list_insert_head( &(t->mmo_un.mmo_vmas), &(temp->vma_olink));
-        
+        */
         vmmap_insert(map,temp);
         if(new)
         {
@@ -633,7 +662,7 @@ vmarea_clone(vmarea_t	*t)
 		new->vma_obj->mmo_ops->ref(new->vma_obj);
 	}
 	
-	list_insert_before(&(t->vma_olink), &(new->vma_olink));
+	/*list_insert_before(&(t->vma_olink), &(new->vma_olink));*/
 	return	new;
 
 } 

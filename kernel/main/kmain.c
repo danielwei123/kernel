@@ -341,13 +341,14 @@ initproc_create(void)
 
  #ifdef __DRIVERS__
 
- /*Empty function*/
+/*
+ /*Empty function
  static void *empty(int arg1,void *arg2)
  {
      return NULL;
  }
 
- /*Function which kills itself*/
+ /*Function which kills itself
  static void *self_cancel(int arg1,void *arg2)
  {
      kthread_cancel(curthr,0);
@@ -473,7 +474,7 @@ badargs2(kshell_t *kshell, int argc, char **argv)
     }
     return 0;
 }
-
+*/
 
  #endif /* __DRIVERS__ */
 
@@ -538,6 +539,9 @@ badargs2(kshell_t *kshell, int argc, char **argv)
         char  	*argvec[] = { NULL };
         char  	*envvec[] = { NULL };
  		kernel_execve("/usr/bin/hello", argvec, envvec);
+  		dbg(DBG_PRINT,"EEQQ after if\n");
+  		
+  		
   		dbg(DBG_PRINT,"EEQQ after if\n");
  
         return NULL;

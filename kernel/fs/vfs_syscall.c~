@@ -80,7 +80,6 @@ do_read(int fd, void *buf, size_t nbytes)
             dbg(DBG_PRINT, "(GRADING2B)\n");
         	fput(f);
         	return	-EISDIR;
-
         }
         
         if(!(f->f_mode&FMODE_READ))
@@ -95,7 +94,8 @@ do_read(int fd, void *buf, size_t nbytes)
         int ret_val = bytes_read;
        	if(bytes_read > 0)
         {
-        dbg(DBG_PRINT, "XXE fd here 26:%d\n", fd);
+    
+        	dbg(DBG_PRINT, "XXE fd here 26:%d\n", fd);
             dbg(DBG_PRINT, "(GRADING2B)\n");
         	int x = do_lseek(fd, bytes_read, SEEK_CUR);
         }

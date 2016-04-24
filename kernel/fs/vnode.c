@@ -263,7 +263,7 @@ vput(struct vnode *vn)
 		if((long)vn->vn_vno == 26)
 		{
 			
-			
+			dbg(DBG_PRINT," tp2 \n");
 			
 			
 		}
@@ -385,6 +385,7 @@ vfs_is_in_use(fs_t *fs)
                 KASSERT(0 <= refs);
                 KASSERT(((vn->vn_fs->fs_root == vn) && (1 <= refs))
                         || ((vn->vn_fs->fs_root != vn) && (0 <= refs)));
+
 
                 if (((vn->vn_fs->fs_root == vn) && (1 < refs))
                     || ((vn->vn_fs->fs_root != vn) && refs)) {
