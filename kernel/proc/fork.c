@@ -60,6 +60,49 @@ fork_setup_stack(const regs_t *regs, void *kstack)
         return esp;
 }
 
+/*
+ * Modular function to copy vmmap of parent
+ * to child. Returning 0 on success. Negative
+ * value on error
+ */
+
+ int vmmap_copy(proc_t *child)
+ {
+     int error = 0;
+
+     vmmap_t *childmap = vmmap_clone(curproc->p_vmmap);
+
+     if(childmap == NULL)
+     {
+         return -ENOMEM;
+     }
+
+     childmap->vmm_proc = child;
+
+     list_t *parent_list = &curproc->p_vmmap->vmm_list;
+     list_t *child_list = childmap->vmm_list;
+     list_link_t *parent_link = parent_list->l_next;
+     list_link_t *child_link = child_list->l_next;
+
+     while(parent_link != parent_list)
+     {
+         vmarea_t parent_area = list_item(parent_link,vmarea_t,vma_plink);
+         vmarea_t child_area = list_item(child_link,vmarea_t,vma_plink);
+
+         child_area->vma_obj = parent_area->vma_obj;
+         child_area->vma_obj->mmo_ops->ref(child_area->vma_obj);
+
+         /*DO SHADOW STUFF HERE TOMORROW */
+
+         child_link = child_link->l_next;
+         parent_link = parent_link->l_next;
+
+         vmmap_destroy(child->p_vmmap);
+         child->p_vmmap = childmap;
+         return 0;
+     }
+ }
+
 
 /*
  * The implementation of fork(2). Once this works,
@@ -70,6 +113,17 @@ fork_setup_stack(const regs_t *regs, void *kstack)
 int
 do_fork(struct regs *regs)
 {
-        NOT_YET_IMPLEMENTED("VM: do_fork");
+        /*NOT_YET_IMPLEMENTED("VM: do_fork");*/
+        proc_t *child = proc_create("childproc");
+        int error=0;
+
+        if(child == NULL)
+        {
+            curthr->kt_errno = ENOMEM;
+            return -1;
+        }
+
+        error = vmmap_copy(child);
+
         return 0;
 }
