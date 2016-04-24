@@ -122,11 +122,19 @@ init_func(vnode_init);
 void
 vref(vnode_t *vn)
 {
+
+		if((long)vn->vn_vno == 26)
+		{
+			
+			
+			dbg(DBG_PRINT," tp \n");
+			
+		}
      dbg(DBG_PRINT," QQ calling vref \n");
         KASSERT(vn);
         KASSERT(0 < vn->vn_refcount);
         vn->vn_refcount++;
-        dbg(DBG_VNREF, "CC vref: 0x%p, 0x%p ino %ld up to %d, nrespages=%d\n",
+        dbg(DBG_VNREF, "PPCC vref: %s 0x%p, 0x%p ino %ld up to %d, nrespages=%d\n", curproc->p_comm,
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount, vn->vn_nrespages);
 }
 
@@ -251,6 +259,14 @@ find:
 void
 vput(struct vnode *vn)
 {
+
+		if((long)vn->vn_vno == 26)
+		{
+			
+			
+			
+			
+		}
         KASSERT(vn);
 
         KASSERT(0 <= vn->vn_nrespages);
@@ -261,7 +277,7 @@ vput(struct vnode *vn)
         KASSERT(!(VN_BUSY & vn->vn_flags));
 
 
-        dbg(DBG_VNREF, " PPPvput: 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",
+        dbg(DBG_VNREF, " PPCC vput: %s 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",curproc->p_comm,
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount - 1, vn->vn_nrespages);
 
         if ((vn->vn_nrespages == (vn->vn_refcount - 1))

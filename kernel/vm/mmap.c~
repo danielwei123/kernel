@@ -81,7 +81,6 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         	return	-EINVAL;
         }
         
-        
         if(len == 0)
         {
         	return	-EINVAL;

@@ -122,11 +122,19 @@ init_func(vnode_init);
 void
 vref(vnode_t *vn)
 {
+
+		if((long)vn->vn_vno == 26)
+		{
+			
+			
+			
+			
+		}
      dbg(DBG_PRINT," QQ calling vref \n");
         KASSERT(vn);
         KASSERT(0 < vn->vn_refcount);
         vn->vn_refcount++;
-        dbg(DBG_VNREF, "CC vref: 0x%p, 0x%p ino %ld up to %d, nrespages=%d\n",
+        dbg(DBG_VNREF, "PPCC vref: %s 0x%p, 0x%p ino %ld up to %d, nrespages=%d\n", curproc->p_comm,
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount, vn->vn_nrespages);
 }
 
@@ -251,6 +259,14 @@ find:
 void
 vput(struct vnode *vn)
 {
+
+		if((long)vn->vn_vno == 26)
+		{
+			
+			
+			
+			
+		}
         KASSERT(vn);
 
         KASSERT(0 <= vn->vn_nrespages);
@@ -260,12 +276,8 @@ vput(struct vnode *vn)
 
         KASSERT(!(VN_BUSY & vn->vn_flags));
 
-	if(vn->vn_vno == 44)
-	{
-	     dbg(DBG_PRINT," FD vput: %ld\n", vn->vn_vno);
-	}
-	
-        dbg(DBG_VNREF, " PPPvput: 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",
+
+        dbg(DBG_VNREF, " PPCC vput: %s 0x%p, 0x%p ino %ld, down to %d, nrespages = %d\n",curproc->p_comm,
             vn, vn->vn_fs, (long)vn->vn_vno, vn->vn_refcount - 1, vn->vn_nrespages);
 
         if ((vn->vn_nrespages == (vn->vn_refcount - 1))
@@ -479,18 +491,18 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
         /*NOT_YET_IMPLEMENTED("VFS: special_file_read");*/
         KASSERT(file);
         KASSERT((S_ISCHR(file->vn_mode) || S_ISBLK(file->vn_mode)));
-        
-        
-        
+
+
+
         int res = -1;
         if (S_ISCHR(file->vn_mode)){
            KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->read);
-        
-        	
-        
-        	res = file->vn_cdev->cd_ops->read(file->vn_cdev, offset, buf, count); 
+
+
+
+        	res = file->vn_cdev->cd_ops->read(file->vn_cdev, offset, buf, count);
         }
-       
+
         return res;
 }
 
@@ -506,55 +518,23 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
         /*NOT_YET_IMPLEMENTED("VFS: special_file_write");*/
         KASSERT(file);
         KASSERT((S_ISCHR(file->vn_mode) || S_ISBLK(file->vn_mode)));
-        
-        
+
+
         int res = -1;
       if (S_ISCHR(file->vn_mode)){
-                                    
+
                                        KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->write);
-        res = file->vn_cdev->cd_ops->write(file->vn_cdev, offset, buf, count); 
+        res = file->vn_cdev->cd_ops->write(file->vn_cdev, offset, buf, count);
         }
-      
-      
+
+
         return res;
-        
-        
-        
+
+
+
 }
 
-/* Memory map the 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-special file represented by <file>. All of the
+/* Memory map the special file represented by <file>. All of the
  * work for this function is device-specific, so look up the
  * file's bytedev_t and pass the arguments through to its mmap
  * function. Return what that function returns.
@@ -564,8 +544,8 @@ special file represented by <file>. All of the
 static int
 special_file_mmap(vnode_t *file, vmarea_t *vma, mmobj_t **ret)
 {
-        NOT_YET_IMPLEMENTED("VM: special_file_mmap");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VM: special_file_mmap");*/
+        return file->vn_cdev->cd_ops->mmap(file, vma, ret);
 }
 
 /* Just as with mmap above, pass the call through to the
@@ -576,8 +556,8 @@ special_file_mmap(vnode_t *file, vmarea_t *vma, mmobj_t **ret)
 static int
 special_file_fillpage(vnode_t *file, off_t offset, void *pagebuf)
 {
-        NOT_YET_IMPLEMENTED("VM: special_file_fillpage");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VM: special_file_fillpage");*/
+        return file->vn_cdev->cd_ops->fillpage(file, offset, pagebuf);
 }
 
 /* Just as with mmap above, pass the call through to the
@@ -588,8 +568,8 @@ special_file_fillpage(vnode_t *file, off_t offset, void *pagebuf)
 static int
 special_file_dirtypage(vnode_t *file, off_t offset)
 {
-        NOT_YET_IMPLEMENTED("VM: special_file_dirtypage");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VM: special_file_dirtypage");*/
+        return file->vn_cdev->cd_ops->dirtypage(file, offset);
 }
 
 /* Just as with mmap above, pass the call through to the
@@ -600,8 +580,8 @@ special_file_dirtypage(vnode_t *file, off_t offset)
 static int
 special_file_cleanpage(vnode_t *file, off_t offset, void *pagebuf)
 {
-        NOT_YET_IMPLEMENTED("VM: special_file_cleanpage");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("VM: special_file_cleanpage");*/
+        return file->vn_cdev->cd_ops->cleanpage(file, offset, pagebuf);
 }
 
 /*

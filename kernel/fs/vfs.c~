@@ -179,6 +179,7 @@ vfs_shutdown()
          * idleproc running. idleproc does not have a p_cwd. Thus, there
          * should be no live vnodes */
 
+		
         if (0 > vfs_is_in_use(fs)) {
                 panic("vfs_shutdown: found active vnodes in root "
                       "filesystem!!! This shouldn't happen!!\n");

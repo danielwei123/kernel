@@ -82,8 +82,7 @@ do_brk(void *addr, void **ret)
         	return	0;
         }
  		if(addr < curproc->p_start_brk || ((uint32_t)addr > USER_MEM_HIGH))
- 		{
- 				
+ 		{		
  			return	-ENOMEM;
  		}
  		
@@ -92,12 +91,12 @@ do_brk(void *addr, void **ret)
 			return	0;
  		}
  		
- 		int	ret = vmmap_is_range_empty(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(cuproc->p_brk)), (ADDR_TO_PN(PAGE_ALIGN_UP(addr)) - ADDR_TO_PN(PAGE_ALIGN_UPcuproc->p_brk)));
+ 		int	ret_val = vmmap_is_range_empty(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)), (ADDR_TO_PN(PAGE_ALIGN_UP(addr))) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)));
  		
- 		if(ret == 0)
+ 		if(ret_val == 0)
  		{
  			return	-ENOMEM;
  		}
- 		s
+ 		
         return 0;
 }

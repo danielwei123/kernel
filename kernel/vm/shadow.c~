@@ -177,7 +177,6 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
         	{
         	
         		pframe_lookup(o, pagenum, forwrite, &res);
-        		/*res=pframe_get_resident(o,pagenum);*/
         		if(res!=NULL)
         		{
         			*pf=res;
@@ -188,7 +187,6 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
         }
         else
         {
-        	
         	while(1)
         	{
         		if(res)
@@ -211,7 +209,6 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
         	{
         	
         		pframe_lookup(o, pagenum, forwrite, &res);
-        		/*res=pframe_get_resident(o,pagenum);*/
         		if(res!=NULL)
         		{
         			*pf=res;
@@ -219,9 +216,6 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
         		}
         		return -1;
         	}
-        	
-        	
-        	
         }
 }
 
@@ -243,7 +237,7 @@ shadow_fillpage(mmobj_t *o, pframe_t *pf)
         
        	pframe_t	*res = NULL;
        	
-       	int	x = shadow_lookuppage(o, pf->pagenum, &res);
+       	int	x = shadow_lookuppage(o->mmo_shadowed, pf->pf_pagenum, 1, &res);
        	
        	if(x < 0)
        	{

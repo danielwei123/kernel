@@ -50,11 +50,7 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
         KASSERT(NULL != dir);
         
         KASSERT(NULL != result);
-        
-        
 
-        
-        
 	if(len > NAME_LEN)
 	{
 		
@@ -129,10 +125,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	
             	myBase = curproc->p_cwd;
         }
-       
 
-         
-        
      
 	vref(myBase);
  
@@ -173,7 +166,6 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         	}
         	if(!(myBase -> vn_mode & S_IFDIR))
         	{
-        		
         		retval=-ENOTDIR;
         		vput(myBase);
         		break;

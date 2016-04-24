@@ -211,7 +211,7 @@ kthread_clone(kthread_t *thr)
         temp->kt_errno=thr->kt_errno;
         /*DONT KNOW WHAT TO SET PROC TO, IF I SET IT TO SAME, THEN IT'LL BE MTP*/
         temp->kt_proc=NULL;
-        temp->kt_cancelled=thr->kt_canclled;
+        temp->kt_cancelled=thr->kt_cancelled;
         temp->kt_wchan=thr->kt_wchan;
         list_link_init(&(temp->kt_qlink));
         list_link_init(&(temp->kt_plink));

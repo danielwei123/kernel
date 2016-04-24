@@ -136,7 +136,7 @@ static int
 anon_fillpage(mmobj_t *o, pframe_t *pf)
 {
        /*NOT_YET_IMPLEMENTED("VM: anon_fillpage");*/
-       
+       	pframe_pin(pf);
        	memset(pf->pf_addr, 0, PAGE_SIZE);
         return 0;
 }

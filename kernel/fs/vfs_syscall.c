@@ -82,7 +82,7 @@ do_read(int fd, void *buf, size_t nbytes)
         	return	-EISDIR;
 
         }
-        /*
+        
         if(!(f->f_mode&FMODE_READ))
         {
         dbg(DBG_PRINT, "XXE fd here 25:%d\n", fd);
@@ -90,7 +90,7 @@ do_read(int fd, void *buf, size_t nbytes)
         	fput(f);
         	return	-EBADF;
         }
-        */
+        
         bytes_read = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
         int ret_val = bytes_read;
        	if(bytes_read > 0)

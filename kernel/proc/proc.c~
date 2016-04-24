@@ -171,7 +171,7 @@ proc_create(char *name)
     	dbg(DBG_PRINT,"\nWWEE proc_creat else");
         pt->p_cwd = NULL;
     }
-    
+    dbg(DBG_PRINT, "(GRADING1A 2.) cleanup-cre pid: %d name:%s\n", pt->p_pid, pt->p_comm);
     pt->p_vmmap = vmmap_create();
     pt->p_vmmap->vmm_proc = pt;
     
@@ -250,20 +250,19 @@ proc_cleanup(int status)
 
 	}
 
-	if(curproc->p_pid != 2 )
+	if(curproc->p_cwd != NULL )
 	{
 		dbg(DBG_PRINT, "EEWW pid: %d, file:%d File, parent: %d Closing \n",curproc->p_pid,i, curproc->p_pproc->p_pid);
 		vput(curproc->p_cwd);
 	}
 
-
 	curproc->p_status = status;
 	curproc->p_state = PROC_DEAD;
-
 	list_remove(&(curproc->p_list_link));
 	KASSERT(NULL != curproc->p_pproc);
-	dbg(DBG_PRINT, "(GRADING1A 2.b)\n");
-	/*vmmap_destroy(curproc->p_vmmap);*/
+	
+	dbg(DBG_PRINT, "(GRADING1A 2.b) cleanup pid: %d, name: %s\n", curproc->p_pid, curproc->p_comm);
+	vmmap_destroy(curproc->p_vmmap);
 	sched_wakeup_on(&(curproc->p_pproc->p_wait));
 }
 

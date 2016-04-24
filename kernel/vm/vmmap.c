@@ -162,7 +162,7 @@ vmmap_destroy(vmmap_t *map)
             vmarea_free(temp);
         }
         list_iterate_end();
-        slab_obj_free(vmmap_allocator,map);
+        slab_obj_free(vmmap_allocator, map);
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
@@ -174,14 +174,18 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
          vmarea_t 	*temp;
-
+         
+         KASSERT(!list_link_is_linked(&(newvma->vma_plink)));
+         
+         
+/*
          if(list_empty(&(map->vmm_list)))
          {
          	list_insert_head(&(map->vmm_list), &(newvma->vma_plink));
          	newvma->vma_vmmap = map;
          	return;
          }
-
+*/
 
         list_iterate_begin(&(map->vmm_list), temp, vmarea_t, vma_plink)
         {
@@ -472,7 +476,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         
       	temp->vma_prot = prot;
        	temp->vma_flags = flags;
-       	temp->vma_off = off;
+       	
 
         list_link_init(&(temp->vma_plink));
         list_link_init(&(temp->vma_olink));
@@ -494,9 +498,12 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		{
 		}        
 	        
-       temp->vma_obj=tempobj;
-
+       	temp->vma_obj=tempobj;
         tempobj->mmo_ops->ref(tempobj);
+        
+        mmobj_t	*t = mmobj_bottom_obj(temp->vma_obj);
+        list_insert_head( &(t->mmo_un.mmo_vmas), &(temp->vma_olink));
+        
         vmmap_insert(map,temp);
         if(new)
         {
@@ -620,11 +627,13 @@ vmarea_clone(vmarea_t	*t)
 	list_link_init(&(new->vma_plink));
 	list_link_init(&(new->vma_olink));
 	
+	
 	if(new->vma_obj != NULL)
 	{
 		new->vma_obj->mmo_ops->ref(new->vma_obj);
 	}
 	
+	list_insert_before(&(t->vma_olink), &(new->vma_olink));
 	return	new;
 
 } 
@@ -654,7 +663,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			{
 				/*Case 1*/
 				vmarea_t	*split = vmarea_clone(temp);
-	
+				
 				temp->vma_end = lopage;
 
 				split->vma_start = endvfs;

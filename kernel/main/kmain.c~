@@ -509,9 +509,6 @@ badargs2(kshell_t *kshell, int argc, char **argv)
  		
  #ifdef __DRIVERS__
 
-
- 		
-
 		/*
          kshell_add_command("faberproc", do_foo, "Invoke faber tests");
          kshell_add_command("sunghan", sunghan_test_func, "Sunghan test");

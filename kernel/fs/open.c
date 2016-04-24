@@ -112,7 +112,12 @@ do_open(const char *filename, int oflags)
 	
 	curproc->p_files[fd] = f;
 	
-	flags = (oflags & O_RDONLY)|(oflags & O_WRONLY)|(oflags & O_RDWR);
+	/*flags = (oflags & O_RDONLY)|(oflags & O_WRONLY)|(oflags & O_RDWR);*/
+	
+	if( oflags == 0)
+	{
+		flags = FMODE_READ;
+	}
 	
 	if(oflags &  O_WRONLY)
 	{
