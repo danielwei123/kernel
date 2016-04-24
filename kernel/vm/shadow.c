@@ -1,3 +1,4 @@
+
 /******************************************************************************/
 /* Important Spring 2016 CSCI 402 usage information:                          */
 /*                                                                            */
@@ -84,7 +85,7 @@ mmobj_t *
 shadow_create()
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_create");*/
-        
+
         mmobj_t *temp = slab_obj_alloc(shadow_allocator);
         if (temp)
         {
@@ -117,7 +118,7 @@ static void
 shadow_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_put");*/
-        
+
         pframe_t *temp;
         if(o->mmo_refcount != o->mmo_nrespages + 1)
         {
@@ -133,8 +134,8 @@ shadow_put(mmobj_t *o)
             list_iterate_end();
             slab_obj_free(shadow_allocator,(void *)o);
         }
-        
-        
+
+
 }
 
 /* This function looks up the given page in this shadow object. The
@@ -150,73 +151,27 @@ static int
 shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");*/
-        
-        int	ret_val = 0;
-        pframe_t	*res = NULL;
-        if(forwrite == 0)
+        if(forwrite==1)
         {
-        	while(1)
-        	{
-        		if(res)
-        		{
-        			break;
-        		}
-        		if(o->mmo_shadowed == NULL)
-        		{
-        			break;
-        		}
-        		res = pframe_get_resident(o, pagenum);
-        		o = o->mmo_shadowed;
-        	}
-        	if(res)
-        	{
-        		*pf=res;
-        		return 0;
-        	}
-        	else
-        	{
-        	
-        		pframe_lookup(o, pagenum, forwrite, &res);
-        		if(res!=NULL)
-        		{
-        			*pf=res;
-        			return 0;
-        		}
-        		return -1;
-        	}
+            return pframe_get(o,pagenum,pf);
         }
-        else
+
+        pframe_t *temp=NULL;
+        mmobj *cur=o;
+
+        while(temp == NULL && cur->mmo_shadowed != NULL)
         {
-        	while(1)
-        	{
-        		if(res)
-        		{
-        			break;
-        		}
-        		if(o->mmo_shadowed == NULL)
-        		{
-        			break;
-        		}
-        		res = pframe_get_resident(o, pagenum);
-        		o = o->mmo_shadowed;
-        	}
-        	if(res)
-        	{
-        		*pf=res;
-        		return 0;
-        	}
-        	else
-        	{
-        	
-        		pframe_lookup(o, pagenum, forwrite, &res);
-        		if(res!=NULL)
-        		{
-        			*pf=res;
-        			return 0;
-        		}
-        		return -1;
-        	}
+            p=pframe_get_resident(curr,pagenum);
+            cur=cur->mmo_shadowed;
         }
+
+        if(p==NULL)
+        {
+            return pframe_lookup(cur,pagenum,0,pf);
+        }
+
+        *pf=p;
+        return 0;
 }
 
 /* As per the specification in mmobj.h, fill the page frame starting
@@ -227,25 +182,34 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
  * if no such shadow object exists we need to follow the chain of
  * shadow objects all the way to the bottom object and take the data
  * for the pf->pf_pagenum-th page from the last object in the chain).
- * It is important to use iteration rather than recursion here as a 
- * recursive implementation can overflow the kernel stack when 
+ * It is important to use iteration rather than recursion here as a
+ * recursive implementation can overflow the kernel stack when
  * looking down a long shadow chain */
 static int
 shadow_fillpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_fillpage");*/
-        
-       	pframe_t	*res = NULL;
-       	
-       	int	x = shadow_lookuppage(o->mmo_shadowed, pf->pf_pagenum, 1, &res);
-       	
-       	if(x < 0)
-       	{
-       		return	x;
-       	}
-       	
-       	memcpy(pf->pf_addr, res->pf_addr, PAGE_SIZE);
-       	
+        pframe *temp=NULL;
+        mmobj *cur=o->mmo_shadowed;
+
+        while(temp==NULL && cur!=o->mmo_un.mmo_bottom_obj)
+        {
+            temp=pframe_get_resident(cur,pf->pf_pagenum):
+            cur=cur->mmo_shadowed;
+        }
+
+        if(temp==NULL)
+        {
+            /*bottommost diamond*/
+            int x=pframe_lookup(cur,pf->pf_pagenum,1,&temp);
+            if(x<0)
+            {
+                return x;
+            }
+        }
+
+        pframe_pin(pf);
+        memcpy(pf->pf_addr,temp->pf_addr,PAGE_SIZE);
         return 0;
 }
 
