@@ -86,7 +86,7 @@ do_brk(void *addr, void **ret)
  			return	-ENOMEM;
  		}
         /*addr same as p_brk*/
- 		if((uint32_t)addr == (uint32_t)curproc->p_brk))
+ 		if((uint32_t)addr == (uint32_t)curproc->p_brk)
         {
             *ret  = curproc->p_brk;
         	return	0;
@@ -101,7 +101,7 @@ do_brk(void *addr, void **ret)
  		else
         {
             uint32_t npages = ADDR_TO_PN(PAGE_ALIGN_UP(addr)) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk));
-            int	ret_val = vmmap_is_range_empty(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)), napges);
+            int	ret_val = vmmap_is_range_empty(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)), npages);
 
      		if(ret_val == 0)
      		{
@@ -115,7 +115,7 @@ do_brk(void *addr, void **ret)
                 /*Assuption : flag = 0, prot = MAP_PRIVATE, npages should by PAGE_SIZE*/
 
                 npages = ADDR_TO_PN(PAGE_ALIGN_UP(addr)) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk));
-                vmmap_map(curproc->p_vmmap, NULL , ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk)), npages,  MAP_PRIVATE, 0 , 0, VMMAP_DIR_HILO, &vma);
+                vmmap_map(curproc->p_vmmap, NULL , ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk)), npages,  MAP_PRIVATE, PROT_READ | PROT_WRITE , 0, VMMAP_DIR_LOHI, &vma);
 
             }
             else

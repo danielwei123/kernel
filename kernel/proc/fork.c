@@ -68,9 +68,9 @@ fork_setup_stack(const regs_t *regs, void *kstack)
  {
      list_remove(&child->p_list_link);
      pt_destroy_pagedir(child->p_pagedir);
-     list_remove(&p->p_child_link);
-     vput(p->p_cwd);
-     vmmap_destroy(p->p_vmmap);
+     list_remove(&child->p_child_link);
+     vput(child->p_cwd);
+     vmmap_destroy(child->p_vmmap);
  }
 
 /*
@@ -79,7 +79,7 @@ fork_setup_stack(const regs_t *regs, void *kstack)
  */
 void link_shadow_obj(vmarea_t *area, mmobj_t *shadow)
 {
-    mmobj_t lower_obj = mmobj_bottom_obj(area->vma_obj);
+    mmobj_t *lower_obj = mmobj_bottom_obj(area->vma_obj);
 
     /* Link the shadow object directly to bottom object*/
     shadow->mmo_un.mmo_bottom_obj = lower_obj;
@@ -92,7 +92,7 @@ void link_shadow_obj(vmarea_t *area, mmobj_t *shadow)
     /*Really not sure about this part. Need to check*/
     if(list_link_is_linked(&area->vma_olink))
     {
-        list_remove(&vma->vma_olink);
+        list_remove(&area->vma_olink);
     }
     list_insert_tail(&lower_obj->mmo_un.mmo_vmas,&area->vma_olink);
 
@@ -105,7 +105,7 @@ void link_shadow_obj(vmarea_t *area, mmobj_t *shadow)
  * Modular function to create shadow objects
  */
 
-int create_shadow_objects(vmarea_t parent_area , vmarea_t child_area)
+int create_shadow_objects(vmarea_t *parent_area , vmarea_t *child_area)
 {
     mmobj_t *shadow1 = shadow_create();
 
@@ -128,6 +128,8 @@ int create_shadow_objects(vmarea_t parent_area , vmarea_t child_area)
 
     link_shadow_obj(parent_area,shadow1);
     link_shadow_obj(child_area,shadow2);
+    
+    return	0;
 }
 
 /*
@@ -191,14 +193,14 @@ int vmmap_copy(proc_t *child)
     childmap->vmm_proc = child;
 
     list_t *parent_list = &curproc->p_vmmap->vmm_list;
-    list_t *child_list = childmap->vmm_list;
+    list_t *child_list = &childmap->vmm_list;
     list_link_t *parent_link = parent_list->l_next;
     list_link_t *child_link = child_list->l_next;
 
     while(parent_link != parent_list && error == 0)
     {
-        vmarea_t parent_area = list_item(parent_link,vmarea_t,vma_plink);
-        vmarea_t child_area = list_item(child_link,vmarea_t,vma_plink);
+        vmarea_t *parent_area = list_item(parent_link,vmarea_t,vma_plink);
+        vmarea_t *child_area = list_item(child_link,vmarea_t,vma_plink);
 
         child_area->vma_obj = parent_area->vma_obj;
         child_area->vma_obj->mmo_ops->ref(child_area->vma_obj);
@@ -220,6 +222,9 @@ int vmmap_copy(proc_t *child)
         child_link = child_link->l_next;
         parent_link = parent_link->l_next;
 
+
+    }
+
         if(error != 0)
         {
             clean_my_vmmap(parent_list,child_list);
@@ -230,8 +235,7 @@ int vmmap_copy(proc_t *child)
         vmmap_destroy(child->p_vmmap);
         child->p_vmmap = childmap;
         return 0;
-    }
-
+	
  }
 
 
@@ -247,6 +251,7 @@ do_fork(struct regs *regs)
         /*NOT_YET_IMPLEMENTED("VM: do_fork");*/
         proc_t *child = proc_create("childproc");
         int error=0;
+        int	i = 0;
 
         if(child == NULL)
         {
@@ -282,10 +287,10 @@ do_fork(struct regs *regs)
         childthr->kt_ctx.c_pdptr = child->p_pagedir;
         childthr->kt_ctx.c_eip = (uint32_t) userland_entry;
         childthr->kt_ctx.c_esp = stack_ret_val;
-        childthr->kt_ctx.c_kstack = (uintptr_t) curthr->kt_stack;
+        childthr->kt_ctx.c_kstack = (uintptr_t) childthr->kt_kstack;
         childthr->kt_ctx.c_kstacksz = DEFAULT_STACK_SIZE;
 
-        for(int i=0;i<NFILES;++i)
+        for(i=0;i<NFILES;++i)
         {
             if(curproc->p_files[i])
             {
@@ -296,11 +301,14 @@ do_fork(struct regs *regs)
 
         pt_unmap_range(curproc->p_pagedir,USER_MEM_LOW,USER_MEM_HIGH);
 
+		dbg(DBG_PRINT,"AAW child of %s with pid %d\n", curproc->p_comm, child->p_pid);
         sched_make_runnable(childthr);
 
-        regs->r_eax = child->p_pid;
+        
 
+        regs->r_eax = child->p_pid;
+		dbg(DBG_PRINT,"AAW after return %s with pid %d\n", curproc->p_comm, child->p_pid);
+		
         return child->p_pid;
 
-        return 0;
 }

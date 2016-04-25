@@ -175,14 +175,17 @@ range_perm(struct proc *p, const void *avaddr, size_t len, int perm)
 {
         /*NOT_YET_IMPLEMENTED("VM: range_perm");*/
         
-        const void * curraddr = avaddr;
+        uint32_t curraddr = (uint32_t)avaddr;
         int retval = 0;
         int i = 0;
-		for(i = 0 ; i < len ; i++){
-			retval = addr_perm(p, (void *)((uint32_t)curraddr + PAGE_SIZE), perm);
+        
+        while(curraddr < ((uint32_t)avaddr + len))
+        {
+        	retval = addr_perm(p, (void *)(curraddr), perm);
 			if(retval == 0){
 				return 0;
 			}
-		}        
+        	curraddr += PAGE_SIZE;
+        }
         return 1;
 }

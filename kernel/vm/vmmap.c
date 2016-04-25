@@ -483,6 +483,18 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         vmarea_t *temp = vmarea_alloc();
 
         int x=lopage;
+        
+        int map_flag = MAP_TYPE & flags;
+        mmobj_t	*shadow = NULL;
+        
+        if(map_flag == MAP_PRIVATE)
+		{
+			shadow = shadow_create();
+			if(shadow == NULL)
+			{
+				return	-ENOMEM;
+			}
+		}
 
         if(lopage == 0)
         {
@@ -524,15 +536,40 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         
 		if(ret_val < 0)
 		{
-		}        
+		}    
+		
+		if(map_flag == MAP_PRIVATE)
+		{
+			temp->vma_obj = shadow;
+			shadow->mmo_ops->ref(shadow);
+			
+			shadow->mmo_shadowed=tempobj;
+			
+			
+			mmobj_t *lower_most;
+			if(tempobj->mmo_shadowed == NULL)
+			{
+				lower_most = tempobj;
+				
+			}
+			else
+			{
+				lower_most = tempobj->mmo_un.mmo_bottom_obj;
+			}
+			lower_most->mmo_ops->ref(lower_most);
+			shadow->mmo_un.mmo_bottom_obj = lower_most;
+			
+		}
+		else
+		{
+			temp->vma_obj=tempobj;
+		}    
 	        
-       	temp->vma_obj=tempobj;
+	      
+        	mmobj_t	*t = mmobj_bottom_obj(temp->vma_obj);
+        	list_insert_head( &(t->mmo_un.mmo_vmas), &(temp->vma_olink));
         
-        /*tempobj->mmo_ops->ref(tempobj);
         
-        mmobj_t	*t = mmobj_bottom_obj(temp->vma_obj);
-        list_insert_head( &(t->mmo_un.mmo_vmas), &(temp->vma_olink));
-        */
         vmmap_insert(map,temp);
         if(new)
         {
@@ -662,7 +699,7 @@ vmarea_clone(vmarea_t	*t)
 		new->vma_obj->mmo_ops->ref(new->vma_obj);
 	}
 	
-	/*list_insert_before(&(t->vma_olink), &(new->vma_olink));*/
+	list_insert_before(&(t->vma_olink), &(new->vma_olink));
 	return	new;
 
 } 
@@ -735,6 +772,12 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				temp->vma_obj->mmo_ops->put(temp->vma_obj);
 				
 				list_remove(&(temp->vma_plink));
+				
+				if(list_link_is_linked(&(temp->vma_olink)))
+            	{
+                	list_remove(&(temp->vma_olink));
+                }
+            
 
 				vmarea_free(temp);
 				/*

@@ -133,6 +133,9 @@ shadow_put(mmobj_t *o)
             }
             list_iterate_end();
             /*Might need to put bottom obj too here*/
+            
+            o->mmo_shadowed->mmo_ops->put(o->mmo_shadowed);
+            o->mmo_un.mmo_bottom_obj->mmo_ops->put(o->mmo_un.mmo_bottom_obj);
             slab_obj_free(shadow_allocator,(void *)o);
         }
 
@@ -158,20 +161,20 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
         }
 
         pframe_t *temp=NULL;
-        mmobj *cur=o;
+        mmobj_t *cur=o;
 
         while(temp == NULL && cur->mmo_shadowed != NULL)
         {
-            p=pframe_get_resident(curr,pagenum);
+            temp=pframe_get_resident(cur,pagenum);
             cur=cur->mmo_shadowed;
         }
 
-        if(p==NULL)
+        if(temp==NULL)
         {
             return pframe_lookup(cur,pagenum,0,pf);
         }
 
-        *pf=p;
+        *pf=temp;
         return 0;
 }
 
@@ -190,12 +193,12 @@ static int
 shadow_fillpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_fillpage");*/
-        pframe *temp=NULL;
-        mmobj *cur=o->mmo_shadowed;
+        pframe_t *temp=NULL;
+        mmobj_t *cur=o->mmo_shadowed;
 
         while(temp==NULL && cur!=o->mmo_un.mmo_bottom_obj)
         {
-            temp=pframe_get_resident(cur,pf->pf_pagenum):
+            temp=pframe_get_resident(cur,pf->pf_pagenum);
             cur=cur->mmo_shadowed;
         }
 

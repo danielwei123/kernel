@@ -249,7 +249,7 @@ idleproc_run(int arg1, void *arg2)
              do_mknod("/dev/null",S_IFCHR,MEM_NULL_DEVID);
 
 
-            do_mknod("/dev/zero",S_IFCHR,MEM_ZERO_DEVID);
+             do_mknod("/dev/zero",S_IFCHR,MEM_ZERO_DEVID);
 
 
              do_mknod("/dev/tty1",S_IFCHR,MKDEVID(2,1));
@@ -538,7 +538,7 @@ badargs2(kshell_t *kshell, int argc, char **argv)
  
         char  	*argvec[] = { NULL };
         char  	*envvec[] = { NULL };
- 		kernel_execve("/usr/bin/hello", argvec, envvec);
+ 		kernel_execve("/usr/bin/fork-and-wait", argvec, envvec);
   		dbg(DBG_PRINT,"EEQQ after if\n");
   		
   		
