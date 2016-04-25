@@ -285,5 +285,22 @@ do_fork(struct regs *regs)
         childthr->kt_ctx.c_kstack = (uintptr_t) curthr->kt_stack;
         childthr->kt_ctx.c_kstacksz = DEFAULT_STACK_SIZE;
 
+        for(int i=0;i<NFILES;++i)
+        {
+            if(curproc->p_files[i])
+            {
+                child->p_files[i]=curproc->p_files[i];
+                fref(child->p_files[i]);
+            }
+        }
+
+        pt_unmap_range(curproc->p_pagedir,USER_MEM_LOW,USER_MEM_HIGH);
+
+        sched_make_runnable(childthr);
+
+        regs->r_eax = child->p_pid;
+
+        return child->p_pid;
+
         return 0;
 }
