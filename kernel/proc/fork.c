@@ -61,6 +61,19 @@ fork_setup_stack(const regs_t *regs, void *kstack)
 }
 
 /*
+ *Modular function to clean up a non curproc
+ *process
+ */
+ static void clean_my_proc(proc_t *child)
+ {
+     list_remove(&child->p_list_link);
+     pt_destroy_pagedir(child->p_pagedir);
+     list_remove(&p->p_child_link);
+     vput(p->p_cwd);
+     vmmap_destroy(p->p_vmmap);
+ }
+
+/*
  * Modular function to link a shadow object
  * to an area
  */
@@ -98,7 +111,7 @@ int create_shadow_objects(vmarea_t parent_area , vmarea_t child_area)
 
     if(shadow1 == NULL)
     {
-        return -ENOSPC;
+        return -ENOMEM;
     }
 
     shadow1->mmo_ops->ref(shadow1);
@@ -108,7 +121,7 @@ int create_shadow_objects(vmarea_t parent_area , vmarea_t child_area)
     if(shadow2 == NULL)
     {
         shadow1->mmo_ops->put(shadow1);
-        return -ENOSPC;
+        return -ENOMEM;
     }
 
     shadow2->mmo_ops->ref(shadow2);
@@ -242,6 +255,35 @@ do_fork(struct regs *regs)
         }
 
         error = vmmap_copy(child);
+
+        if(error != 0)
+        {
+            clean_my_proc(child);
+            curthr->kt_errno = -error;
+            return -1;
+        }
+
+        kthread_t *childthr = kthread_clone(curthr);
+
+        if(childthr == NULL)
+        {
+            clean_my_vmmap(&curproc->p_vmmap->vmm_list,&child->p_vmmap->vmm_list);
+            clean_my_proc(child);
+            curthr->kt_errno = ENOMEM;
+            return -1;
+        }
+
+        childthr->kt_proc = child;
+        list_insert_tail(&child->p_threads,&childthr->kt_plink);
+
+        /*This part is based on talk with Ajitesh. Need to check with Karishma or Harsha once*/
+        regs->r_eax = 0;
+        int stack_ret_val = fork_setup_stack(regs,childthr->kt_kstack);
+        childthr->kt_ctx.c_pdptr = child->p_pagedir;
+        childthr->kt_ctx.c_eip = (uint32_t) userland_entry;
+        childthr->kt_ctx.c_esp = stack_ret_val;
+        childthr->kt_ctx.c_kstack = (uintptr_t) curthr->kt_stack;
+        childthr->kt_ctx.c_kstacksz = DEFAULT_STACK_SIZE;
 
         return 0;
 }
