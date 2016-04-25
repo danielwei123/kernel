@@ -281,7 +281,6 @@ do_fork(struct regs *regs)
         childthr->kt_proc = child;
         list_insert_tail(&child->p_threads,&childthr->kt_plink);
 
-        /*This part is based on talk with Ajitesh. Need to check with Karishma or Harsha once*/
         regs->r_eax = 0;
         int stack_ret_val = fork_setup_stack(regs,childthr->kt_kstack);
         childthr->kt_ctx.c_pdptr = child->p_pagedir;
@@ -292,7 +291,7 @@ do_fork(struct regs *regs)
 
         for(i=0;i<NFILES;++i)
         {
-            if(curproc->p_files[i])
+            if(curproc->p_files[i] != NULL)
             {
                 child->p_files[i]=curproc->p_files[i];
                 fref(child->p_files[i]);
@@ -300,11 +299,10 @@ do_fork(struct regs *regs)
         }
 
         pt_unmap_range(curproc->p_pagedir,USER_MEM_LOW,USER_MEM_HIGH);
+        tlb_flush_all();
 
 		dbg(DBG_PRINT,"AAW child of %s with pid %d\n", curproc->p_comm, child->p_pid);
         sched_make_runnable(childthr);
-
-        
 
         regs->r_eax = child->p_pid;
 		dbg(DBG_PRINT,"AAW after return %s with pid %d\n", curproc->p_comm, child->p_pid);

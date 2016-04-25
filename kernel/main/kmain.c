@@ -538,7 +538,7 @@ badargs2(kshell_t *kshell, int argc, char **argv)
  
         char  	*argvec[] = { NULL };
         char  	*envvec[] = { NULL };
- 		kernel_execve("/usr/bin/fork-and-wait", argvec, envvec);
+ 		kernel_execve("/sbin/init", argvec, envvec);
   		dbg(DBG_PRINT,"EEQQ after if\n");
   		
   		
