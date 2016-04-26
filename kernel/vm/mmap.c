@@ -101,20 +101,30 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 			return -EBADF;
 		}
 
-        vmmap_t	* newmap = vmmap_create();
-       	tlb_flush_all();
-    int	ret_val = vmmap_map(newmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_HILO,(vmarea_t **)ret);
+        /*vmmap_t	* newmap = vmmap_create();*/
+       
+       vmarea_t	*newret;
+       
+    int	ret_val = vmmap_map(curproc->p_vmmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE), prot, flags, off, VMMAP_DIR_HILO, &newret);
         
-        if(ret_val < 0)
+        
+        
+        if(ret_val >= 0 && (ret)!= NULL)
         {
-        	curproc->p_vmmap = NULL;
-       		return	ret_val;
+        	*ret = PN_TO_ADDR(newret->vma_start);
+        	/*pt_unmap_range(curproc->p_pagedir, (uint32_t)PN_TO_ADDR(newret->vma_start), (uint32_t)PN_TO_ADDR(newret->vma_end));*/
+       		tlb_flush_all();
+       		/*tlb_flush_range( (uintptr_t)newret->vma_start, ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE));*/
+        }
+        else
+        {
+        	*ret = (void *)(-1);
         }
         
-        curproc->p_vmmap = newmap;
-        newmap->vmm_proc = curproc;
+        /*curproc->p_vmmap = newmap;
+        newmap->vmm_proc = curproc;*/
         
-        return 0;
+       return	ret_val;
 }
 
 

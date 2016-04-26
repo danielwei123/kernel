@@ -539,6 +539,7 @@ badargs2(kshell_t *kshell, int argc, char **argv)
         char  	*argvec[] = { NULL };
         char  	*envvec[] = { NULL };
  		kernel_execve("/sbin/init", argvec, envvec);
+ 		/*kernel_execve("/usr/bin/hello", argvec, envvec);*/
   		dbg(DBG_PRINT,"EEQQ after if\n");
   		
   		

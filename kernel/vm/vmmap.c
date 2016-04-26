@@ -734,6 +734,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				split->vma_start = endvfs;
 				split->vma_off = temp->vma_off + npages + lopage - temp->vma_start;
 				
+				
 				/*
 				split->vma_prot = temp->vma_prot;
 				split->vma_flags = temp->vma_flags;

@@ -81,18 +81,18 @@ do_brk(void *addr, void **ret)
         	*ret  = curproc->p_brk;
         	return	0;
         }
- 		if(addr < curproc->p_start_brk || ((uint32_t)addr > USER_MEM_HIGH))
+ 		if(addr < curproc->p_start_brk || (ADDR_TO_PN(PAGE_ALIGN_UP(addr)) > USER_MEM_HIGH))
  		{
  			return	-ENOMEM;
  		}
         /*addr same as p_brk*/
- 		if((uint32_t)addr == (uint32_t)curproc->p_brk)
+ 		if(ADDR_TO_PN(PAGE_ALIGN_UP(addr)) == (ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk))))
         {
             *ret  = curproc->p_brk;
         	return	0;
         }
  		/*addr < p_brk*/
-        else if((uint32_t)addr < (uint32_t)curproc->p_brk)
+        else if(ADDR_TO_PN(PAGE_ALIGN_UP(addr)) < (ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk))))
         {
             uint32_t npages = ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)) - ADDR_TO_PN(PAGE_ALIGN_UP(addr));
             vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(addr)), npages);
@@ -108,7 +108,7 @@ do_brk(void *addr, void **ret)
      			return	-ENOMEM;
      		}
 
-            vmarea_t * vma = vmmap_lookup(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk)));
+            vmarea_t * vma = vmmap_lookup(curproc->p_vmmap, ADDR_TO_PN(curproc->p_start_brk));
 
             if(vma == NULL)
             {

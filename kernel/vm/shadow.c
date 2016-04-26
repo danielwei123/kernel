@@ -118,6 +118,11 @@ static void
 shadow_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_put");*/
+        
+        if(o== NULL)
+        {
+        	return;
+        }
 
         pframe_t *temp;
         if(o->mmo_refcount != o->mmo_nrespages + 1)

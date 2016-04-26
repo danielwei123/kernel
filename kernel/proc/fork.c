@@ -258,6 +258,9 @@ do_fork(struct regs *regs)
             curthr->kt_errno = ENOMEM;
             return -1;
         }
+        
+        child->p_brk = curproc->p_brk;
+        child->p_start_brk = curproc->p_start_brk;
 
         error = vmmap_copy(child);
 
@@ -298,8 +301,9 @@ do_fork(struct regs *regs)
             }
         }
 
+		
         pt_unmap_range(curproc->p_pagedir,USER_MEM_LOW,USER_MEM_HIGH);
-        tlb_flush_all();
+		tlb_flush_all();
 
 		dbg(DBG_PRINT,"AAW child of %s with pid %d\n", curproc->p_comm, child->p_pid);
         sched_make_runnable(childthr);

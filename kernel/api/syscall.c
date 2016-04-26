@@ -231,18 +231,21 @@ sys_getdents(getdents_args_t *arg)
         getdents_args_t		kern_args;
 
 
-        if(copy_from_user(&kern_args, arg, sizeof(kern_args)<0))
+
+        if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
         {
         	curthr->kt_errno = EFAULT;
         	return	-1;
         }
+
+		int	max = kern_args.count / sizeof(dirent_t);
 
         dirent_t	dir;
 
         uint32_t total_read = 0;
         int i = 0;
 
-        while(total_read < kern_args.count)
+        while(i<max)
         {
             int read = do_getdent(kern_args.fd , &dir);
             if(read < 0)
@@ -256,6 +259,7 @@ sys_getdents(getdents_args_t *arg)
             }
             copy_to_user(kern_args.dirp + i , &dir , read);
             total_read += read;
+            i = i + 1;
         }
         return total_read;
 }
