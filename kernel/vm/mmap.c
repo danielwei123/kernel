@@ -54,59 +54,97 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 {
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
         /*
-        if((!S_ISREG(curproc->pfiles[fd]->f_vnode->vn_mode)))  
+        if(curproc->p_files[fd]->f_vnode->vn_mode&S_IFREG)
         {
         	return	-EACCES;
         }
         */
         
-        if((flags==MAP_PRIVATE) && ((curproc->p_files[fd]->f_mode&FMODE_READ)!= FMODE_READ))
-        {
-        	return	-EACCES;
-        }
-        
-        if((flags==MAP_SHARED) && prot == PROT_WRITE && ((curproc->p_files[fd]->f_mode&(FMODE_READ|FMODE_WRITE)) != (FMODE_READ|FMODE_WRITE)))
-        {
-        	return	-EACCES;
-        }
-        
-        
-        if((flags==MAP_SHARED) && prot == PROT_WRITE && ((curproc->p_files[fd]->f_mode&(FMODE_APPEND)) == (FMODE_APPEND)))
-        {
-        	return	-EACCES;
-        }
-        
-        if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len) || !PAGE_ALIGNED(off))
+        if(!((flags&MAP_TYPE)==MAP_SHARED) && !((flags&MAP_TYPE)==MAP_PRIVATE) )
         {
         	return	-EINVAL;
         }
         
-        if(len == 0)
+        if(len == 0 || len > USER_MEM_HIGH)
+        {
+        	return -EINVAL;
+        }
+        
+        
+        if(!PAGE_ALIGNED(off))
         {
         	return	-EINVAL;
         }
         
-        if(flags&MAP_SHARED && flags&MAP_PRIVATE)
+                
+        if(!PAGE_ALIGNED(addr) && !(flags&MAP_ANON) && (flags&MAP_FIXED))
         {
         	return	-EINVAL;
         }
-        
-        if(!(flags&MAP_SHARED || flags&MAP_PRIVATE))
-        {
-        	return	-EINVAL;
-        }       
 
-		if((fd<0 || fd >=NFILES) && !(flags&MAP_ANON))
-		{
-			return -EBADF;
-		}
+        if(addr != NULL && (uint32_t)addr < USER_MEM_LOW)
+        {
+        	return	-EINVAL;
+        }
+        
+        if(addr != NULL && (uint32_t)addr > USER_MEM_HIGH)
+        {
+        	return	-EINVAL;
+        }
+        
+        if(addr != NULL && len > (USER_MEM_HIGH - (uint32_t)addr))
+        {
+        	return -EINVAL;
+        }	
+        
+        if( (flags&MAP_FIXED) && addr==NULL)
+        {
+        	return	-EINVAL;
+        }
+        
+        vnode_t	*vnode_param = NULL;
+        
+        if(!(flags&MAP_ANON))
+        {
+        	if((fd<0 || fd >=NFILES))
+			{
+				return -EBADF;
+			}
+			
+			if(curproc->p_files[fd] == NULL)
+        	{
+        		return -EBADF;
+       	 	}
+       	 	
+       	 	int	map_flag = MAP_TYPE&flags;
+       	 	
+       	 	if((map_flag == MAP_PRIVATE) && !(curproc->p_files[fd]->f_mode&FMODE_READ))
+        	{
+        		return	-EACCES;
+        	}
+        	
+        	if(flags&MAP_SHARED && (prot&PROT_WRITE) && !(curproc->p_files[fd]->f_mode&FMODE_READ && curproc->p_files[fd]->f_mode&FMODE_WRITE))
+        	{
+        		return	-EACCES;
+        	}
+        	
+        	if((prot&PROT_WRITE) && (curproc->p_files[fd]->f_mode&(FMODE_APPEND))) 
+        	{
+        		return	-EACCES;
+        	}
+			
+			vnode_param = curproc->p_files[fd]->f_vnode;
+        
+        }/*maps anon ends*/
+        
+        
+
 
         /*vmmap_t	* newmap = vmmap_create();*/
        
        vmarea_t	*newret;
        
-    int	ret_val = vmmap_map(curproc->p_vmmap, curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE), prot, flags, off, VMMAP_DIR_HILO, &newret);
-        
+    int	ret_val = vmmap_map(curproc->p_vmmap, vnode_param, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE), prot, flags, off, VMMAP_DIR_HILO, &newret);
         
         
         if(ret_val >= 0 && (ret)!= NULL)
@@ -118,7 +156,8 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         }
         else
         {
-        	*ret = (void *)(-1);
+        	*ret = ((void *)-1);
+        	
         }
         
         /*curproc->p_vmmap = newmap;
@@ -139,15 +178,25 @@ int
 do_munmap(void *addr, size_t len)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_munmap");*/
-		if(!PAGE_ALIGNED(addr) || !PAGE_ALIGNED(len))
+		if(!PAGE_ALIGNED(addr))
         {
         	return	-EINVAL;
         }
-        if(len == 0)
-        {
+        if(len == 0 || len >= USER_MEM_HIGH)
+        { 
         	return	-EINVAL;
         		
 		}
+		
+		if(addr == NULL)
+		{
+			return -EINVAL;
+		}
+		
+		if(addr != NULL && len > (USER_MEM_HIGH - (uint32_t)addr))
+        {
+        	return -EINVAL;
+        }	
 				        
         vmmap_remove( curproc->p_vmmap, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE));
         

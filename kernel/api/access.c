@@ -147,6 +147,10 @@ addr_perm(struct proc *p, const void *vaddr, int perm)
         
         temp = vmmap_lookup(p->p_vmmap, ADDR_TO_PN(vaddr));
         
+        if(temp==NULL)
+		{
+			return	0;
+		}       
         if(perm&PROT_READ && !(temp->vma_prot&PROT_READ)){
         	return 0;
         }

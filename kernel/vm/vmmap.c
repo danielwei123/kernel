@@ -346,6 +346,13 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 				prevList = prevList->l_prev;
 
 			}
+			
+			cur = list_item(curList, vmarea_t, vma_plink);
+			
+			if(cur->vma_start - MIN_PAGE >= npages)
+			{
+				return cur->vma_start - npages;
+			}
 
 
        }
@@ -384,6 +391,8 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 				curList = curList->l_next;
 
 			}
+			
+			
 
        }
 

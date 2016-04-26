@@ -38,7 +38,7 @@
 /*our function to check permissions*/
 int permissionCheck(vmarea_t *vm , uint32_t cause)
 {
-    if(vm->vma_prot & PROT_NONE)
+    if(vm->vma_prot== 0)
     {
         return 0;
     }
@@ -52,7 +52,12 @@ int permissionCheck(vmarea_t *vm , uint32_t cause)
     {
         return 0;
     }
-
+    
+    if(!(cause&FAULT_WRITE) && !(cause& FAULT_EXEC) && !(vm->vma_prot&PROT_READ))
+	{
+		return	0;
+	}
+	
     return 1;
 }
 
