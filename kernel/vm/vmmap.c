@@ -377,7 +377,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 
 				if(sufficient_space(prev, cur, npages))
 				{
-					return	(cur->vma_end);
+					return	(prev->vma_end);
 				}
 
 				prevList = curList;
@@ -544,7 +544,6 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			shadow->mmo_ops->ref(shadow);
 			
 			shadow->mmo_shadowed=tempobj;
-			
 			
 			mmobj_t *lower_most;
 			if(tempobj->mmo_shadowed == NULL)
@@ -748,7 +747,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				/*Case 1 ends*/
 
 			}
-			else if(temp->vma_start<lopage && temp->vma_end<endvfs)
+			else if(temp->vma_start<lopage && temp->vma_end<=endvfs && temp->vma_end > lopage)
 			{
 				/*Case 2*/
 
@@ -757,7 +756,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				/*case 2 ends*/
 
 			}
-			else if(temp->vma_start>=lopage && temp->vma_end>endvfs)
+			else if(temp->vma_start>=lopage && temp->vma_end>endvfs  && temp->vma_start < endvfs )
 			{
 				/*Case 3*/
 
