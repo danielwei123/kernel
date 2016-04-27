@@ -72,6 +72,7 @@ void
 shadow_init()
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_init");*/
+        dbg(DBG_PRINT, "Shadowing: 01\n");
          shadow_allocator = slab_allocator_create("shadowobj",  sizeof(mmobj_t));
 }
 
@@ -85,10 +86,11 @@ mmobj_t *
 shadow_create()
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_create");*/
-
+	dbg(DBG_PRINT, "Shadowing: 02\n");
         mmobj_t *temp = slab_obj_alloc(shadow_allocator);
         if (temp)
         {
+        dbg(DBG_PRINT, "Shadowing: 03\n");
             mmobj_init(temp, &shadow_mmobj_ops);
         }
         return temp;
@@ -103,6 +105,7 @@ static void
 shadow_ref(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_ref");*/
+        dbg(DBG_PRINT, "Shadowing: 04\n");
            o->mmo_refcount+=1;
 }
 
@@ -118,19 +121,22 @@ static void
 shadow_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_put");*/
-        
-        if(o== NULL)
+        dbg(DBG_PRINT, "Shadowing: 05\n");
+       /* if(o== NULL)
         {
+        dbg(DBG_PRINT, "Shadowing: 06\n");
         	return;
         }
-
+*/
         pframe_t *temp;
         if(o->mmo_refcount != o->mmo_nrespages + 1)
         {
+        dbg(DBG_PRINT, "Shadowing: 07\n");
             o->mmo_refcount-=1;
         }
         else
         {
+        dbg(DBG_PRINT, "Shadowing: 08\n");
             list_iterate_begin(&(o->mmo_respages),temp,pframe_t,pf_olink)
             {
                 pframe_unpin(temp);
@@ -160,8 +166,10 @@ static int
 shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");*/
+        dbg(DBG_PRINT, "Shadowing: 09\n");
         if(forwrite==1)
         {
+        dbg(DBG_PRINT, "Shadowing: 10\n");
             return pframe_get(o,pagenum,pf);
         }
 
@@ -170,16 +178,19 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 
         while(temp == NULL && cur->mmo_shadowed != NULL)
         {
+        dbg(DBG_PRINT, "Shadowing: 11\n");
             temp=pframe_get_resident(cur,pagenum);
             cur=cur->mmo_shadowed;
         }
 
         if(temp==NULL)
         {
+        dbg(DBG_PRINT, "Shadowing: 12\n");
             return pframe_lookup(cur,pagenum,0,pf);
         }
 
         *pf=temp;
+        dbg(DBG_PRINT, "Shadowing: 13\n");
         return 0;
 }
 
@@ -198,27 +209,32 @@ static int
 shadow_fillpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_fillpage");*/
+        dbg(DBG_PRINT, "Shadowing: 14\n");
         pframe_t *temp=NULL;
         mmobj_t *cur=o->mmo_shadowed;
 
         while(temp==NULL && cur!=o->mmo_un.mmo_bottom_obj)
         {
+        dbg(DBG_PRINT, "Shadowing: 15\n");
             temp=pframe_get_resident(cur,pf->pf_pagenum);
             cur=cur->mmo_shadowed;
         }
 
         if(temp==NULL)
         {
+        dbg(DBG_PRINT, "Shadowing: 16\n");
             /*bottommost diamond*/
             int x=pframe_lookup(cur,pf->pf_pagenum,1,&temp);
             if(x<0)
             {
+            dbg(DBG_PRINT, "Shadowing: 17\n");
                 return x;
             }
         }
 
         pframe_pin(pf);
         memcpy(pf->pf_addr,temp->pf_addr,PAGE_SIZE);
+        dbg(DBG_PRINT, "Shadowing: 18\n");
         return 0;
 }
 
@@ -228,6 +244,7 @@ static int
 shadow_dirtypage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_dirtypage");*/
+        dbg(DBG_PRINT, "Shadowing: 19\n");
         return 0;
 }
 

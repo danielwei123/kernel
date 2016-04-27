@@ -58,6 +58,7 @@ void
 anon_init()
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_init");*/
+        dbg(DBG_PRINT,"XFINN 1\n");
         anon_allocator = slab_allocator_create("anon", sizeof(mmobj_t));
 }
 
@@ -71,11 +72,13 @@ mmobj_t *
 anon_create()
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_create");*/
+        dbg(DBG_PRINT,"FINN 2\n");
         mmobj_t *temp = slab_obj_alloc(anon_allocator);
         if (temp)
-        {
+        {	dbg(DBG_PRINT,"FINN 3\n");
             mmobj_init(temp, &anon_mmobj_ops);
         }
+        dbg(DBG_PRINT,"FINN 4\n");
         return temp;
 }
 
@@ -89,6 +92,7 @@ anon_ref(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_ref");*/
         o->mmo_refcount+=1;
+        dbg(DBG_PRINT,"FINN 5\n");
 
 }
 
@@ -105,20 +109,25 @@ anon_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_put");*/
         pframe_t *temp;
+        dbg(DBG_PRINT,"FINN 6\n");
         if(o->mmo_refcount != o->mmo_nrespages + 1)
         {
+        dbg(DBG_PRINT,"FINN 7\n");
             o->mmo_refcount-=1;
         }
         else
         {
+        	dbg(DBG_PRINT,"FINN 8\n");
             list_iterate_begin(&(o->mmo_respages),temp,pframe_t,pf_olink)
             {
+            	dbg(DBG_PRINT,"FINN 9\n");
                 pframe_unpin(temp);
                 pframe_free(temp);
             }
             list_iterate_end();
             slab_obj_free(anon_allocator,(void *)o);
         }
+        dbg(DBG_PRINT,"FINN 10\n");
 }
 
 /* Get the corresponding page from the mmobj. No special handling is
@@ -127,6 +136,7 @@ static int
 anon_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_lookuppage");*/
+        dbg(DBG_PRINT,"FINN 11\n");
         return pframe_get(o, pagenum, pf);
 }
 
@@ -138,10 +148,12 @@ anon_fillpage(mmobj_t *o, pframe_t *pf)
        /*NOT_YET_IMPLEMENTED("VM: anon_fillpage");*/
        	if(!pframe_is_pinned(pf))
        	{
+       		dbg(DBG_PRINT,"FINN 12\n");
        		pframe_pin(pf);
        	}
        	
        	memset(pf->pf_addr, 0, PAGE_SIZE);
+       	dbg(DBG_PRINT,"FINN 13\n");
         return 0;
 }
 

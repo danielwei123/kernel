@@ -130,11 +130,13 @@ vmmap_t *
 vmmap_create(void)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_create");*/
+        dbg(DBG_PRINT, "VMMAPING: 01 \n");
         vmmap_t *temp = (vmmap_t *)slab_obj_alloc(vmmap_allocator);
-        if(temp == NULL)
+       /* if(temp == NULL)
         {
+        dbg(DBG_PRINT, "VMMAPING: 02 \n");
             return temp;
-        }
+        }*/
         list_init(&temp->vmm_list);
         temp->vmm_proc = NULL;
         return temp;
@@ -146,17 +148,21 @@ void
 vmmap_destroy(vmmap_t *map)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_destroy");*/
+        dbg(DBG_PRINT, "VMMAPING: 03 \n");
         vmarea_t *temp;
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
+        dbg(DBG_PRINT, "VMMAPING: 04 \n");
             /*CHECK STUFF HERE */
             if(temp->vma_obj)
             {
+            dbg(DBG_PRINT, "VMMAPING: 05 \n");
                 temp->vma_obj->mmo_ops->put(temp->vma_obj);
             }
             list_remove(&(temp->vma_plink));
             if(list_link_is_linked(&(temp->vma_olink)))
             {
+            dbg(DBG_PRINT, "VMMAPING: 06 \n");
                 list_remove(&(temp->vma_olink));
             }
             vmarea_free(temp);
@@ -177,7 +183,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
          
          KASSERT(!list_link_is_linked(&(newvma->vma_plink)));
          
-         
+         dbg(DBG_PRINT, "VMMAPING: 07 \n");
 /*
          if(list_empty(&(map->vmm_list)))
          {
@@ -208,11 +214,12 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 	
 	while(traverse != insertionList)
 	{
-	
+	dbg(DBG_PRINT, "VMMAPING: 08 \n");
 		temp = list_item(traverse, vmarea_t, vma_plink);
 	
 		if(temp->vma_start >= newvma->vma_end)
 		{
+		dbg(DBG_PRINT, "VMMAPING: 09 \n");
 			list_insert_before(traverse, &newvma->vma_plink);
 			 dbg(DBG_PRINT, "e L %d\n", list_empty(&(map->vmm_list)));
 			newvma->vma_vmmap = map;
@@ -228,7 +235,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
     newvma->vma_vmmap = map;
 	
 	
-
+dbg(DBG_PRINT, "VMMAPING: 10 \n");
 		return;
 }
 
@@ -239,6 +246,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 int
 sufficient_space(vmarea_t *prev, vmarea_t	*next, int	npages)
 {
+dbg(DBG_PRINT, "VMMAPING: 11 \n");
 	return ((prev!=NULL) && (next!=NULL) && ((next->vma_start - prev->vma_end)>=(uint32_t)npages));
 }
 
@@ -250,30 +258,50 @@ int
 check_boundary(vmmap_t *map,int32_t npages,int dir)
 {
     list_t *vmareas = &(map->vmm_list);
-    if(dir == VMMAP_DIR_LOHI)
+    dbg(DBG_PRINT, "VMMAPING: 12 \n");
+    dbg(DBG_PRINT, "VMMAPING: 16 \n");
+      /*  if(list_empty(vmareas))
+        {
+        dbg(DBG_PRINT, "VMMAPING: 17 \n");
+            return MAX_PAGE-npages;
+        }*/
+        vmarea_t *temp = list_item(vmareas->l_prev,vmarea_t,vma_plink);
+        if(MAX_PAGE - temp->vma_end >= (uint32_t) npages)
+        {
+        dbg(DBG_PRINT, "VMMAPING: 18 \n");
+            return MAX_PAGE-npages;
+        }
+   /* if(dir == VMMAP_DIR_LOHI)
     {
+    dbg(DBG_PRINT, "VMMAPING: 13 \n");
         if(list_empty(vmareas))
         {
+        dbg(DBG_PRINT, "VMMAPING: 14 \n");
             return MIN_PAGE;
         }
         vmarea_t *temp = list_item(vmareas->l_next,vmarea_t,vma_plink);
         if(temp->vma_start - MIN_PAGE >= (uint32_t)npages)
         {
+        dbg(DBG_PRINT, "VMMAPING: 15 \n");
             return MIN_PAGE;
         }
     }
     else
     {
+    dbg(DBG_PRINT, "VMMAPING: 16 \n");
         if(list_empty(vmareas))
         {
+        dbg(DBG_PRINT, "VMMAPING: 17 \n");
             return MAX_PAGE-npages;
         }
         vmarea_t *temp = list_item(vmareas->l_prev,vmarea_t,vma_plink);
         if(MAX_PAGE - temp->vma_end >= (uint32_t) npages)
         {
+        dbg(DBG_PRINT, "VMMAPING: 18 \n");
             return MAX_PAGE-npages;
         }
-    }
+    }*/
+    dbg(DBG_PRINT, "VMMAPING: 19 \n");
     return -1;
 }
 
@@ -298,12 +326,13 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
        			if else for first fit algo
 
        */
-       
+       dbg(DBG_PRINT, "VMMAPING: 20 \n");
        
        int x = check_boundary(map,npages,dir);
 
        if(x != -1)
        {
+       dbg(DBG_PRINT, "VMMAPING: 21 \n");
            return x;
        }
 
@@ -315,30 +344,39 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 
        if(dir == VMMAP_DIR_HILO)
        {
+dbg(DBG_PRINT, "VMMAPING: 22 \n");
 			prevList = ((map->vmm_list).l_prev);
 
 			while(prevList != &(map->vmm_list))
 			{
+			dbg(DBG_PRINT, "VMMAPING: 23 \n");
 				if(curList != NULL)
 				{
+				dbg(DBG_PRINT, "VMMAPING: 24 \n");
 					cur = list_item(curList, vmarea_t, vma_plink);
 				}
 				else
 				{
+				dbg(DBG_PRINT, "VMMAPING: 25 \n");
 					cur = NULL;
 				}
 
 				if(prevList != NULL)
 				{
+				dbg(DBG_PRINT, "VMMAPING: 26 \n");
 					prev = list_item(prevList, vmarea_t, vma_plink);
 				}
-				else
+			/*	else
 				{
+				
+				dbg(DBG_PRINT, "VMMAPING: 27 \n");
 					prev = NULL;
 				}
-
+*/
 				if(sufficient_space(prev, cur, npages))
 				{
+				
+				dbg(DBG_PRINT, "VMMAPING: 28 \n");
 					return	cur->vma_start-npages;
 				}
 
@@ -351,39 +389,47 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 			
 			if(cur->vma_start - MIN_PAGE >= npages)
 			{
+		dbg(DBG_PRINT, "VMMAPING: 29 \n");	
 				return cur->vma_start - npages;
 			}
 
 
        }
-       else/*VMM7AP_DIR_LOHI*/
+       /*VMM7AP_DIR_LOHI*/
+   /*    else
        {
-
+dbg(DBG_PRINT, "VMMAPING: 30 \n");
 
 			curList = ((map->vmm_list).l_next);
 
 			while(curList != &(map->vmm_list))
 			{
+			dbg(DBG_PRINT, "VMMAPING: 31 \n");
 				if(curList != NULL)
 				{
+				dbg(DBG_PRINT, "VMMAPING: 32 \n");
 					cur = list_item(curList, vmarea_t, vma_plink);
 				}
 				else
 				{
+				dbg(DBG_PRINT, "VMMAPING: 33 \n");
 					cur = NULL;
 				}
 
 				if(prevList != NULL)
 				{
+				dbg(DBG_PRINT, "VMMAPING: 34 \n");
 					prev = list_item(prevList, vmarea_t, vma_plink);
 				}
 				else
 				{
+				dbg(DBG_PRINT, "VMMAPING: 35 \n");
 					prev = NULL;
 				}
 
 				if(sufficient_space(prev, cur, npages))
 				{
+				dbg(DBG_PRINT, "VMMAPING: 36 \n");
 					return	(prev->vma_end);
 				}
 
@@ -394,8 +440,8 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 			
 			
 
-       }
-
+       }*/
+dbg(DBG_PRINT, "VMMAPING: 37 \n");
        return -1;
 }
 
@@ -406,11 +452,14 @@ vmarea_t *
 vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_lookup");*/
+        dbg(DBG_PRINT, "VMMAPING: 38 \n");
         vmarea_t	*temp;	
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
+        dbg(DBG_PRINT, "VMMAPING: 39 \n");
             if(temp->vma_start <= vfn && temp->vma_end > vfn)
             {
+            dbg(DBG_PRINT, "VMMAPING: 40 \n");
                 return temp;
               
             }
@@ -427,22 +476,26 @@ vmmap_t *
 vmmap_clone(vmmap_t *map)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_clone");*/
+        dbg(DBG_PRINT, "VMMAPING: 41 \n");
         vmmap_t *temp = vmmap_create();
-        if(temp == NULL)
+       /* if(temp == NULL)
         {
+        dbg(DBG_PRINT, "VMMAPING: 42 \n");
             return temp;
         }
-        
+        */
         temp->vmm_proc = map->vmm_proc;
         vmarea_t *temparea;
         list_iterate_begin(&(map->vmm_list),temparea,vmarea_t,vma_plink)
         {
+        dbg(DBG_PRINT, "VMMAPING: 43 \n");
             vmarea_t *newtemparea = vmarea_alloc();
-            if(newtemparea == NULL)
+          /*  if(newtemparea == NULL)
             {
+            dbg(DBG_PRINT, "VMMAPING: 44 \n");
                 vmmap_destroy(temp);
                 return NULL;
-            }
+            }*/
             newtemparea->vma_start = temparea->vma_start;
             newtemparea->vma_end = temparea->vma_end;
             newtemparea->vma_off = temparea->vma_off;
@@ -455,6 +508,7 @@ vmmap_clone(vmmap_t *map)
             list_insert_tail(&(temp->vmm_list),&(newtemparea->vma_plink));
         }
         list_iterate_end();
+        dbg(DBG_PRINT, "VMMAPING: 45 \n");
         return temp;
 }
 
@@ -489,6 +543,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 {
 
         /*Anirudh's vmmap_map()*/
+        dbg(DBG_PRINT, "VMMAPING: 46 \n");
         vmarea_t *temp = vmarea_alloc();
 
         int x=lopage;
@@ -498,23 +553,28 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         
         if(map_flag == MAP_PRIVATE)
 		{
+		dbg(DBG_PRINT, "VMMAPING: 47 \n");
 			shadow = shadow_create();
-			if(shadow == NULL)
+		/*	if(shadow == NULL)
 			{
+			dbg(DBG_PRINT, "VMMAPING: 48 \n");
 				return	-ENOMEM;
-			}
+			}*/
 		}
 
         if(lopage == 0)
         {
+        dbg(DBG_PRINT, "VMMAPING: 49 \n");
             x=vmmap_find_range(map,npages,dir);
             if(x < 0)
             {
+            dbg(DBG_PRINT, "VMMAPING: 50 \n");
                 vmarea_free(temp);
                 return -ENOMEM;
             }
         }else if(!vmmap_is_range_empty(map, lopage, npages))
         {
+        dbg(DBG_PRINT, "VMMAPING: 51 \n");
         	int remove_status = vmmap_remove(map,x,npages);
         }
 
@@ -535,20 +595,20 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 
         if(file==NULL)
         {
+        dbg(DBG_PRINT, "VMMAPING: 52 \n");
             tempobj=anon_create();
             tempobj->mmo_ops->ref(tempobj);
         }
         else
         {
+        dbg(DBG_PRINT, "VMMAPING: 53 \n");
             ret_val=file->vn_ops->mmap(file,temp,&tempobj);
         }
         
-		if(ret_val < 0)
-		{
-		}    
 		
 		if(map_flag == MAP_PRIVATE)
 		{
+		dbg(DBG_PRINT, "VMMAPING: 54 \n");
 			temp->vma_obj = shadow;
 			shadow->mmo_ops->ref(shadow);
 			
@@ -557,19 +617,22 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			mmobj_t *lower_most;
 			if(tempobj->mmo_shadowed == NULL)
 			{
+			dbg(DBG_PRINT, "VMMAPING: 55 \n");
 				lower_most = tempobj;
 				
 			}
-			else
+		/*	else
 			{
+			dbg(DBG_PRINT, "VMMAPING: 56 \n");
 				lower_most = tempobj->mmo_un.mmo_bottom_obj;
-			}
+			}*/
 			lower_most->mmo_ops->ref(lower_most);
 			shadow->mmo_un.mmo_bottom_obj = lower_most;
 			
 		}
 		else
 		{
+		dbg(DBG_PRINT, "VMMAPING: 57 \n");
 			temp->vma_obj=tempobj;
 		}    
 	        
@@ -581,6 +644,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         vmmap_insert(map,temp);
         if(new)
         {
+        dbg(DBG_PRINT, "VMMAPING: 58 \n");
             *new = temp;
         }
         return 0;
@@ -701,13 +765,15 @@ vmarea_clone(vmarea_t	*t)
 	list_link_init(&(new->vma_plink));
 	list_link_init(&(new->vma_olink));
 	
-	
+	dbg(DBG_PRINT, "VMMAPING: 59 \n");
 	if(new->vma_obj != NULL)
 	{
+	dbg(DBG_PRINT, "VMMAPING: 60 \n");
 		new->vma_obj->mmo_ops->ref(new->vma_obj);
 	}
 	
 	list_insert_before(&(t->vma_olink), &(new->vma_olink));
+	dbg(DBG_PRINT, "VMMAPING: 61 \n");
 	return	new;
 
 } 
@@ -718,23 +784,25 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
         /*NOT_YET_IMPLEMENTED("VM: vmmap_remove");*/
         vmarea_t *temp;
         uint32_t endvfs = lopage + npages;
-        
-        if(npages == 0)
+        dbg(DBG_PRINT, "VMMAPING: 62 \n");
+      /*  if(npages == 0)
         {
+        dbg(DBG_PRINT, "VMMAPING: 63 \n");
         	return	0;
         }
-        
+        */
         list_link_t	*link = (map->vmm_list).l_next;
         list_link_t	*linknext = NULL;
         
         while(link != &(map->vmm_list)){
-
+dbg(DBG_PRINT, "VMMAPING: 64 \n");
 			temp = list_item(link, vmarea_t, vma_plink);
 		
 			linknext = link->l_next;
 		
 			if( temp->vma_start<lopage && temp->vma_end>endvfs)
 			{
+			dbg(DBG_PRINT, "VMMAPING: 65 \n");
 				/*Case 1*/
 				vmarea_t	*split = vmarea_clone(temp);
 				
@@ -760,6 +828,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			else if(temp->vma_start<lopage && temp->vma_end<=endvfs && temp->vma_end > lopage)
 			{
 				/*Case 2*/
+				dbg(DBG_PRINT, "VMMAPING: 66 \n");
 
 				temp->vma_end = lopage;
 
@@ -768,6 +837,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			}
 			else if(temp->vma_start>=lopage && temp->vma_end>endvfs  && temp->vma_start < endvfs )
 			{
+			dbg(DBG_PRINT, "VMMAPING: 67 \n");
 				/*Case 3*/
 
 				temp->vma_off = (endvfs - temp->vma_start)+ temp->vma_off;
@@ -777,6 +847,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			}
 			else if(temp->vma_start>=lopage && temp->vma_end<=endvfs)
 			{
+			dbg(DBG_PRINT, "VMMAPING: 68 \n");
 				/*Case 4*/
 				temp->vma_obj->mmo_ops->put(temp->vma_obj);
 				
@@ -784,6 +855,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				
 				if(list_link_is_linked(&(temp->vma_olink)))
             	{
+            	dbg(DBG_PRINT, "VMMAPING: 69 \n");
                 	list_remove(&(temp->vma_olink));
                 }
             
@@ -801,7 +873,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 
 
 		pt_unmap_range(curproc->p_pagedir, (uint32_t)PN_TO_ADDR(lopage), (uint32_t)PN_TO_ADDR(endvfs));
-		
+		dbg(DBG_PRINT, "VMMAPING: 70 \n");
         return 0;
 }
 
@@ -813,11 +885,13 @@ int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
+        dbg(DBG_PRINT, "VMMAPING: 71 \n");
         dbg(DBG_PRINT, "XXE Anirudh function\n");
-        if(npages==0)
+      /*  if(npages==0)
         {
+        dbg(DBG_PRINT, "VMMAPING: 72 \n");
             return 1;
-        }
+        }*/
         dbg(DBG_PRINT, "XXE Anirudh function 2\n");
         /*Check if you need to add 1 also to endvfs*/
         uint32_t endvfn = startvfn + npages;
@@ -825,27 +899,32 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
                 dbg(DBG_PRINT, "XXE Anirudh function 3\n");
         list_iterate_begin(&(map->vmm_list),temp,vmarea_t,vma_plink)
         {
+        dbg(DBG_PRINT, "VMMAPING: 73 \n");
                 dbg(DBG_PRINT, "XXE Anirudh function 4\n");
             if (startvfn >= temp->vma_start && startvfn < temp->vma_end)
             {
+            dbg(DBG_PRINT, "VMMAPING: 74 \n");
                     dbg(DBG_PRINT, "XXE Anirudh function 5\n");
                 return 0;
             }
 
             if (endvfn > temp->vma_start && endvfn <= temp->vma_end)
             {
+            dbg(DBG_PRINT, "VMMAPING: 75 \n");
                     dbg(DBG_PRINT, "XXE Anirudh function 6\n");
                 return 0;
             }
 
-            if(startvfn < temp->vma_start && endvfn >= temp->vma_end)
+       /*     if(startvfn < temp->vma_start && endvfn >= temp->vma_end)
             {
+            dbg(DBG_PRINT, "VMMAPING: 76 \n");
                     dbg(DBG_PRINT, "XXE Anirudh function 7\n");
                 return 0;
-            }
+            }*/
         }
         list_iterate_end();
                 dbg(DBG_PRINT, "XXE Anirudh function 9\n");
+                dbg(DBG_PRINT, "VMMAPING: 77 \n");
         return 1;
 }
 
@@ -865,10 +944,10 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
-
+dbg(DBG_PRINT, "VMMAPING: 78 \n");
         while (dest_pos < count){
             uint32_t currvfn = ADDR_TO_PN(curraddr);
-
+dbg(DBG_PRINT, "VMMAPING: 79 \n");
             vmarea_t *vma = vmmap_lookup(map, currvfn);
 
             KASSERT(vma != NULL);
@@ -877,38 +956,46 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
             /* Not Sure to Align Up*/
             uint32_t pages_to_read = 0;
             if (ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)) < vma->vma_end - currvfn){
+            dbg(DBG_PRINT, "VMMAPING: 80 \n");
             	pages_to_read = ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos));
             }
             else{
+            dbg(DBG_PRINT, "VMMAPING: 81 \n");
             	pages_to_read = vma->vma_end - currvfn;
             }
             uint32_t i;
             for (i = 0; i < pages_to_read; i++){
                 pframe_t *p;
+                dbg(DBG_PRINT, "VMMAPING: 82 \n");
                 int get_res = pframe_lookup(vma->vma_obj, offset + i, 0, &p);
 
-                if (get_res < 0){
+           /*     if (get_res < 0){
+                dbg(DBG_PRINT, "VMMAPING: 83 \n");
                     return get_res;
                 }
-
+*/
                 int data_offset = (int) curraddr % PAGE_SIZE;
 
                 int read_size = 0;
+                dbg(DBG_PRINT, "VMMAPING: 85 \n");
+                	read_size = count - dest_pos;
 
-                if (PAGE_SIZE - data_offset < count - dest_pos){
+             /*   if (PAGE_SIZE - data_offset < count - dest_pos){
+                dbg(DBG_PRINT, "VMMAPING: 84 \n");
                 	read_size = PAGE_SIZE - data_offset;
                 }
                 else{
+                dbg(DBG_PRINT, "VMMAPING: 85 \n");
                 	read_size = count - dest_pos;
                 }
-
+*/
                 memcpy((char *) buf + dest_pos, (char *) p->pf_addr + data_offset, read_size);
 
                 dest_pos += read_size;
                 curraddr = (char *) curraddr + read_size;
             }
     }
-
+dbg(DBG_PRINT, "VMMAPING: 86 \n");
     return 0;
 }
 
@@ -924,11 +1011,12 @@ int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_write"); */
-
+dbg(DBG_PRINT, "VMMAPING: 87 \n");
         uint32_t dest_pos = 0;
         const void *curraddr = vaddr;
 
         while (dest_pos < count){
+        dbg(DBG_PRINT, "VMMAPING: 88 \n");
             uint32_t currvfn = ADDR_TO_PN(curraddr);
 
             vmarea_t *vma = vmmap_lookup(map, currvfn);
@@ -939,42 +1027,50 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
             /* Not Sure to Align Up */
             uint32_t pages_to_read = 0;
              if (ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos)) < vma->vma_end - currvfn){
+             dbg(DBG_PRINT, "VMMAPING: 89 \n");
             	pages_to_read = ADDR_TO_PN(PAGE_ALIGN_UP(count - dest_pos));
             }
             else{
+            dbg(DBG_PRINT, "VMMAPING: 90 \n");
             	pages_to_read = vma->vma_end - currvfn;
             }
             uint32_t i;
             for (i = 0; i < pages_to_read; i++){
+            dbg(DBG_PRINT, "VMMAPING: 91 \n");
                 pframe_t *p;
                 int get_res = pframe_lookup(vma->vma_obj, offset + i, 0, &p);
-
+/*
                 if (get_res < 0){
+                dbg(DBG_PRINT, "VMMAPING: 92 \n");
                     return get_res;
                 }
-
+*/
                 int data_offset = (int) curraddr % PAGE_SIZE;
 
                int write_size = 0;
-
-                if (PAGE_SIZE - data_offset < count - dest_pos){
+dbg(DBG_PRINT, "VMMAPING: 94 \n");
+                	write_size = count - dest_pos;
+      /*        if (PAGE_SIZE - data_offset < count - dest_pos){
+                dbg(DBG_PRINT, "VMMAPING: 93 \n");
                 	write_size = PAGE_SIZE - data_offset;
                 }
                 else{
+                dbg(DBG_PRINT, "VMMAPING: 94 \n");
                 	write_size = count - dest_pos;
-                }
+                }*/
                 memcpy((char *) p->pf_addr + data_offset, (char *) buf + dest_pos, write_size);
 
                 int res = pframe_dirty(p);
                 
-                if(res < 0){
+          /*      if(res < 0){
+                dbg(DBG_PRINT, "VMMAPING: 95 \n");
                 	return res;
                 }
-
+*/
                 dest_pos += write_size;
                 curraddr = (char *) curraddr + write_size;
             }
     }
-
+dbg(DBG_PRINT, "VMMAPING: 96 \n");
     return 0;
 }

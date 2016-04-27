@@ -64,6 +64,7 @@ fork_setup_stack(const regs_t *regs, void *kstack)
  *Modular function to clean up a non curproc
  *process
  */
+ /*
  static void clean_my_proc(proc_t *child)
  {
      list_remove(&child->p_list_link);
@@ -71,8 +72,10 @@ fork_setup_stack(const regs_t *regs, void *kstack)
      list_remove(&child->p_child_link);
      vput(child->p_cwd);
      vmmap_destroy(child->p_vmmap);
+     dbg(DBG_PRINT, "FORKING: 07\n");
+     return 0;
  }
-
+*/
 /*
  * Modular function to link a shadow object
  * to an area
@@ -92,12 +95,14 @@ void link_shadow_obj(vmarea_t *area, mmobj_t *shadow)
     /*Really not sure about this part. Need to check*/
     if(list_link_is_linked(&area->vma_olink))
     {
+    	dbg(DBG_PRINT, "FORKING: 08\n");
         list_remove(&area->vma_olink);
     }
     list_insert_tail(&lower_obj->mmo_un.mmo_vmas,&area->vma_olink);
 
     /*No need to ref for shadow object since I did it in previous function*/
     area->vma_obj = shadow;
+    dbg(DBG_PRINT, "FORKING: 09\n");
 }
 
 
@@ -108,27 +113,29 @@ void link_shadow_obj(vmarea_t *area, mmobj_t *shadow)
 int create_shadow_objects(vmarea_t *parent_area , vmarea_t *child_area)
 {
     mmobj_t *shadow1 = shadow_create();
-
+/*
     if(shadow1 == NULL)
     {
+    dbg(DBG_PRINT, "FORKING: 10\n");
         return -ENOMEM;
     }
-
+*/
     shadow1->mmo_ops->ref(shadow1);
 
     mmobj_t *shadow2 = shadow_create();
-
+/*
     if(shadow2 == NULL)
     {
+    dbg(DBG_PRINT, "FORKING: 11\n");
         shadow1->mmo_ops->put(shadow1);
         return -ENOMEM;
     }
-
+*/
     shadow2->mmo_ops->ref(shadow2);
 
     link_shadow_obj(parent_area,shadow1);
     link_shadow_obj(child_area,shadow2);
-    
+    dbg(DBG_PRINT, "FORKING: 12\n");
     return	0;
 }
 
@@ -138,7 +145,7 @@ int create_shadow_objects(vmarea_t *parent_area , vmarea_t *child_area)
  * problems while creating the vmmap for
  * child process
  */
-
+/*
 void clean_my_vmmap(list_t *parent_list,list_t *child_list)
 {
     list_link_t *parent_link = parent_list->l_next;
@@ -146,21 +153,22 @@ void clean_my_vmmap(list_t *parent_list,list_t *child_list)
 
     while(parent_link != parent_list)
     {
+    dbg(DBG_PRINT, "FORKING: 13\n");
         vmarea_t *parent_area = list_item(parent_link,vmarea_t,vma_plink);
         vmarea_t *child_area = list_item(child_link,vmarea_t,vma_plink);
 
-        /*If we find an area with no object, we can stop cleaning up*/
+        /*If we find an area with no object, we can stop cleaning up
         if(child_area->vma_obj == NULL)
-        {
+        {dbg(DBG_PRINT, "FORKING: 14\n");
             return;
         }
 
         int map = parent_area->vma_flags & MAP_TYPE;
 
         /*Screwed. Need to clean shadow objects*/
-        /*SOMEONE PLEASE CHECK THIS PART AGAIN!!!*/
+        /*SOMEONE PLEASE CHECK THIS PART AGAIN!!!
         if(map == MAP_PRIVATE)
-        {
+        {dbg(DBG_PRINT, "FORKING: 15\n");
             mmobj_t *lower_obj = parent_area->vma_obj->mmo_shadowed;
             lower_obj->mmo_ops->ref(lower_obj);
 
@@ -171,8 +179,9 @@ void clean_my_vmmap(list_t *parent_list,list_t *child_list)
         parent_link = parent_link->l_next;
         child_link = child_link->l_next;
     }
+    dbg(DBG_PRINT, "FORKING: 16\n");
 }
-
+*/
 /*
  * Modular function to copy vmmap of parent
  * to child. Returning 0 on success. Negative
@@ -184,12 +193,13 @@ int vmmap_copy(proc_t *child)
     int error = 0;
 
     vmmap_t *childmap = vmmap_clone(curproc->p_vmmap);
-
+/*
     if(childmap == NULL)
     {
+    dbg(DBG_PRINT, "FORKING: 17\n");
         return -ENOMEM;
     }
-
+*/
     childmap->vmm_proc = child;
 
     list_t *parent_list = &curproc->p_vmmap->vmm_list;
@@ -199,6 +209,7 @@ int vmmap_copy(proc_t *child)
 
     while(parent_link != parent_list && error == 0)
     {
+    dbg(DBG_PRINT, "FORKING: 18\n");
         vmarea_t *parent_area = list_item(parent_link,vmarea_t,vma_plink);
         vmarea_t *child_area = list_item(child_link,vmarea_t,vma_plink);
 
@@ -210,30 +221,33 @@ int vmmap_copy(proc_t *child)
 
         if(map == MAP_PRIVATE)
         {
+        dbg(DBG_PRINT, "FORKING: 19\n");
             error = create_shadow_objects(parent_area,child_area);
-
+/*
             if(error < 0)
             {
+            dbg(DBG_PRINT, "FORKING: 20\n");
                 child_area->vma_obj->mmo_ops->put(child_area->vma_obj);
                 child_area->vma_obj=NULL;
-            }
+            }*/
         }
 
         child_link = child_link->l_next;
         parent_link = parent_link->l_next;
 
+	  }
 
-    }
-
-        if(error != 0)
+   /*     if(error != 0)
         {
             clean_my_vmmap(parent_list,child_list);
             vmmap_destroy(childmap);
+        	dbg(DBG_PRINT, "FORKING: 21\n");
             return error;
         }
-
+*/
         vmmap_destroy(child->p_vmmap);
         child->p_vmmap = childmap;
+        dbg(DBG_PRINT, "FORKING: 22\n");
         return 0;
 	
  }
@@ -252,35 +266,38 @@ do_fork(struct regs *regs)
         proc_t *child = proc_create("childproc");
         int error=0;
         int	i = 0;
-
+/*
         if(child == NULL)
         {
+        	dbg(DBG_PRINT, "FORKING: 01\n");
             curthr->kt_errno = ENOMEM;
             return -1;
         }
-        
+ */       
         child->p_brk = curproc->p_brk;
         child->p_start_brk = curproc->p_start_brk;
 
         error = vmmap_copy(child);
-
+/*
         if(error != 0)
         {
+        	dbg(DBG_PRINT, "FORKING: 02\n");
             clean_my_proc(child);
             curthr->kt_errno = -error;
             return -1;
         }
-
+*/
         kthread_t *childthr = kthread_clone(curthr);
-
+/*
         if(childthr == NULL)
         {
+        	dbg(DBG_PRINT, "FORKING: 03\n");
             clean_my_vmmap(&curproc->p_vmmap->vmm_list,&child->p_vmmap->vmm_list);
             clean_my_proc(child);
             curthr->kt_errno = ENOMEM;
             return -1;
         }
-
+*/
         childthr->kt_proc = child;
         list_insert_tail(&child->p_threads,&childthr->kt_plink);
 
@@ -294,8 +311,10 @@ do_fork(struct regs *regs)
 
         for(i=0;i<NFILES;++i)
         {
+        	dbg(DBG_PRINT, "FORKING: 04\n");
             if(curproc->p_files[i] != NULL)
             {
+            	dbg(DBG_PRINT, "FORKING: 05\n");
                 child->p_files[i]=curproc->p_files[i];
                 fref(child->p_files[i]);
             }
@@ -311,6 +330,7 @@ do_fork(struct regs *regs)
         regs->r_eax = child->p_pid;
 		dbg(DBG_PRINT,"AAW after return %s with pid %d\n", curproc->p_comm, child->p_pid);
 		
+		dbg(DBG_PRINT, "FORKING: 06\n");
         return child->p_pid;
 
 }

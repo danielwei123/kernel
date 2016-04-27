@@ -146,21 +146,29 @@ addr_perm(struct proc *p, const void *vaddr, int perm)
         vmarea_t	*temp = NULL;
         
         temp = vmmap_lookup(p->p_vmmap, ADDR_TO_PN(vaddr));
-        
+        dbg(DBG_PRINT,"PFINN 1\n");
         if(temp==NULL)
 		{
+			dbg(DBG_PRINT,"PPFINN 2\n");
 			return	0;
-		}       
+		}     
+		/*  
         if(perm&PROT_READ && !(temp->vma_prot&PROT_READ)){
+        	dbg(DBG_PRINT,"PPFINN 3\n");
         	return 0;
         }
         
         if(perm&PROT_WRITE && !(temp->vma_prot&PROT_WRITE)){
+        	dbg(DBG_PRINT,"PPFINN 4\n");
         	return 0;
+        	
         }
         if(perm&PROT_EXEC&&!(temp->vma_prot&PROT_EXEC)){
+        	dbg(DBG_PRINT,"PPFINN 5\n");
         	return	0;	
         }
+        */
+        dbg(DBG_PRINT,"PFINN 6\n");
         
         return 1;
 }
@@ -185,11 +193,15 @@ range_perm(struct proc *p, const void *avaddr, size_t len, int perm)
         
         while(curraddr < ((uint32_t)avaddr + len))
         {
+        	dbg(DBG_PRINT,"PFINN 7\n");
         	retval = addr_perm(p, (void *)(curraddr), perm);
 			if(retval == 0){
+			dbg(DBG_PRINT,"PPFINN 8\n");
 				return 0;
 			}
+			dbg(DBG_PRINT,"PFINN 9\n");
         	curraddr += PAGE_SIZE;
         }
+        dbg(DBG_PRINT,"PFINN XX\n");
         return 1;
 }

@@ -484,9 +484,73 @@ int
 do_link(const char *from, const char *to)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_link");*/
+        
+        
+        vnode_t  *ret;
+        vnode_t *res_vnode;
+        vnode_t *ret_vnode;
+        const char  *name;
+        size_t  nameLength = 0;
+        
+        
+        
+        
+        int res = open_namev(from, O_RDONLY, &ret, NULL);
+        
+        if( res < 0)
+        {
+            return res;
+        }    
+        
+        if(ret->vn_mode & S_IFDIR)
+        {
+        	vput(ret);
+        	return	-EISDIR;
+        	
+        }
+        
+        res = dir_namev(to, &nameLength, &name, NULL, &res_vnode);
+      
+        if( res < 0)
+        {
+            vput(ret);
+            return res;
+        }
+        
+       	if((res_vnode)->vn_ops->link == NULL)
+        {
+        	vput(ret);
+        	vput(res_vnode);
+        	return	-ENOTDIR;
+        }
+        
+        if(nameLength >NAME_LEN)
+        {
+        	vput(ret);
+        	vput(res_vnode);
+        	return	-ENAMETOOLONG;
+        }
+        
 
-        return 0;
+        res = lookup(res_vnode, name, nameLength, &ret_vnode);
+        if(res == 0)
+        {
+            vput(ret);
+            vput(res_vnode);
+            vput(ret_vnode);
+            return -EEXIST;
+        }
+        
+        
+        
+        int x =  (res_vnode)->vn_ops->link(ret, res_vnode, name, nameLength);
+        vput(ret);
+        vput(res_vnode);
+        return x;
 }
+        
+        
+  
 
 /*      o link newname to oldname
  *      o unlink oldname
@@ -712,6 +776,12 @@ int
 do_stat(const char *path, struct stat *buf)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_stat");*/
+        
+        if(buf == NULL)
+        {
+        	return	-EFAULT;
+        }
+        
         vnode_t *base = NULL;
         vnode_t *res_vnode = NULL;
         int res = open_namev(path, 0, &res_vnode, NULL);
@@ -724,7 +794,7 @@ do_stat(const char *path, struct stat *buf)
         dbg(DBG_PRINT, "(GRADING2A 3.f)\n");
         int ret =  (res_vnode)->vn_ops->stat(res_vnode, buf);
      	vput(res_vnode);
-     	return 0;
+     	return ret;
 }
 
 #ifdef __MOUNTING__

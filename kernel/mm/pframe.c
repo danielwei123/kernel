@@ -357,42 +357,51 @@ int
 pframe_get(struct mmobj *o, uint32_t pagenum, pframe_t **result)
 {
         /*NOT_YET_IMPLEMENTED("S5FS: pframe_get");*/
-        
+        dbg(DBG_PRINT," FINAL pframe_get 1  \n");
         *result = pframe_get_resident(o, pagenum);
 
         if(*result == NULL)
         {
 
-
+			dbg(DBG_PRINT," FINAL pframe_get 2 \n");
             *result = pframe_alloc(o, pagenum);
             
             if(*result == NULL)
             {
+            	dbg(DBG_PRINT," XFINAL pframe_get 3 \n");
                 return  -ENOMEM;
             }
             
             int x = pframe_fill(*result);
-            
+            dbg(DBG_PRINT," FINAL pframe_get 4  \n");
             if( x < 0)
             {
+            	dbg(DBG_PRINT," XFINAL pframe_get 5  \n");
                 pframe_free(*result);
                 return x;
             }
-            
-            if(pageoutd_needed())
+            dbg(DBG_PRINT," FINAL pframe_get 6  \n");
+            /*if(pageoutd_needed())
             {
+            	dbg(DBG_PRINT," XFINAL pframe_get 7  \n");
                 pageoutd_wakeup();
             }
+			*/            
+            dbg(DBG_PRINT," FINAL pframe_get 8  \n");
             
 
         }
         else
         {
+        	dbg(DBG_PRINT," FINAL pframe_get 9  \n");
             while(pframe_is_busy(*result)){
+            	dbg(DBG_PRINT," XFINAL pframe_get 10  \n");
                 sched_sleep_on(&(*result)->pf_waitq);
             }
 
         }
+        
+        dbg(DBG_PRINT," FINAL pframe_get 11  \n");
     
         return 0;
 }
@@ -415,13 +424,16 @@ pframe_pin(pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("S5FS: pframe_pin");*/
         dbg(DBG_PRINT,"BILL Starting PIN\n");
+        dbg(DBG_PRINT,"RFINAL pframe_get 1  \n");
         if(pframe_is_pinned(pf))
         {
+        	 dbg(DBG_PRINT,"RFINAL pframe_get 2  \n");
             dbg(DBG_PRINT,"BILL Pin if\n");
             pf->pf_pincount++;
         }
         else
         {
+        	 dbg(DBG_PRINT,"RFINAL pframe_get 3  \n");
             dbg(DBG_PRINT,"BILL Pin else cond: %d\n", pframe_is_pinned(pf));
             pf->pf_pincount++;
             list_remove(&pf->pf_link);
@@ -430,7 +442,7 @@ pframe_pin(pframe_t *pf)
             list_insert_head(&pinned_list, &pf->pf_link);
             npinned++;
         } 
-        
+         dbg(DBG_PRINT,"RFINAL pframe_get 4  \n");
         
         
 }
@@ -451,9 +463,10 @@ pframe_unpin(pframe_t *pf)
         /*NOT_YET_IMPLEMENTED("S5FS: pframe_unpin");*/
         dbg(DBG_PRINT,"BILL Starting unpin\n");
         pf->pf_pincount--;
-        
+         dbg(DBG_PRINT,"RRFINAL pframe_get 1  \n");
         if(pf->pf_pincount == 0)
         {
+        	dbg(DBG_PRINT,"RRFINAL pframe_get 2  \n");
             list_remove(&pf->pf_link);
             npinned--;
             
@@ -461,7 +474,7 @@ pframe_unpin(pframe_t *pf)
             nallocated++;   
         }
         
-        
+        dbg(DBG_PRINT,"RRFINAL pframe_get 3  \n");
 }
 
 /*

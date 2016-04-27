@@ -78,17 +78,20 @@ do_brk(void *addr, void **ret)
 
         if(addr == NULL)
         {
+        	dbg(DBG_PRINT, "BREAKING: 1\n");
         	*ret  = curproc->p_brk;
         	return	0;
         }
  		if(addr < curproc->p_start_brk || (ADDR_TO_PN(PAGE_ALIGN_UP(addr)) > USER_MEM_HIGH))
  		{
+ 			dbg(DBG_PRINT, "BREAKING: 2\n");
  			return	-ENOMEM;
  		}
         /*addr same as p_brk*/
  		if(ADDR_TO_PN(PAGE_ALIGN_UP(addr)) == (ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk))))
         {
             *ret  = curproc->p_brk;
+            dbg(DBG_PRINT, "BREAKING: 3\n");
         	return	0;
         }
  		/*addr < p_brk*/
@@ -96,6 +99,7 @@ do_brk(void *addr, void **ret)
         {
             uint32_t npages = ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_brk)) - ADDR_TO_PN(PAGE_ALIGN_UP(addr));
             vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(PAGE_ALIGN_UP(addr)), npages);
+            dbg(DBG_PRINT, "BREAKING: 4\n");
         }
         /*addr > p_brk*/
  		else
@@ -105,25 +109,29 @@ do_brk(void *addr, void **ret)
 
      		if(ret_val == 0)
      		{
+     			dbg(DBG_PRINT, "BREAKING: 5\n");
      			return	-ENOMEM;
      		}
 
             vmarea_t * vma = vmmap_lookup(curproc->p_vmmap, ADDR_TO_PN(curproc->p_start_brk));
 
-            if(vma == NULL)
+            if(vma != NULL)
             {
-                /*Assuption : flag = 0, prot = MAP_PRIVATE, npages should by PAGE_SIZE*/
-
+            dbg(DBG_PRINT, "BREAKING: 7\n");
+                vma->vma_end = ADDR_TO_PN(PAGE_ALIGN_UP(addr));
+           
+            }
+       /*     else
+            {
+            	 KASSERT(0);
+               dbg(DBG_PRINT, "BREAKING: 6\n");
                 npages = ADDR_TO_PN(PAGE_ALIGN_UP(addr)) - ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk));
                 vmmap_map(curproc->p_vmmap, NULL , ADDR_TO_PN(PAGE_ALIGN_UP(curproc->p_start_brk)), npages,  MAP_PRIVATE, PROT_READ | PROT_WRITE , 0, VMMAP_DIR_LOHI, &vma);
-
-            }
-            else
-            {
-                vma->vma_end = ADDR_TO_PN(PAGE_ALIGN_UP(addr));
-            }
+            }*/
+            dbg(DBG_PRINT, "BREAKING: 8\n");
         }
         curproc->p_brk = addr;
         *ret = addr;
+        dbg(DBG_PRINT, "BREAKING: 9\n");
         return 0;
 }

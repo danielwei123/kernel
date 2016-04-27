@@ -59,46 +59,54 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         	return	-EACCES;
         }
         */
-        
+        dbg(DBG_PRINT,"AFINAL mmap 1\n");
         if(!((flags&MAP_TYPE)==MAP_SHARED) && !((flags&MAP_TYPE)==MAP_PRIVATE) )
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 2\n");
         	return	-EINVAL;
         }
         
         if(len == 0 || len > USER_MEM_HIGH)
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 3\n");
         	return -EINVAL;
         }
         
         
         if(!PAGE_ALIGNED(off))
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 4\n");
         	return	-EINVAL;
         }
         
                 
         if(!PAGE_ALIGNED(addr) && !(flags&MAP_ANON) && (flags&MAP_FIXED))
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 5\n");
         	return	-EINVAL;
         }
 
-        if(addr != NULL && (uint32_t)addr < USER_MEM_LOW)
+        /*if(addr != NULL && (uint32_t)addr < USER_MEM_LOW)
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 6\n");
         	return	-EINVAL;
-        }
+        }*/
         
-        if(addr != NULL && (uint32_t)addr > USER_MEM_HIGH)
+        /*if(addr != NULL && (uint32_t)addr > USER_MEM_HIGH)
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 7\n");
         	return	-EINVAL;
-        }
+        }*/
         
-        if(addr != NULL && len > (USER_MEM_HIGH - (uint32_t)addr))
+        /*if(addr != NULL && len > (USER_MEM_HIGH - (uint32_t)addr))
         {
+        	dbg(DBG_PRINT,"PAFINAL mmap 8\n");
         	return -EINVAL;
-        }	
+        }*/	
         
         if( (flags&MAP_FIXED) && addr==NULL)
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 9\n");
         	return	-EINVAL;
         }
         
@@ -106,39 +114,45 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         
         if(!(flags&MAP_ANON))
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 10\n");
         	if((fd<0 || fd >=NFILES))
-			{
+			{	
+			dbg(DBG_PRINT,"AFINAL mmap 11\n");
 				return -EBADF;
 			}
 			
 			if(curproc->p_files[fd] == NULL)
         	{
+        		dbg(DBG_PRINT,"AFINAL mmap 12\n");
         		return -EBADF;
        	 	}
        	 	
        	 	int	map_flag = MAP_TYPE&flags;
        	 	
-       	 	if((map_flag == MAP_PRIVATE) && !(curproc->p_files[fd]->f_mode&FMODE_READ))
+       	 	/*if((map_flag == MAP_PRIVATE) && !(curproc->p_files[fd]->f_mode&FMODE_READ))
         	{
+        		dbg(DBG_PRINT,"PAFINAL mmap 13\n");
         		return	-EACCES;
-        	}
+        	}*/
         	
         	if(flags&MAP_SHARED && (prot&PROT_WRITE) && !(curproc->p_files[fd]->f_mode&FMODE_READ && curproc->p_files[fd]->f_mode&FMODE_WRITE))
         	{
+        		dbg(DBG_PRINT,"AFINAL mmap 14\n");
         		return	-EACCES;
         	}
         	
-        	if((prot&PROT_WRITE) && (curproc->p_files[fd]->f_mode&(FMODE_APPEND))) 
+        	/*if((prot&PROT_WRITE) && (curproc->p_files[fd]->f_mode&(FMODE_APPEND))) 
         	{
+        		dbg(DBG_PRINT,"PAFINAL mmap 15\n");
         		return	-EACCES;
-        	}
+        	}*/
 			
 			vnode_param = curproc->p_files[fd]->f_vnode;
         
         }/*maps anon ends*/
         
         
-
+			
 
         /*vmmap_t	* newmap = vmmap_create();*/
        
@@ -149,20 +163,22 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         
         if(ret_val >= 0 && (ret)!= NULL)
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 16\n");
         	*ret = PN_TO_ADDR(newret->vma_start);
         	/*pt_unmap_range(curproc->p_pagedir, (uint32_t)PN_TO_ADDR(newret->vma_start), (uint32_t)PN_TO_ADDR(newret->vma_end));*/
        		tlb_flush_all();
        		/*tlb_flush_range( (uintptr_t)newret->vma_start, ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE));*/
         }
-        else
+        /*else
         {
+			dbg(DBG_PRINT,"PAFINAL mmap 17\n");
         	*ret = ((void *)-1);
         	
-        }
+        }*/
         
         /*curproc->p_vmmap = newmap;
         newmap->vmm_proc = curproc;*/
-        
+		dbg(DBG_PRINT,"AFINAL mmap 18\n");        
        return	ret_val;
 }
 
@@ -180,28 +196,32 @@ do_munmap(void *addr, size_t len)
         /*NOT_YET_IMPLEMENTED("VM: do_munmap");*/
 		if(!PAGE_ALIGNED(addr))
         {
+        	dbg(DBG_PRINT,"AFINAL mmap 19\n");
         	return	-EINVAL;
         }
         if(len == 0 || len >= USER_MEM_HIGH)
         { 
+        	dbg(DBG_PRINT,"AFINAL mmap 20\n");
         	return	-EINVAL;
         		
 		}
 		
 		if(addr == NULL)
 		{
+			dbg(DBG_PRINT,"AFINAL mmap 21\n");
 			return -EINVAL;
 		}
 		
 		if(addr != NULL && len > (USER_MEM_HIGH - (uint32_t)addr))
         {
-        	return -EINVAL;
+        		dbg(DBG_PRINT,"PAFINAL mmap 22\n");
+		      return -EINVAL;
         }	
 				        
         vmmap_remove( curproc->p_vmmap, ADDR_TO_PN(addr), ((uint32_t)PAGE_ALIGN_UP(len)/PAGE_SIZE));
         
         tlb_flush_all();
-        
+		dbg(DBG_PRINT,"AFINAL mmap 23\n");        
         return 0;
 }
 

@@ -196,16 +196,22 @@ kthread_clone(kthread_t *thr)
 {
         /*NOT_YET_IMPLEMENTED("VM: kthread_clone");*/
         kthread_t *temp = slab_obj_alloc(kthread_allocator);
+        /*
         if(temp==NULL)
         {
+        	dbg(DBG_PRINT,"QFINN 1\n");
             return temp;
         }
+        */
         char *stack = alloc_stack();
+        /*
         if(stack==NULL)
         {
+        dbg(DBG_PRINT,"QFINN 2\n");
             slab_obj_free(kthread_allocator,temp);
             return NULL;
         }
+        */
         temp->kt_kstack=stack;
         temp->kt_retval=thr->kt_retval;
         temp->kt_errno=thr->kt_errno;
@@ -215,6 +221,7 @@ kthread_clone(kthread_t *thr)
         temp->kt_wchan=thr->kt_wchan;
         list_link_init(&(temp->kt_qlink));
         list_link_init(&(temp->kt_plink));
+        dbg(DBG_PRINT,"QFINN 3\n");
         return temp;
 }
 

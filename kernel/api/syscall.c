@@ -75,64 +75,74 @@ static int
 sys_read(read_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_read");*/
+        dbg(DBG_PRINT,"SSFINAL syscall 1  \n");
         read_args_t		kern_args;
         char*			newPage = NULL;
+		copy_from_user(&kern_args, arg, sizeof(kern_args));
 
-        if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
+        /*if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
         {
+        	dbg(DBG_PRINT,"XSSFINAL syscall 2 \n");
         	curthr->kt_errno = EFAULT;
         	return	-1;
         }
-
+		*/
         newPage = (char *)page_alloc();
 
-        if(newPage == NULL)
+        /*if(newPage == NULL)
         {
+        	dbg(DBG_PRINT,"XSSFINAL syscall 3  \n");
             curthr->kt_errno = ENOMEM;
             return -1;
-        }
+        }*/
 
 		uint32_t total_read = 0;
 		int error = 0;
 		while(total_read < kern_args.nbytes && error == 0)
         {
+        	dbg(DBG_PRINT,"SSFINAL syscall 4  \n");
             int to_read = 0;
-            if(kern_args.nbytes - total_read > PAGE_SIZE)
+            if(kern_args.nbytes - total_read <= PAGE_SIZE)
             {
-                to_read = PAGE_SIZE;
-            }
-            else
-            {
+            	dbg(DBG_PRINT,"XSSFINAL syscall 5  \n");
                 to_read = kern_args.nbytes - total_read;
             }
+            /*else
+            {
+            	dbg(DBG_PRINT,"SSFINAL syscall 6  \n");
+                to_read = PAGE_SIZE;
+            }*/
 
             int bytes_read = do_read(kern_args.fd , newPage , to_read);
 
             if(bytes_read < 0)
             {
+            	dbg(DBG_PRINT,"SSFINAL syscall 7  \n");
                 page_free(newPage);
                 curthr->kt_errno = -bytes_read;
                 return -1;
             }
-
+			dbg(DBG_PRINT,"SSFINAL syscall 8  \n");
             error = copy_to_user(  (void *)((uint32_t)kern_args.buf + total_read), newPage , bytes_read);
-
+			dbg(DBG_PRINT,"SSFINAL syscall 9  \n");
             total_read += bytes_read;
 
             if(bytes_read < to_read)
             {
+            	dbg(DBG_PRINT,"SSFINAL syscall 10 \n");
                 break;
             }
         }
-
+		dbg(DBG_PRINT,"SSFINAL syscall 11  \n");
         page_free(newPage);
 
-        if(error < 0)
+        /*if(error < 0)
         {
+        	dbg(DBG_PRINT,"XSSFINAL syscall 12 \n");
             curthr->kt_errno = -error;
             return -1;
-        }
-
+        }*/
+		dbg(DBG_PRINT,"SSFINAL syscall 13  \n");
         return total_read;
 }
 
@@ -146,49 +156,57 @@ sys_write(write_args_t *arg)
 
         write_args_t		kern_args;
         char*			newPage = NULL;
-
-        if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
+		dbg(DBG_PRINT,"SSSFINAL syscall 1  \n");
+		copy_from_user(&kern_args, arg, sizeof(kern_args));
+        /*if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
         {
+        	dbg(DBG_PRINT,"SSSSFINAL syscall 2 \n");
         	curthr->kt_errno = EFAULT;
         	return	-1;
-        }
+        }*/
 
         newPage = (char *)page_alloc();
 
-        if(newPage == NULL)
+   /*     if(newPage == NULL)
         {
+        	dbg(DBG_PRINT,"SSSSFINAL syscall 3  \n");
             curthr->kt_errno = ENOMEM;
             return -1;
-        }
+       }*/
 
         uint32_t total_written = 0;
         int error = 0;
 
         while(total_written < kern_args.nbytes && error == 0)
         {
+        	dbg(DBG_PRINT,"SSSFINAL syscall 4 \n");
             int to_write = 0;
-            if(kern_args.nbytes - total_written > PAGE_SIZE)
+            if(kern_args.nbytes - total_written <= PAGE_SIZE)
             {
-                to_write = PAGE_SIZE;
-            }
-            else
-            {
+            	dbg(DBG_PRINT,"SSSSFINAL syscall 5  \n");
                 to_write = kern_args.nbytes - total_written;
             }
-
+           /* else
+            {
+            	dbg(DBG_PRINT,"SSSFINAL syscall 6  \n");
+                to_write = PAGE_SIZE;
+            }
+*/
             error = copy_from_user(newPage , (void *)((uint32_t)kern_args.buf + total_written) , to_write);
 
-            if(error < 0)
+            /*if(error < 0)
             {
+            	dbg(DBG_PRINT,"SSSSFINAL syscall 7  \n");
                 page_free(newPage);
                 curthr->kt_errno = -error;
                 return -1;
-            }
+            }*/
 
             int bytes_written = do_write(kern_args.fd , newPage , to_write);
 
             if(bytes_written < 0)
             {
+            	dbg(DBG_PRINT,"SSSSFINAL syscall 8  \n");
                 page_free(newPage);
                 curthr->kt_errno = -bytes_written;
                 return -1;
@@ -196,21 +214,17 @@ sys_write(write_args_t *arg)
 
             total_written += bytes_written;
 
-            if(bytes_written < to_write)
-            {
-                break;
-            }
-
         }
 
         page_free(newPage);
 
-        if(error < 0)
+        /*if(error < 0)
         {
+        	dbg(DBG_PRINT,"SSSSFINAL syscall 10  \n");
             curthr->kt_errno = -error;
             return -1;
-        }
-
+        }*/
+		dbg(DBG_PRINT,"SSSFINAL syscall 11  \n");
         return total_written;
 }
 
@@ -230,14 +244,16 @@ sys_getdents(getdents_args_t *arg)
 
         getdents_args_t		kern_args;
 
+		dbg(DBG_PRINT,"FFINAL syscall 1  \n");
+		copy_from_user(&kern_args, arg, sizeof(kern_args));
 
-
-        if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
+  /*      if(copy_from_user(&kern_args, arg, sizeof(kern_args))<0)
         {
+        	dbg(DBG_PRINT,"RFFINAL syscall 2 \n");
         	curthr->kt_errno = EFAULT;
         	return	-1;
         }
-
+*/
 		int	max = kern_args.count / sizeof(dirent_t);
 
         dirent_t	dir;
@@ -247,20 +263,24 @@ sys_getdents(getdents_args_t *arg)
 
         while(i<max)
         {
+        	dbg(DBG_PRINT,"FFINAL syscall 3  \n");
             int read = do_getdent(kern_args.fd , &dir);
             if(read < 0)
             {
+            	dbg(DBG_PRINT,"RFFINAL syscall 4\n");
                 curthr->kt_errno = -read;
                 return -1;
             }
             if(read == 0)
             {
+            	dbg(DBG_PRINT,"FFINAL syscall 5\n");
                 break;
             }
             copy_to_user(kern_args.dirp + i , &dir , read);
             total_read += read;
             i = i + 1;
         }
+        dbg(DBG_PRINT,"FFINAL syscall 6\n");
         return total_read;
 }
 

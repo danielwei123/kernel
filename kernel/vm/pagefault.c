@@ -38,26 +38,30 @@
 /*our function to check permissions*/
 int permissionCheck(vmarea_t *vm , uint32_t cause)
 {
+	dbg(DBG_PRINT, "PAGEFAULTNG: 7\n");
     if(vm->vma_prot== 0)
     {
+    	dbg(DBG_PRINT, "PAGEFAULTNG: 8\n");
         return 0;
     }
 
     if((cause & FAULT_WRITE) && !(vm->vma_prot & PROT_WRITE))
     {
+    	dbg(DBG_PRINT, "PAGEFAULTNG: 9\n");
         return 0;
     }
-
+/*
     if((cause & FAULT_EXEC) && !(vm->vma_prot & PROT_EXEC))
     {
+    	dbg(DBG_PRINT, "PAGEFAULTNG: 10\n");
         return 0;
     }
-    
+ */  
     if(!(cause&FAULT_WRITE) && !(cause& FAULT_EXEC) && !(vm->vma_prot&PROT_READ))
 	{
+		dbg(DBG_PRINT, "PAGEFAULTNG: 11\n");
 		return	0;
 	}
-	
     return 1;
 }
 
@@ -110,18 +114,22 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 		dbg(DBG_PRINT, "EEXX here in page fault cause: %d", cause); 
 		vmmap_mapping_info(curproc->p_vmmap, buf, 1000);
 
+		dbg(DBG_PRINT, "PAGEFAULTNG: 1\n");
         if(area == NULL)
         {
+        	dbg(DBG_PRINT, "PAGEFAULTNG: 2\n");
         	do_exit(EFAULT);
         }
 
         if(!permissionCheck(area, cause))
         {
+        	dbg(DBG_PRINT, "PAGEFAULTNG: 3\n");
         	do_exit(EFAULT);
         }
 
         if(cause&FAULT_WRITE)
         {
+        	dbg(DBG_PRINT, "PAGEFAULTNG: 4\n");
         	forwrite = 1;
         	pt_map1 = pt_map1 | PT_WRITE;
         	pt_map2 = pt_map2 | PD_WRITE;
@@ -131,6 +139,7 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 
         if(lookup_ret<0)
         {
+        	dbg(DBG_PRINT, "PAGEFAULTNG: 5\n");
         	do_exit(EFAULT);
         }
 
@@ -138,5 +147,6 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 
         pt_map(curproc->p_pagedir, (uintptr_t)PAGE_ALIGN_DOWN(vaddr), (uintptr_t)pt_virt_to_phys((uintptr_t)resFrame->pf_addr), pt_map2, pt_map1);
         /*tlb_flush_all();*/
+        dbg(DBG_PRINT, "PAGEFAULTNG: 6\n");
 
 }
